@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.collection.serialization.impl.migration.E
 
 /**
  * Event that will signal to finish the actual delete (post-mark delete) for an Entity
+ * It will mark if this is for a collection delete
  */
 public final class EntityDeleteEvent extends AsyncEvent {
 
@@ -31,17 +32,41 @@ public final class EntityDeleteEvent extends AsyncEvent {
     @JsonProperty
     protected EntityIdScope entityIdScope;
 
+    @JsonProperty
+    private long updatedBefore;
+
+    @JsonProperty
+    private boolean isCollectionDelete;
+
     public EntityDeleteEvent() {
         super();
     }
 
     public EntityDeleteEvent(String sourceRegion, EntityIdScope entityIdScope) {
         super(sourceRegion);
-        this.entityIdScope =  entityIdScope;
+        this.entityIdScope = entityIdScope;
+        this.updatedBefore = Long.MAX_VALUE;
+        this.isCollectionDelete = false;
+    }
+
+    public EntityDeleteEvent(String sourceRegion, EntityIdScope entityIdScope,
+                             boolean isCollectionDelete, long updatedBefore) {
+        super(sourceRegion);
+        this.entityIdScope = entityIdScope;
+        this.updatedBefore = updatedBefore;
+        this.isCollectionDelete = isCollectionDelete;
     }
 
 
     public EntityIdScope getEntityIdScope() {
         return entityIdScope;
+    }
+
+    public long getUpdatedBefore() {
+        return updatedBefore;
+    }
+
+    public boolean isCollectionDelete() {
+        return isCollectionDelete;
     }
 }

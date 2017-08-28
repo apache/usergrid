@@ -30,12 +30,12 @@ limitations under the License.
 <body>
 
 	<div class="dialog-area">
-		<c:if test="${!empty it.errorMsg}"><div class="dialog-form-message">${it.errorMsg}</div></c:if>
+		<c:if test="${!empty it.errorMsg}"><div class="dialog-form-message">${fn:escapeXml(it.errorMsg)}</div></c:if>
 		<form class="dialog-form" action="" method="post">
-			<input type="hidden" name="token" value="${it.token}">
+			<input type="hidden" name="token" value="${fn:escapeXml(it.token)}">
 			<fieldset>
 				<p>
-					<label for="password1">Please enter your new password for <c:out value="${it.user.email}"/>.</label>
+					<label for="password1">Please enter your new password for <c:out value="${it.user.email}" escapeXml="true"/>.</label>
 				</p>
 				<p>
 					<input class="text_field" id="password1" name="password1" type="password" />

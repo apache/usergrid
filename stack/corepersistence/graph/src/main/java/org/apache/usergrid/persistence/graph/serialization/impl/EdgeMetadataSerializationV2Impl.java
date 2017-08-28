@@ -400,7 +400,6 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchEdgeType( search );
 
-
         final Id applicationId = scope.getApplication();
         final Id searchNode = search.getNode();
 

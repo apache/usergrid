@@ -102,7 +102,7 @@
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true
                         -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-                        -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                        -javaagent:${settings.localRepository}/com/github/jbellis/jamm/0.3.1/jamm-0.3.1.jar
                         ${ug.argline} -Dlog4j.configuration=file:${basedir}/src/test/resources/log4j.properties
                     </argLine>
                     <includes>
@@ -499,7 +499,7 @@
                         <configuration>
                             <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true
                                 -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-                                -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                                -javaagent:${settings.localRepository}/com/github/jbellis/jamm/0.3.1/jamm-0.3.1.jar
                                 ${ug.argline}
                                 -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec
                             </argLine>

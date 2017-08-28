@@ -39,7 +39,7 @@ public interface EntityManagerFig extends GuicyFig {
     int sleep();
 
     @Key( "usergrid.entityManager.enable_deindex_on_update" )
-    @Default( "true" )
+    @Default( "false" )
     boolean getDeindexOnUpdate();
 
     /**

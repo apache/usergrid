@@ -163,7 +163,7 @@ public class QueueSerializationImpl implements QueueSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
         return Collections.singletonList(
-            new TableDefinitionStringImpl( cassandraConfig.getApplicationKeyspace(), "queues", CQL ) );
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationKeyspace(), TABLE_QUEUES, CQL ) );
     }
 
 }

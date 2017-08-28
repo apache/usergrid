@@ -40,9 +40,13 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_WORKER_COUNT_UTILITY = "elasticsearch.worker_count_utility";
 
+    String ELASTICSEARCH_WORKER_COUNT_DELETE = "elasticsearch.worker_count_delete";
+
     String ELASTICSEARCH_WORKER_COUNT_DEADLETTER = "elasticsearch.worker_count_deadletter";
 
     String ELASTICSEARCH_WORKER_COUNT_UTILITY_DEADLETTER = "elasticsearch.worker_count_utility_deadletter";
+
+    String ELASTICSEARCH_WORKER_COUNT_DELETE_DEADLETTER = "elasticsearch.worker_count_delete_deadletter";
 
     String EVENT_CONCURRENCY_FACTOR = "event.concurrency.factor";
 
@@ -51,6 +55,8 @@ public interface IndexProcessorFig extends GuicyFig {
     String INDEX_QUEUE_VISIBILITY_TIMEOUT = "elasticsearch.queue_visibility_timeout";
 
     String REINDEX_BUFFER_SIZE = "elasticsearch.reindex.buffer_size";
+
+    String COLLECTION_DELETE_BUFFER_SIZE = "elasticsearch.collection_delete.buffer_size";
 
     String REINDEX_CONCURRENCY_FACTOR = "elasticsearch.reindex.concurrency.factor";
 
@@ -105,6 +111,13 @@ public interface IndexProcessorFig extends GuicyFig {
     int getWorkerCountUtility();
 
     /**
+     * The number of worker threads used to read delete requests from the queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_DELETE)
+    int getWorkerCountDelete();
+
+    /**
      * The number of worker threads used to read dead messages from the index dead letter queue and reload them into the index queue.
      */
     @Default("1")
@@ -117,6 +130,13 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("1")
     @Key(ELASTICSEARCH_WORKER_COUNT_UTILITY_DEADLETTER)
     int getWorkerCountUtilityDeadLetter();
+
+    /**
+     * The number of worker threads used to read dead messages from the delete dead letter queue and reload them into the delete queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_DELETE_DEADLETTER)
+    int getWorkerCountDeleteDeadLetter();
 
     /**
      * Set the implementation to use for queuing.
@@ -137,6 +157,13 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("10")
     @Key(REINDEX_CONCURRENCY_FACTOR)
     int getReindexConcurrencyFactor();
+
+    /**
+     * Number of parallel buffers during collection delete
+     */
+    @Default("500")
+    @Key(COLLECTION_DELETE_BUFFER_SIZE)
+    int getCollectionDeleteBufferSize();
 
     /**
      * Flag to resolve the LOCAL queue implementation service synchronously.

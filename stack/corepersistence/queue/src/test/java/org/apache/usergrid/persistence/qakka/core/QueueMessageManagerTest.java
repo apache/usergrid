@@ -340,7 +340,7 @@ public class QueueMessageManagerTest extends AbstractAkkaTest {
                 if (qmm.getQueueDepth( queueName, available ) == numMessages) {
                     break;
                 }
-                Thread.sleep( 500 );
+                Thread.sleep( 1000 );
             }
 
             Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName, available ) );

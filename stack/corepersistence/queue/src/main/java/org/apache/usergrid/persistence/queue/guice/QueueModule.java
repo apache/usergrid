@@ -43,7 +43,7 @@ public class QueueModule extends AbstractModule {
     public QueueModule( String queueManagerType ) {
 
         logger.info("QueueManagerType={}", queueManagerType);
-        if ( "DISTRIBUTED_SNS".equals( queueManagerType ) ) {
+        if ( "DISTRIBUTED_SNS".equals( queueManagerType ) || "SNS".equals(queueManagerType)) {
             this.implementation = LegacyQueueManager.Implementation.DISTRIBUTED_SNS;
         }
         else if ( "DISTRIBUTED".equals( queueManagerType ) ) {
