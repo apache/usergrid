@@ -63,7 +63,18 @@ public interface EventBuilder {
      * @param entityId
      * @return
      */
-    IndexOperationMessage buildEntityDelete(ApplicationScope applicationScope, Id entityId );
+    IndexOperationMessage buildEntityDelete(ApplicationScope applicationScope, Id entityId);
+
+    /**
+     * Return a bin with 2 observable streams for entity delete.
+     * @param applicationScope
+     * @param entityId
+     * @param isCollectionDelete
+     * @param updatedBefore
+     * @return
+     */
+    IndexOperationMessage buildEntityDelete(ApplicationScope applicationScope, Id entityId,
+                                            boolean isCollectionDelete, long updatedBefore);
 
 
 

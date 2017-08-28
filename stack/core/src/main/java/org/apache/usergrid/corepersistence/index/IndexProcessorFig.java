@@ -56,6 +56,8 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String REINDEX_BUFFER_SIZE = "elasticsearch.reindex.buffer_size";
 
+    String COLLECTION_DELETE_BUFFER_SIZE = "elasticsearch.collection_delete.buffer_size";
+
     String REINDEX_CONCURRENCY_FACTOR = "elasticsearch.reindex.concurrency.factor";
 
 
@@ -155,6 +157,13 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("10")
     @Key(REINDEX_CONCURRENCY_FACTOR)
     int getReindexConcurrencyFactor();
+
+    /**
+     * Number of parallel buffers during collection delete
+     */
+    @Default("500")
+    @Key(COLLECTION_DELETE_BUFFER_SIZE)
+    int getCollectionDeleteBufferSize();
 
     /**
      * Flag to resolve the LOCAL queue implementation service synchronously.

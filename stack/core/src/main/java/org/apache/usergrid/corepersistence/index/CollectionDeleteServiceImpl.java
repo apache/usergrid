@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.index;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,17 +60,19 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
+import static com.google.common.base.Optional.fromNullable;
+
 
 @Singleton
-public class ReIndexServiceImpl implements ReIndexService {
+public class CollectionDeleteServiceImpl implements CollectionDeleteService {
 
-    private static final Logger logger = LoggerFactory.getLogger( ReIndexServiceImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( CollectionDeleteServiceImpl.class );
 
     private static final MapScope RESUME_MAP_SCOPE =
-        new MapScopeImpl( CpNamingUtils.getManagementApplicationId(), "reindexresume" );
+        new MapScopeImpl( CpNamingUtils.getManagementApplicationId(), "collectiondeleteresume" );
 
-    //Keep cursors to resume re-index for 10 days.  This is far beyond it's useful real world implications anyway.
-    private static final int INDEX_TTL = 60 * 60 * 24 * 10;
+    //Keep cursors to resume collection delete for 10 days.
+    private static final int CURSOR_TTL = 60 * 60 * 24 * 10;
 
     private static final String MAP_CURSOR_KEY = "cursor";
     private static final String MAP_COUNT_KEY = "count";
@@ -89,14 +92,14 @@ public class ReIndexServiceImpl implements ReIndexService {
 
 
     @Inject
-    public ReIndexServiceImpl( final EntityIndexFactory entityIndexFactory,
-                               final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                               final AllEntityIdsObservable allEntityIdsObservable,
-                               final MapManagerFactory mapManagerFactory,
-                               final AllApplicationsObservable allApplicationsObservable,
-                               final IndexProcessorFig indexProcessorFig,
-                               final CollectionSettingsFactory collectionSettingsFactory,
-                               final AsyncEventService indexService ) {
+    public CollectionDeleteServiceImpl(final EntityIndexFactory entityIndexFactory,
+                                       final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                       final AllEntityIdsObservable allEntityIdsObservable,
+                                       final MapManagerFactory mapManagerFactory,
+                                       final AllApplicationsObservable allApplicationsObservable,
+                                       final IndexProcessorFig indexProcessorFig,
+                                       final CollectionSettingsFactory collectionSettingsFactory,
+                                       final AsyncEventService indexService ) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.allEntityIdsObservable = allEntityIdsObservable;
@@ -111,66 +114,66 @@ public class ReIndexServiceImpl implements ReIndexService {
 
     //TODO: optional delay, param.
     @Override
-    public ReIndexStatus rebuildIndex( final ReIndexRequestBuilder reIndexRequestBuilder ) {
-
-        //load our last emitted Scope if a cursor is present
+    public CollectionDeleteStatus deleteCollection( final CollectionDeleteRequestBuilder collectionDeleteRequestBuilder) {
 
         final AtomicInteger count = new AtomicInteger();
 
-        final Optional<EdgeScope> cursor = parseCursor( reIndexRequestBuilder.getCursor() );
-
+        final Optional<EdgeScope> cursor = parseCursor( collectionDeleteRequestBuilder.getCursor() );
 
         final CursorSeek<Edge> cursorSeek = getResumeEdge( cursor );
 
-        final Optional<ApplicationScope> appId = reIndexRequestBuilder.getApplicationScope();
+        final Optional<Integer> delayTimer = collectionDeleteRequestBuilder.getDelayTimer();
 
-        final Optional<Integer> delayTimer = reIndexRequestBuilder.getDelayTimer();
+        final Optional<TimeUnit> timeUnitOptional = collectionDeleteRequestBuilder.getTimeUnitOptional();
 
-        final Optional<TimeUnit> timeUnitOptional = reIndexRequestBuilder.getTimeUnitOptional();
+        Optional<ApplicationScope> appId = collectionDeleteRequestBuilder.getApplicationScope();
+
+        Preconditions.checkArgument(collectionDeleteRequestBuilder.getCollectionName().isPresent(),
+            "You must specify a collection name");
+        String collectionName = collectionDeleteRequestBuilder.getCollectionName().get();
 
         Preconditions.checkArgument( !(cursor.isPresent() && appId.isPresent()),
-            "You cannot specify an app id and a cursor.  When resuming with cursor you must omit the appid" );
+            "You cannot specify an app id and a cursor.  When resuming with cursor you must omit the appid." );
+        Preconditions.checkArgument( cursor.isPresent() || appId.isPresent(),
+            "Either application ID or cursor is required.");
 
-        final Observable<ApplicationScope> applicationScopes = getApplications( cursor, appId );
+        ApplicationScope applicationScope;
+        if (appId.isPresent()) {
+            applicationScope = appId.get();
+        } else { // cursor is present
+            applicationScope = cursor.get().getApplicationScope();
+        }
 
 
         final String jobId = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 
-        final long modifiedSince = reIndexRequestBuilder.getUpdateTimestamp().or( Long.MIN_VALUE );
+        // default to current time
+        final long endTimestamp = collectionDeleteRequestBuilder.getEndTimestamp().or( System.currentTimeMillis() );
 
-        // create an observable that loads a batch to be indexed
+        String pluralizedCollectionName = InflectionUtils.pluralize(CpNamingUtils.getNameFromEdgeType(collectionName));
 
-        if(reIndexRequestBuilder.getCollectionName().isPresent()) {
+        CollectionSettings collectionSettings =
+            collectionSettingsFactory.getInstance(new CollectionSettingsScopeImpl(applicationScope.getApplication(), pluralizedCollectionName));
 
-            String collectionName =  InflectionUtils.pluralize(
-                CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( pluralizedCollectionName );
 
-            CollectionSettings collectionSettings =
-                collectionSettingsFactory.getInstance( new CollectionSettingsScopeImpl(appId.get().getApplication(), collectionName) );
+        if ( existingSettings.isPresent() ) {
 
-            Optional<Map<String, Object>> existingSettings =
-                collectionSettings.getCollectionSettings( collectionName );
+            Map jsonMapData = existingSettings.get();
 
-            // If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-            if ( existingSettings.isPresent() ) {
+            jsonMapData.put( "lastCollectionClear", Instant.now().toEpochMilli() );
 
-                Map jsonMapData = existingSettings.get();
-
-                jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
-
-                // should probably roll this into the cache.
-                collectionSettings.putCollectionSettings(
-                    collectionName, JsonUtils.mapToJsonString(jsonMapData ) );
-            }
-
+            collectionSettings.putCollectionSettings(
+                pluralizedCollectionName, JsonUtils.mapToJsonString(jsonMapData ) );
         }
 
-        allEntityIdsObservable.getEdgesToEntities( applicationScopes,
-            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
-            .buffer( indexProcessorFig.getReindexBufferSize())
+        allEntityIdsObservable.getEdgesToEntities( Observable.just(applicationScope),
+            fromNullable(collectionName), cursorSeek.getSeekValue() )
+            .buffer( indexProcessorFig.getCollectionDeleteBufferSize())
             .doOnNext( edgeScopes -> {
-                logger.info("Sending batch of {} to be indexed.", edgeScopes.size());
-                indexService.indexBatch(edgeScopes, modifiedSince, AsyncEventQueueType.UTILITY);
+                logger.info("Sending batch of {} to be deleted.", edgeScopes.size());
+                indexService.deleteBatch(edgeScopes, endTimestamp, AsyncEventQueueType.DELETE);
                 count.addAndGet(edgeScopes.size() );
                 if( edgeScopes.size() > 0 ) {
                     writeCursorState(jobId, edgeScopes.get(edgeScopes.size() - 1));
@@ -180,51 +183,20 @@ public class ReIndexServiceImpl implements ReIndexService {
             .subscribeOn( Schedulers.io() ).subscribe();
 
 
-        return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );
+        return new CollectionDeleteStatus( jobId, Status.STARTED, 0, 0 );
     }
 
 
     @Override
-    public ReIndexRequestBuilder getBuilder() {
-        return new ReIndexRequestBuilderImpl();
+    public CollectionDeleteRequestBuilder getBuilder() {
+        return new CollectionDeleteRequestBuilderImpl();
     }
 
 
     @Override
-    public ReIndexStatus getStatus( final String jobId ) {
+    public CollectionDeleteStatus getStatus( final String jobId ) {
         Preconditions.checkNotNull( jobId, "jobId must not be null" );
-        return getIndexResponse( jobId );
-    }
-
-
-    /**
-     * Simple collector that counts state, then flushed every time a buffer is provided.  Writes final state when complete
-     */
-    private class FlushingCollector {
-
-        private final String jobId;
-        private long count;
-
-
-        private FlushingCollector( final String jobId ) {
-            this.jobId = jobId;
-        }
-
-
-        public void flushBuffer( final List<EdgeScope> buffer ) {
-            count += buffer.size();
-
-            //write our cursor state
-            if ( buffer.size() > 0 ) {
-                writeCursorState( jobId, buffer.get( buffer.size() - 1 ) );
-            }
-
-            writeStateMeta( jobId, Status.INPROGRESS, count, System.currentTimeMillis() );
-        }
-
-        public void complete(){
-            writeStateMeta( jobId, Status.COMPLETE, count, System.currentTimeMillis() );
-        }
+        return getCollectionDeleteResponse( jobId );
     }
 
 
@@ -241,40 +213,6 @@ public class ReIndexServiceImpl implements ReIndexService {
         }
 
         return new CursorSeek<>( Optional.absent() );
-    }
-
-
-    /**
-     * Generate an observable for our appliation scope
-     */
-    private Observable<ApplicationScope> getApplications( final Optional<EdgeScope> cursor,
-                                                          final Optional<ApplicationScope> appId ) {
-        //cursor is present use it and skip until we hit that app
-        if (cursor.isPresent()) {
-
-            final EdgeScope cursorValue = cursor.get();
-            //we have a cursor and an application scope that was used.
-            return allApplicationsObservable.getData().skipWhile(
-                applicationScope -> !cursorValue.getApplicationScope().equals(applicationScope));
-        }
-        //this is intentional.  If
-        else if (appId.isPresent()) {
-            return Observable.just(appId.get())
-                .doOnNext(appScope -> {
-                    //make sure index is initialized on rebuild
-                    entityIndexFactory.createEntityIndex(
-                        indexLocationStrategyFactory.getIndexLocationStrategy(appScope)
-                    ).initialize();
-                });
-        }
-
-        return allApplicationsObservable.getData()
-            .doOnNext(appScope -> {
-                //make sure index is initialized on rebuild
-                entityIndexFactory.createEntityIndex(
-                    indexLocationStrategyFactory.getIndexLocationStrategy(appScope)
-                ).initialize();
-            });
     }
 
 
@@ -311,7 +249,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         final String serializedState = CursorSerializerUtil.asString( node );
 
-        mapManager.putString( jobId + MAP_CURSOR_KEY, serializedState, INDEX_TTL );
+        mapManager.putString( jobId + MAP_CURSOR_KEY, serializedState, CURSOR_TTL);
     }
 
 
@@ -341,12 +279,12 @@ public class ReIndexServiceImpl implements ReIndexService {
      * @param jobId
      * @return
      */
-    private ReIndexStatus getIndexResponse( final String jobId ) {
+    private CollectionDeleteStatus getCollectionDeleteResponse( final String jobId ) {
 
         final String stringStatus = mapManager.getString( jobId+MAP_STATUS_KEY );
 
         if(stringStatus == null){
-           return new ReIndexStatus( jobId, Status.UNKNOWN, 0, 0 );
+           return new CollectionDeleteStatus( jobId, Status.UNKNOWN, 0, 0 );
         }
 
         final Status status = Status.valueOf( stringStatus );
@@ -354,7 +292,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         final long processedCount = mapManager.getLong( jobId + MAP_COUNT_KEY );
         final long lastUpdated = mapManager.getLong( jobId + MAP_UPDATED_KEY );
 
-        return new ReIndexStatus( jobId, status, processedCount, lastUpdated );
+        return new CollectionDeleteStatus( jobId, status, processedCount, lastUpdated );
     }
 }
 
