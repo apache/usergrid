@@ -3412,6 +3412,16 @@ public class ManagementServiceImpl implements ManagementService {
         return service.deleteAllEntities(CpNamingUtils.getApplicationScope(applicationId),limit);
     }
 
+    @Override
+    public Collection<String> passwordPolicyCheck(String password, boolean isAdminUser) {
+        return passwordPolicy.policyCheck(password, isAdminUser);
+    }
+
+    @Override
+    public String getPasswordDescription(boolean isAdminUser) {
+        return passwordPolicy.getDescription(isAdminUser);
+    }
+
     private String getProperty(String key) {
         String obj = properties.getProperty(key);
         if(StringUtils.isEmpty(obj))

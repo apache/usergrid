@@ -29,7 +29,7 @@ limitations under the License.
 </head>
 <body>
 
-	<p>Email with instructions for password reset sent to <c:out value="${it.user.email}"/></p>
+	<p>Email with instructions for password reset sent to <c:out value="${it.user.email}" escapeXml="true"/></p>
 
 </body>
 </html>

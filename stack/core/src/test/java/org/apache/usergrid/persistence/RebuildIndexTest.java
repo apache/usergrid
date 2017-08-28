@@ -74,10 +74,10 @@ public class RebuildIndexTest extends AbstractCoreIT {
     }
 
 
-    @Test( timeout = 120000 )
+    @Test( timeout = 240000 )
     public void rebuildOneCollectionIndex() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info( "Started rebuildOneCollectionIndex()" );
 
         String rand = RandomStringUtils.randomAlphanumeric( 5 );
         final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
@@ -163,7 +163,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         waitForRebuild( status, reIndexService );
 
-        app.waitForQueueDrainAndRefreshIndex(5000);
+        app.waitForQueueDrainAndRefreshIndex(15000);
 
         // ----------------- test that we can read the catherder collection and not the catshepard
 
@@ -172,7 +172,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     }
 
 
-    @Test( timeout = 120000 )
+    @Test( timeout = 240000 )
     public void rebuildIndex() throws Exception {
 
         logger.info( "Started rebuildIndex()" );
@@ -234,7 +234,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.waitForQueueDrainAndRefreshIndex(15000);
+        app.waitForQueueDrainAndRefreshIndex(30000);
 
         // ----------------- test that we can read them, should work fine
 
@@ -278,7 +278,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
             assertNotNull( status.getJobId(), "JobId is present" );
 
-            logger.info( "Rebuilt index" );
+            logger.info( "Rebuilt index, jobID={}", status.getJobId());
 
 
             waitForRebuild( status, reIndexService );
@@ -301,7 +301,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     @Test( timeout = 120000 )
     public void rebuildIndexGeo() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info( "Started rebuildIndexGeo()" );
 
         String rand = RandomStringUtils.randomAlphanumeric( 5 );
         final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
@@ -414,7 +414,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     @Test( timeout = 120000 )
     public void rebuildUpdatedSince() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info( "Started rebuildUpdatedSince()" );
 
         String rand = RandomStringUtils.randomAlphanumeric( 5 );
         final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
@@ -436,7 +436,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         final Entity secondEntity = em.create( "thing",  entityData);
 
-        app.waitForQueueDrainAndRefreshIndex(5000);
+        app.waitForQueueDrainAndRefreshIndex(15000);
 
         // ----------------- test that we can read them, should work fine
 
@@ -511,14 +511,26 @@ public class RebuildIndexTest extends AbstractCoreIT {
      * Wait for the rebuild to occur
      */
     private void waitForRebuild( final ReIndexService.ReIndexStatus status, final ReIndexService reIndexService )
-        throws InterruptedException {
+        throws InterruptedException, IllegalArgumentException {
+        if (status != null) {
+            logger.info("waitForRebuild: jobID={}", status.getJobId());
+        } else {
+            logger.info("waitForRebuild: error, status = null");
+            throw new IllegalArgumentException("reindexStatus = null");
+        }
         while ( true ) {
 
             try {
                 final ReIndexService.ReIndexStatus updatedStatus = reIndexService.getStatus( status.getJobId() );
 
-                if ( updatedStatus.getStatus() == ReIndexService.Status.COMPLETE ) {
-                    break;
+                if (updatedStatus == null) {
+                    logger.info("waitForRebuild: updated status is null");
+                } else {
+                    logger.info("waitForRebuild: status={} numberProcessed={}", updatedStatus.getStatus().toString(), updatedStatus.getNumberProcessed());
+
+                    if ( updatedStatus.getStatus() == ReIndexService.Status.COMPLETE ) {
+                        break;
+                    }
                 }
             }
             catch ( IllegalArgumentException iae ) {

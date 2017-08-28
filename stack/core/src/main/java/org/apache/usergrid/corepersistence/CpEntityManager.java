@@ -2471,10 +2471,9 @@ public class CpEntityManager implements EntityManager {
 
         final Entity entity;
 
-        //this is the fall back, why isn't this writt
         if ( entityType == null ) {
              return null;
-//            throw new EntityNotFoundException( String.format( "Counld not find type for uuid {}", uuid ) );
+//            throw new EntityNotFoundException( String.format( "Could not find type for uuid {}", uuid ) );
         }
 
         entity = get( new SimpleEntityRef( entityType, uuid ) );

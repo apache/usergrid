@@ -17,11 +17,7 @@
 package org.apache.usergrid.management;
 
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
@@ -371,6 +367,10 @@ public interface ManagementService {
 	void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception;
 
 	Observable<Id> deleteAllEntities(final UUID applicationId,final int limit);
+
+    Collection<String> passwordPolicyCheck(String password, boolean isAdminUser);
+
+    String getPasswordDescription(boolean isAdminUser);
 
 
     // DO NOT REMOVE BELOW METHODS, THEY ARE HERE TO ALLOW EXTERNAL CLASSES TO OVERRIDE AND HOOK INTO POST PROCESSING

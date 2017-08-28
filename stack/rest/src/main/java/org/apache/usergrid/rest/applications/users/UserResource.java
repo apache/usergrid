@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications.users;
 
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -465,6 +466,14 @@ public class UserResource extends ServiceResource {
             if ( ( password1 != null ) || ( password2 != null ) ) {
                 if ( management.checkPasswordResetTokenForAppUser( getApplicationId(), getUserUuid(), token ) ) {
                     if ( ( password1 != null ) && password1.equals( password2 ) ) {
+                        // validate password
+                        Collection<String> violations = management.passwordPolicyCheck(password1, false);
+                        if (violations.size() > 0) {
+                            // password not valid
+                            errorMsg = management.getPasswordDescription(false);
+                            return handleViewable("resetpw_set_form", this, getOrganizationName());
+                        }
+
                         management.setAppUserPassword( getApplicationId(), getUser().getUuid(), password1 );
                         management.revokeAccessTokenForAppUser( token );
                         return handleViewable( "resetpw_set_success", this, getOrganizationName() );

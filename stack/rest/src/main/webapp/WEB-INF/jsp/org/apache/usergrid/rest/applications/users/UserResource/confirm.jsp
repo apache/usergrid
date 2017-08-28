@@ -26,7 +26,7 @@ limitations under the License.
 </head>
 <body>
 
-	<p>Your account with email address <c:out value="${it.user.email}"/> has been successfully confirmed.
+	<p>Your account with email address <c:out value="${it.user.email}" escapeXml="true"/> has been successfully confirmed.
 	You will received an email soon to let you know when you account has been activated</p>
 
 </body>

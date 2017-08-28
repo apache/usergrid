@@ -487,7 +487,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // evict app Id from cache
         applicationIdCache.evictAppId(appName);
 
-        logger.info("Initialized application {}", appName);
+        logger.info("Initialized application {}, uuid {}", appName, appInfo.getUuid().toString());
         return appInfo;
     }
 

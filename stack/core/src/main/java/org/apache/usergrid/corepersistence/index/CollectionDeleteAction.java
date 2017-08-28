@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,33 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.stage;
+
+package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.UUID;
-
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventQueueType;
+import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import rx.Observable;
+import java.util.List;
 
 
 /**
- * The listener for node delete events.  Performs post proessing
+ * Callback to perform a collection delete operation based on an scope during bulk collection delete operations
  */
-public interface NodeDeleteListener {
+public interface CollectionDeleteAction {
 
     /**
-       * Removes this node from the graph.
-       *
-       * @param scope The scope of the application
-       * @param node The node that was deleted
-       * @param timestamp The timestamp of the event
-       *
-       * @return An observable that emits the marked edges that have been removed with this node both as the
-       *         target and source
-       */
-    Observable<MarkedEdge> receive(final ApplicationScope scope, final Id node, final UUID timestamp );
+     * Delete a batch list of entities.
+     * @param edges
+     * @param updatedBefore
+     * @param queueType
+     */
+    void deleteBatch(final List<EdgeScope> edges, final long updatedBefore, AsyncEventQueueType queueType);
 }

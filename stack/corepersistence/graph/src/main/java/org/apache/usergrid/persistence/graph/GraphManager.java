@@ -93,7 +93,7 @@ public interface GraphManager extends CPManager {
      * @param node The node to remove.  This will apply a timestamp to apply the delete + compact operation.  Any edges connected to this node with a timestamp
      * <= the specified time on the mark will be removed from the graph
      */
-    Observable<Id> compactNode( final Id node );
+    Observable<MarkedEdge> compactNode( final Id node );
 
     /**
      * Get all versions of this edge where versions <= max version

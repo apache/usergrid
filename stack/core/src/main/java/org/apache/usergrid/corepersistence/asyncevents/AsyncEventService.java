@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import org.apache.usergrid.corepersistence.index.CollectionDeleteAction;
 import org.apache.usergrid.corepersistence.index.ReIndexAction;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -33,7 +34,7 @@ import java.util.UUID;
 /**
  * Low level queue service for events in the entity.  These events are fire and forget, and will always be asynchronous
  */
-public interface AsyncEventService extends ReIndexAction {
+public interface AsyncEventService extends ReIndexAction, CollectionDeleteAction {
 
 
     /**
@@ -84,9 +85,9 @@ public interface AsyncEventService extends ReIndexAction {
     /**
      *
      * @param indexOperationMessage
-     * @param forUtilityQueue
+     * @param queueType
      */
-    void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage, boolean forUtilityQueue);
+    void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage, AsyncEventQueueType queueType);
 
     /**
      * @param applicationScope

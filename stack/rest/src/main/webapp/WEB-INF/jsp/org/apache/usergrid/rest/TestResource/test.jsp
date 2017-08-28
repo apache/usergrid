@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <!--
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
@@ -24,6 +25,6 @@ limitations under the License.
 	<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 </head>
 <body>
-<h1>${it.foo}</h1> 
+<h1>${fn:escapeXml(it.foo)}</h1>
 </body>
 </html>

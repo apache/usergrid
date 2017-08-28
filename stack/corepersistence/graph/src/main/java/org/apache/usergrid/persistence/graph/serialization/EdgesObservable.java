@@ -36,9 +36,10 @@ public interface EdgesObservable {
      * Return an observable of all edges from a source
      * @param gm
      * @param sourceNode
+     * @param filterMarked
      * @return
      */
-    Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode );
+    Observable<Edge> edgesFromSourceDescending(final GraphManager gm, final Id sourceNode, boolean filterMarked);
 
 
     /**
@@ -54,9 +55,10 @@ public interface EdgesObservable {
      * Return an observable of all edges to a target
      * @param gm
      * @param targetNode
+     * @param filterMarked
      * @return
      */
-    Observable<Edge> edgesToTarget(final GraphManager gm,  final Id targetNode);
+    Observable<Edge> edgesToTarget(final GraphManager gm, final Id targetNode, boolean filterMarked);
 
     /**
      * Return an observable of all edges from a source node.  Ordered ascending, from the startTimestamp if specified
