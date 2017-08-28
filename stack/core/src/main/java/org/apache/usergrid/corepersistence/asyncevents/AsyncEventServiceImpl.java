@@ -75,9 +75,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.lang.StringUtils.indexOf;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-
 
 /**
  * TODO, this whole class is becoming a nightmare.
@@ -106,7 +103,6 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
     public static final String QUEUE_NAME_UTILITY = "utility"; //keep this short as AWS limits queue name size to 80 chars
     public static final String QUEUE_NAME_DELETE = "delete";
-    public static final String DEAD_LETTER_SUFFIX = "_dead";
 
 
     private final LegacyQueueManager indexQueue;
@@ -522,8 +518,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             applicationScope);
 
 
-        logger.trace("Offering InitializeApplicationIndexEvent for {}:{}",
-            applicationScope.getApplication().getUuid(), applicationScope.getApplication().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering InitializeApplicationIndexEvent for {}:{}",
+                applicationScope.getApplication().getUuid(), applicationScope.getApplication().getType());
+        }
 
         offerTopic( new InitializeApplicationIndexEvent( queueFig.getPrimaryRegion(),
             new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ), AsyncEventQueueType.REGULAR);
@@ -535,8 +533,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                        final Entity entity, long updatedAfter) {
 
 
-        logger.trace("Offering EntityIndexEvent for {}:{}",
-            entity.getId().getUuid(), entity.getId().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EntityIndexEvent for {}:{}",
+                entity.getId().getUuid(), entity.getId().getType());
+        }
 
         offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),
             new EntityIdScope(applicationScope, entity.getId()), updatedAfter));
@@ -577,8 +577,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                              final Entity entity,
                              final Edge newEdge) {
 
-        logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
-            newEdge.getType(), entity.getId().getUuid(), entity.getId().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
+                newEdge.getType(), entity.getId().getUuid(), entity.getId().getType());
+        }
 
         offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge ));
 
@@ -612,8 +614,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public void queueDeleteEdge(final ApplicationScope applicationScope,
                                 final Edge edge) {
 
-        logger.trace("Offering EdgeDeleteEvent for type {} to target {}:{}",
-            edge.getType(), edge.getTargetNode().getUuid(), edge.getTargetNode().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EdgeDeleteEvent for type {} to target {}:{}",
+                edge.getType(), edge.getTargetNode().getUuid(), edge.getTargetNode().getType());
+        }
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ), AsyncEventQueueType.DELETE );
@@ -675,7 +679,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         //send to the topic so all regions index the batch
 
-        logger.trace("Offering ElasticsearchIndexEvent for message {}", newMessageId );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering ElasticsearchIndexEvent for message {}", newMessageId);
+        }
 
         offerTopic( elasticsearchIndexEvent, queueType );
     }
@@ -749,8 +755,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         // queue the de-index of old versions to the topic so cleanup happens in all regions
 
-        logger.trace("Offering DeIndexOldVersionsEvent for app {} {}:{}",
-            applicationScope.getApplication().getUuid(), entityId.getUuid(), entityId.getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering DeIndexOldVersionsEvent for app {} {}:{}",
+                applicationScope.getApplication().getUuid(), entityId.getUuid(), entityId.getType());
+        }
 
         offerTopic( new DeIndexOldVersionsEvent( queueFig.getPrimaryRegion(),
             new EntityIdScope( applicationScope, entityId), markedVersion), AsyncEventQueueType.DELETE );
@@ -810,7 +818,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
 
-        logger.trace("Offering EntityDeleteEvent for {}:{}", entityId.getUuid(), entityId.getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EntityDeleteEvent for {}:{}", entityId.getUuid(), entityId.getType());
+        }
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ),
@@ -830,12 +840,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final EntityDeleteEvent entityDeleteEvent = ( EntityDeleteEvent ) event;
         final ApplicationScope applicationScope = entityDeleteEvent.getEntityIdScope().getApplicationScope();
         final Id entityId = entityDeleteEvent.getEntityIdScope().getId();
+        final boolean isCollectionDelete = entityDeleteEvent.isCollectionDelete();
+        final long updatedBefore = entityDeleteEvent.getUpdatedBefore();
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
+            logger.debug("Deleting entity id from index in app scope {} with entityId {}, isCollectionDelete {}, updatedBefore {}",
+                applicationScope, entityId, isCollectionDelete, updatedBefore);
         }
 
-        return eventBuilder.buildEntityDelete( applicationScope, entityId );
+        return eventBuilder.buildEntityDelete( applicationScope, entityId, isCollectionDelete, updatedBefore );
 
     }
 
@@ -1192,9 +1205,25 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         });
 
-        logger.trace("Offering batch of EntityIndexEvent of size {}", batch.size());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering batch of EntityIndexEvent of size {}", batch.size());
+        }
 
         offerBatch( batch, queueType );
+    }
+
+    public void deleteBatch(final List<EdgeScope> edges, final long updatedBefore, AsyncEventQueueType queueType) {
+
+        final List<EntityDeleteEvent> batch = new ArrayList<>();
+        edges.forEach(e -> {
+
+            //change to id scope to avoid serialization issues
+            batch.add(new EntityDeleteEvent(queueFig.getPrimaryRegion(),
+                new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), true, updatedBefore));
+
+        });
+
+        offerBatch(batch, queueType);
     }
 
 

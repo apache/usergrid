@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.antlr.misc.Graph;
 import org.apache.usergrid.corepersistence.index.*;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,15 +130,48 @@ public class EventBuilderImpl implements EventBuilder {
     //it'll need to be pushed up higher so we can do the marking that isn't async or does it not matter?
 
     @Override
-    public IndexOperationMessage buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
+    public IndexOperationMessage buildEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
+        return buildEntityDelete(applicationScope, entityId, false, Long.MAX_VALUE);
+    }
+
+    @Override
+    public IndexOperationMessage buildEntityDelete(final ApplicationScope applicationScope, final Id entityId,
+                                                   final boolean isCollectionDelete, final long updatedBefore) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Deleting entity id (marked versions) from index in app scope {} with entityId {}",
-                applicationScope, entityId);
+            logger.debug("Deleting entity id (marked versions) from index in app scope {} with entityId {}, isCollectionDelete {}, updatedBefore={}",
+                applicationScope, entityId, isCollectionDelete, updatedBefore);
         }
 
-        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
-        final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager(applicationScope);
+        final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
+
+        boolean deleteEntity = ecm.load(entityId).
+            map(entity -> {
+                final Field<Long> modified = entity.getField( Schema.PROPERTY_MODIFIED );
+
+                boolean willDelete = false;
+                if ( modified == null ) {
+                    // We don't have a modified field, so we can't check, so delete it
+                    willDelete = true;
+                } else if (modified.getValue() <= updatedBefore) {
+                    willDelete = true;
+                }
+
+                if (isCollectionDelete && willDelete) {
+                    // need to mark for deletion
+                    ecm.mark(entityId, null)
+                        .mergeWith(gm.markNode(entityId, CpNamingUtils.createGraphOperationTimestamp()))
+                        .toBlocking().last();
+                }
+
+                return willDelete;
+            }).toBlocking().firstOrDefault(true);
+
+        if (!deleteEntity) {
+            return new IndexOperationMessage();
+        }
+
 
         MvccLogEntry mostRecentToDelete =
             ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() )
