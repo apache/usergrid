@@ -111,6 +111,9 @@ public class CollectionDeleteTest extends AbstractCoreIT {
         }
 
         logger.info("Created {} entities", ENTITIES_TO_DELETE);
+
+        app.waitForQueueDrainAndRefreshIndex(10000);
+
         long timeFirstPutDone = System.currentTimeMillis();
         logger.info("timeFirstPutDone={}", timeFirstPutDone);
 
