@@ -196,7 +196,7 @@ public class CollectionResource extends ServiceResource {
     }
 
 
-    @PUT
+    @POST
     @Path("{itemName}/_clear")
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     @RequireApplicationAccess
