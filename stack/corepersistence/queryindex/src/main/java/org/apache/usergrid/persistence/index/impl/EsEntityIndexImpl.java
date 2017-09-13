@@ -70,6 +70,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
@@ -804,15 +805,25 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     }
 
     private long getIndexSize(){
-        final IndicesStatsResponse statsResponse = esProvider.getClient()
-            .admin()
-            .indices()
-            .prepareStats(indexLocationStrategy.getIndexInitialName())
-            .all()
-            .execute()
-            .actionGet();
-        final CommonStats indexStats = statsResponse.getIndex(indexLocationStrategy.getIndexInitialName()).getTotal();
-        return indexStats.getStore().getSizeInBytes();
+        long indexSize = 0L;
+        final String indexName = indexLocationStrategy.getIndexInitialName();
+        try {
+            final IndicesStatsResponse statsResponse = esProvider.getClient()
+                .admin()
+                .indices()
+                .prepareStats(indexName)
+                .all()
+                .execute()
+                .actionGet();
+            final CommonStats indexStats = statsResponse.getIndex(indexName).getTotal();
+            indexSize = indexStats.getStore().getSizeInBytes();
+        } catch (IndexMissingException e) {
+            // if for some reason the index size does not exist,
+            // log an error and we can assume size is 0 as it doesn't exist
+            logger.error("Unable to get size for index {} due to IndexMissingException for app {}",
+                indexName, indexLocationStrategy.getApplicationScope().getApplication().getUuid());
+        }
+        return indexSize;
     }
 
     @Override
