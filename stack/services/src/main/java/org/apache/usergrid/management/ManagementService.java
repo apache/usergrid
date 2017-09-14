@@ -343,6 +343,8 @@ public interface ManagementService {
 
 	Object registerAppWithAPM( OrganizationInfo orgInfo, ApplicationInfo appInfo ) throws Exception;
 
+	boolean isAPMEnabled() throws Exception;
+
 	/** For testing purposes only */
 	Properties getProperties();
 

@@ -621,6 +621,10 @@ public class ApplicationResource extends CollectionResource {
     public Object getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
+        if (!management.isAPMEnabled()) {
+            // no need to check app for setting
+            throw new EntityNotFoundException("apigeeMobileConfig not enabled.");
+        }
         EntityManager em = emf.getEntityManager( applicationId );
         Object value = em.getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                 APIGEE_MOBILE_APM_CONFIG_JSON_KEY );
