@@ -3404,6 +3404,11 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
+    public boolean isAPMEnabled() throws Exception {
+        return false;
+    }
+
+    @Override
     public Observable<Id> deleteAllEntities(final UUID applicationId,final int limit){
         if(applicationId.equals(CpNamingUtils.MANAGEMENT_APPLICATION_ID)){
             throw new IllegalArgumentException("Can't delete from management app");
