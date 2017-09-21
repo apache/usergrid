@@ -4,6 +4,7 @@
 <%@ page import="net.tanesha.recaptcha.ReCaptchaFactory"%>
 <%@ page import="org.apache.usergrid.rest.AbstractContextResource"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <!--
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
