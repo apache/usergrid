@@ -2654,8 +2654,15 @@ public class ManagementServiceImpl implements ManagementService {
                 getOrganizationConfigByUuid(organizationId) : getOrganizationConfigForUserInfo(user);
             String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.ADMIN_CONFIRMATION_URL, user.getUuid().toString()) +
                 "?token=" + token;
+
+            String reset_token = getPasswordResetTokenForAdminUser( user.getUuid(), 0, organizationId );
+            String resetPropertyUrl = orgConfig.getFullUrlTemplate(WorkflowUrl.ADMIN_RESETPW_URL);
+            String reset_url = String.format(resetPropertyUrl, user.getUuid().toString())
+                + "?token=" + reset_token;
+
             sendAdminUserEmail(user, "User Account Confirmation: " + user.getEmail(),
-                emailMsg(hashMap("confirm_email", user.getEmail()).map("confirmation_url", confirmation_url),
+                emailMsg(hashMap("confirm_email", user.getEmail()).map("confirmation_url", confirmation_url)
+                    .map("reset_url", reset_url),
                     PROPERTIES_EMAIL_ADMIN_CONFIRMATION));
     }
 
