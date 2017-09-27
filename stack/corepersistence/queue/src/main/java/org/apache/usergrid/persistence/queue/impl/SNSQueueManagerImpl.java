@@ -84,6 +84,8 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
     private static final int MIN_VISIBILITY_TIMEOUT = 1; //seconds
     private static final String DEAD_LETTER_QUEUE_SUFFIX = "_dead";
 
+    private static final String FAILED_TO_SEND_MESSAGE = "FAILED INDEX REQUEST: Failed to send message to SNS Queue, sending asynchronously. Message:[{}] URL:[{}] Error:[{}]";
+
     static {
 
         /**
@@ -573,7 +575,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
             }
         } catch (Exception e) {
             if (logger.isErrorEnabled()) {
-                logger.error("Failed to send this message {} to SNS queue at {}", stringBody, topicArn);
+                logger.error(FAILED_TO_SEND_MESSAGE,  stringBody, topicArn, e);
             }
             sendMessageToAllRegionsAsync(body);
         }
@@ -591,7 +593,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
         final String stringBody = toString( body );
 
-        String topicArn = getWriteTopicArn();
+        final String topicArn = getWriteTopicArn();
 
         if ( logger.isTraceEnabled() ) {
             logger.trace( "Publishing Message...{} to arn: {}", stringBody, topicArn );
@@ -603,6 +605,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
             @Override
             public void onError( Exception e ) {
                 logger.error( "Error publishing message... {}", e );
+                logger.error(FAILED_TO_SEND_MESSAGE, stringBody, topicArn, e);
             }
 
 
@@ -713,7 +716,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
                     url);
             }
         } catch (Exception e) {
-            logger.error("Failed to send this message {}. To this address {}. Error was ",  messageRequest.getMessageBody(), url, e);
+            logger.error(FAILED_TO_SEND_MESSAGE,  messageRequest.getMessageBody(), url, e);
             sendMessageToLocalRegionAsync(body);
         }
 
@@ -740,7 +743,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
             @Override
             public void onError( final Exception e ) {
-                logger.error("Failed to send this message {}. To this address {}. Error was ", stringBody, url, e);
+                logger.error(FAILED_TO_SEND_MESSAGE, stringBody, url, e);
             }
 
 
