@@ -2854,7 +2854,7 @@ public class CpEntityManager implements EntityManager {
 
         // add to and index in collection of the application
         if ( !is_application) {
-            updateIndexForEniity(eType, entity, timestamp);
+            updateIndexForEntity(eType, entity, timestamp);
         }
 
         //write to our types map
@@ -2864,7 +2864,7 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
-    private <A extends Entity> void updateIndexForEniity(String eType, A entity,  long timestamp) throws Exception {
+    private <A extends Entity> void updateIndexForEntity(String eType, A entity, long timestamp) throws Exception {
         String collectionName = Schema.defaultCollectionName( eType );
         CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
         cpr.addToCollection( collectionName, entity );
