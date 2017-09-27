@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -302,6 +303,7 @@ public class EventBuilderImpl implements EventBuilder {
 
         return indexService.deIndexOldVersions( applicationScope, entityId,
             getVersionsOlderThanOrEqualToMarked(ecm, entityId, markedVersion));
+
 
     }
 

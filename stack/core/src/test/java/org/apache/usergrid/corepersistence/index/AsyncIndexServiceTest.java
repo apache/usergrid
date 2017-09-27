@@ -144,7 +144,7 @@ public abstract class AsyncIndexServiceTest {
 
 
         //queue up processing
-        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity, 0);
+        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity, 0, null);
 
 
         final EntityIndex EntityIndex =

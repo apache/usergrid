@@ -62,7 +62,7 @@ public class LegacyQueueManagerTest extends AbstractAkkaTest {
         LegacyQueueManager qm = qmf.getQueueManager(scope);
 
         String value = "bodytest";
-        qm.sendMessageToLocalRegion(value);
+        qm.sendMessageToLocalRegion(value, null);
 
         Thread.sleep(5000);
 

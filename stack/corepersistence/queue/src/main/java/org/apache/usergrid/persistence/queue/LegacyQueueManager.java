@@ -66,6 +66,13 @@ public interface LegacyQueueManager {
      * @param bodies body objects must be serializable
      * @throws IOException
      */
+    void sendMessagesAsync(List bodies) throws IOException;
+
+    /**
+     * send messages to queue
+     * @param bodies body objects must be serializable
+     * @throws IOException
+     */
     void sendMessages(List bodies) throws IOException;
 
     /**
@@ -81,13 +88,13 @@ public interface LegacyQueueManager {
      * @param body
      * @throws IOException
      */
-    <T extends Serializable> void sendMessageToLocalRegion(T body)throws IOException;
+    <T extends Serializable> void sendMessageToLocalRegion(T body, Boolean async)throws IOException;
 
     /**
      * Send a messae to the topic to be sent to other queues
      * @param body
      */
-    <T extends Serializable> void sendMessageToAllRegions(T body) throws IOException;
+    <T extends Serializable> void sendMessageToAllRegions(T body, Boolean async) throws IOException;
 
     /**
      * purge messages

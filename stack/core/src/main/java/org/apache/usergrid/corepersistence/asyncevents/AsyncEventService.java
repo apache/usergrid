@@ -53,7 +53,7 @@ public interface AsyncEventService extends ReIndexAction, CollectionDeleteAction
      * @param entity The entity to index.  Should be fired when an entity is updated
      * @param updatedAfter
      */
-    void queueEntityIndexUpdate(final ApplicationScope applicationScope, final Entity entity, long updatedAfter);
+    void queueEntityIndexUpdate(final ApplicationScope applicationScope, final Entity entity, long updatedAfter, Boolean async);
 
 
     /**
@@ -63,10 +63,10 @@ public interface AsyncEventService extends ReIndexAction, CollectionDeleteAction
      * TODO: We shouldn't take an entity here, only the id. It doesn't make sense in a distributed context
      *
      * @param applicationScope
-     * @param entity
+     * @param entityId
      * @param newEdge
      */
-    void queueNewEdge(final ApplicationScope applicationScope, final Entity entity, final Edge newEdge);
+    void queueNewEdge(final ApplicationScope applicationScope, final Id entityId, final Edge newEdge, Boolean async);
 
     /**
      * Queue the deletion of an edge

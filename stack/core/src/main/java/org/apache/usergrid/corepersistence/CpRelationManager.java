@@ -31,6 +31,7 @@ import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionSearch;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
@@ -349,6 +350,7 @@ public class CpRelationManager implements RelationManager {
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load( entityId );
 
+        Id memberEntityId = memberEntity.getId();
 
         // don't fetch entity if we've already got one
         final Entity itemEntity;
@@ -364,7 +366,7 @@ public class CpRelationManager implements RelationManager {
         }
 
 
-        if ( memberEntity == null ) {
+        if ( memberEntityId == null ) {
             throw new RuntimeException(
                 "Unable to load entity uuid=" + itemRef.getUuid() + " type=" + itemRef.getType() );
         }
@@ -376,7 +378,7 @@ public class CpRelationManager implements RelationManager {
 
 
         // create graph edge connection from head entity to member entity
-        final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
+        final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntityId );
         final String linkedCollection = collection.getLinkedCollection();
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
@@ -387,21 +389,24 @@ public class CpRelationManager implements RelationManager {
             }
         } ).filter( writtenEdge -> linkedCollection != null ).flatMap( writtenEdge -> {
             final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
-            final Edge reverseEdge = createCollectionEdge( memberEntity.getId(), pluralType, cpHeadEntity.getId() );
+            final Edge reverseEdge = createCollectionEdge( memberEntityId, pluralType, cpHeadEntity.getId() );
 
             //reverse
             return gm.writeEdge( reverseEdge ).doOnNext( reverseEdgeWritten -> {
 
-                if ( !skipIndexingForType( cpHeadEntity.getId().getType() ) ) {
-
-                    indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+                String entityType = cpHeadEntity.getId().getType();
+                if ( !skipIndexingForType( entityType) ) {
+                    Boolean async = asyncIndexingForType(entityType);
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity.getId(), reverseEdge, async);
                 }
 
             } );
         } ).doOnCompleted( () -> {
 
-            if ( !skipIndexingForType( memberEntity.getId().getType() ) ) {
-                indexService.queueNewEdge(applicationScope, memberEntity, edge);
+            String entityType = memberEntity.getId().getType();
+            if ( !skipIndexingForType( entityType ) ) {
+                Boolean async = asyncIndexingForType(entityType);
+                indexService.queueNewEdge(applicationScope, memberEntityId, edge, async);
             }
 
 
@@ -731,9 +736,10 @@ public class CpRelationManager implements RelationManager {
         gm.writeEdge(edge).toBlocking().lastOrDefault(null); //throw an exception if this fails
 
 
-        if ( !skipIndexingForType( targetEntity.getId().getType() ) ) {
-
-            indexService.queueNewEdge(applicationScope, targetEntity, edge);
+        String entityType = targetEntity.getId().getType();
+        if ( !skipIndexingForType( entityType ) ) {
+            Boolean async = asyncIndexingForType(entityType);
+            indexService.queueNewEdge(applicationScope, targetEntity.getId(), edge, async);
         }
 
         // remove any duplicate edges (keeps the duplicate edge with same timestamp)
@@ -1094,27 +1100,13 @@ public class CpRelationManager implements RelationManager {
 
     }
 
+    private Boolean asyncIndexingForType( String type ) {
+        return CpCollectionUtils.asyncIndexingForType(collectionSettingsFactory, applicationId, type);
+
+    }
+
     private boolean skipIndexingForType( String type ) {
-
-        boolean skipIndexing = false;
-
-        String collectionName = Schema.defaultCollectionName( type );
-
-        CollectionSettings collectionSettings =
-            collectionSettingsFactory.
-                getInstance( new CollectionSettingsScopeImpl(new SimpleId( applicationId, TYPE_APPLICATION ), collectionName ) );
-        Optional<Map<String, Object>> collectionIndexingSchema =
-            collectionSettings.getCollectionSettings( collectionName );
-
-        if ( collectionIndexingSchema.isPresent()) {
-            Map jsonMapData = collectionIndexingSchema.get();
-            final Object fields = jsonMapData.get( "fields" );
-            if ( fields != null && fields instanceof String && "none".equalsIgnoreCase( fields.toString())) {
-                skipIndexing = true;
-            }
-        }
-
-        return skipIndexing;
+        return CpCollectionUtils.skipIndexingForType(collectionSettingsFactory, applicationId, type);
     }
 
     /**
