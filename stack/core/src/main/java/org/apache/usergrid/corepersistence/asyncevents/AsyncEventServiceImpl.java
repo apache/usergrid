@@ -276,15 +276,26 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Offer the EntityIdScope to SQS
      */
     private void offer(final Serializable operation) {
-        offer(operation, AsyncEventQueueType.REGULAR);
+        offer(operation, AsyncEventQueueType.REGULAR, null);
     }
 
-    private void offer(final Serializable operation, AsyncEventQueueType queueType) {
+    /**
+     * Offer the EntityIdScope to SQS
+     */
+    private void offer(final Serializable operation, Boolean async) {
+        offer(operation, AsyncEventQueueType.REGULAR, async);
+    }
+
+     /**
+      * Offer the EntityIdScope to SQS
+      */
+    private void offer(final Serializable operation, AsyncEventQueueType queueType, Boolean async) {
         final Timer.Context timer = this.writeTimer.time();
 
         try {
             //signal to SQS
-            getQueue(queueType).sendMessageToLocalRegion(operation);
+            getQueue(queueType).sendMessageToLocalRegion(operation, async);
+
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
@@ -299,7 +310,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         try {
             //signal to SQS
-            getQueue(queueType).sendMessageToAllRegions(operation);
+            getQueue(queueType).sendMessageToAllRegions(operation,null);
+
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Unable to queue message", e );
@@ -530,7 +542,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     @Override
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
-                                       final Entity entity, long updatedAfter) {
+                                       final Entity entity, long updatedAfter, Boolean async) {
 
 
         if (logger.isTraceEnabled()) {
@@ -538,12 +550,17 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 entity.getId().getUuid(), entity.getId().getType());
         }
 
-        offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),
-            new EntityIdScope(applicationScope, entity.getId()), updatedAfter));
+
+        EntityIndexEvent event = new EntityIndexEvent(queueFig.getPrimaryRegion(),
+            new EntityIdScope(applicationScope, entity.getId()),
+            updatedAfter);
+
+        offer(event, async);
 
     }
 
     private IndexOperationMessage handleEntityIndexUpdate(final LegacyQueueMessage message) {
+
 
         Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEntityIndexUpdate" );
 
@@ -574,15 +591,16 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     @Override
     public void queueNewEdge(final ApplicationScope applicationScope,
-                             final Entity entity,
-                             final Edge newEdge) {
+                             final Id entityId,
+                             final Edge newEdge,
+                             Boolean async) {
 
         if (logger.isTraceEnabled()) {
             logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
-                newEdge.getType(), entity.getId().getUuid(), entity.getId().getType());
+                newEdge.getType(), entityId.getUuid(), entityId.getType());
         }
 
-        offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge ));
+        offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entityId, newEdge ), async);
 
     }
 
@@ -620,7 +638,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
-        offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ), AsyncEventQueueType.DELETE );
+        offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ), AsyncEventQueueType.DELETE , null);
     }
 
     private IndexOperationMessage  handleEdgeDelete(final LegacyQueueMessage message) {
@@ -824,7 +842,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ),
-            AsyncEventQueueType.DELETE );
+            AsyncEventQueueType.DELETE , null);
     }
 
     private IndexOperationMessage handleEntityDelete(final LegacyQueueMessage message) {

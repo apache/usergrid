@@ -541,7 +541,49 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToAllRegions(final T body, Boolean async) throws IOException {
+        boolean sendAsync = async == null ? fig.isAsyncQueue() : async.booleanValue();
+        if (sendAsync) {
+            sendMessageToAllRegionsAsync(body);
+        } else {
+            sendMessageToAllRegionsSync(body);
+        }
+    }
+
+
+    private <T extends Serializable> void sendMessageToAllRegionsSync(final T body) throws IOException {
+        if ( sns == null ) {
+            logger.error( "SNS client is null, perhaps it failed to initialize successfully" );
+            return;
+        }
+
+        final String stringBody = toString( body );
+
+        String topicArn = getWriteTopicArn();
+
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Publishing Message...{} to arn: {}", stringBody, topicArn );
+        }
+
+        try {
+            PublishResult publishResult = sns.publish(topicArn, toString(body));
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "Successfully published... messageID=[{}],  arn=[{}]", publishResult.getMessageId(),
+                    topicArn );
+            }
+        } catch (Exception e) {
+            if (logger.isErrorEnabled()) {
+                logger.error("Failed to send this message {} to SNS queue at {}", stringBody, topicArn);
+            }
+            sendMessageToAllRegionsAsync(body);
+        }
+
+
+
+    }
+
+
+    private <T extends Serializable> void sendMessageToAllRegionsAsync(final T body ) throws IOException {
         if ( snsAsync == null ) {
             logger.error( "SNS client is null, perhaps it failed to initialize successfully" );
             return;
@@ -574,17 +616,27 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
         } );
     }
 
-
     @Override
-    public void sendMessages( final List bodies ) throws IOException {
-
+    public void sendMessagesAsync( final List bodies ) throws IOException {
         if ( sqsAsync == null ) {
             logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
             return;
         }
 
         for ( Object body : bodies ) {
-            sendMessageToLocalRegion( ( Serializable ) body );
+            sendMessageToLocalRegionAsync( ( Serializable ) body );
+        }
+    }
+
+
+    @Override
+    public void sendMessages( final List bodies ) throws IOException {
+        for ( Object body : bodies ) {
+            if (fig.isAsyncQueue()) {
+                sendMessageToLocalRegionAsync((Serializable) body);
+            } else {
+                sendMessageToLocalRegionSync((Serializable) body);
+            }
         }
     }
 
@@ -625,16 +677,57 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
         return successMessages;
     }
 
-
     @Override
-    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body, Boolean async) throws IOException {
+        boolean sendAsync = async == null ? fig.isAsyncQueue() : async.booleanValue();
+        if (sendAsync) {
+            sendMessageToLocalRegionAsync(body);
+        } else {
+            sendMessageToLocalRegionSync(body);
+        }
+    }
+
+    private <T extends Serializable> void sendMessageToLocalRegionSync(final T body) throws IOException {
+
+        if ( sqs == null ) {
+            logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
+            return;
+        }
+        final String stringBody = toString( body );
+
+        if (logger.isDebugEnabled()) {
+            logger.debug(" sendMessageToLocalRegion " + stringBody);
+        }
+
+        String url = getReadQueue().getUrl();
+
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Publishing Message...{} to url: {}", stringBody, url );
+        }
+
+        SendMessageRequest messageRequest = new SendMessageRequest(url, stringBody);
+        try {
+            SendMessageResult result = sqs.sendMessage(messageRequest);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(),
+                    url);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send this message {}. To this address {}. Error was ",  messageRequest.getMessageBody(), url, e);
+            sendMessageToLocalRegionAsync(body);
+        }
+
+
+    }
+
+
+    private <T extends Serializable> void sendMessageToLocalRegionAsync(final T body ) throws IOException {
 
         if ( sqsAsync == null ) {
             logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
             return;
         }
         final String stringBody = toString( body );
-
         String url = getReadQueue().getUrl();
 
         if ( logger.isTraceEnabled() ) {
@@ -647,8 +740,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
             @Override
             public void onError( final Exception e ) {
-
-                logger.error( "Error sending message... {}", e );
+                logger.error("Failed to send this message {}. To this address {}. Error was ", stringBody, url, e);
             }
 
 

@@ -34,6 +34,7 @@ import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.mq.QueueManager;
@@ -160,7 +161,6 @@ public class CpEntityManager implements EntityManager {
     private EntityCollectionManager ecm;
 
     public QueueManagerFactory queueManagerFactory;
-
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
@@ -521,6 +521,10 @@ public class CpEntityManager implements EntityManager {
 
         cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
 
+        String entityType = cpEntity.getId().getType();
+        boolean skipIndexingForType = skipIndexingForType(entityType);
+        Boolean asyncIndex = asyncIndexingForType(entityType);
+
         try {
 
             String region = lookupAuthoritativeRegionForType( entity.getType() );
@@ -546,38 +550,32 @@ public class CpEntityManager implements EntityManager {
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
-        if ( !skipIndexingForType( cpEntity.getId().getType() ) ) {
-
-            // queue an event to update the new entity
-            indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 );
-
-            // queue up an event to clean-up older versions than this one from the index
-            if (entityManagerFig.getDeindexOnUpdate()) {
-                indexService.queueDeIndexOldVersion( applicationScope, cpEntity.getId(), cpEntity.getVersion());
-            }
+        if (!skipIndexingForType) {
+            indexEntity(cpEntity, asyncIndex);
+            deIndexOldVersionsOfEntity(cpEntity);
         }
     }
 
-    private boolean skipIndexingForType( String type ) {
+    private void indexEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity, Boolean async) {
+        // queue an event to update the new entity
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , async);
+    }
 
-        boolean skipIndexing = false;
-        String collectionName = Schema.defaultCollectionName( type );
-
-
-        CollectionSettings collectionSettings = collectionSettingsFactory
-            .getInstance( new CollectionSettingsScopeImpl(getAppIdObject(), collectionName) );
-        Optional<Map<String, Object>> existingSettings =
-            collectionSettings.getCollectionSettings( collectionName );
-
-        if ( existingSettings.isPresent()) {
-            Map jsonMapData = existingSettings.get();
-            Object fields = jsonMapData.get("fields");
-            if ( fields != null && "none".equalsIgnoreCase( fields.toString() ) ) {
-                skipIndexing = true;
-            }
+    private void deIndexOldVersionsOfEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity) {
+        // queue up an event to clean-up older versions than this one from the index
+        if (entityManagerFig.getDeindexOnUpdate()) {
+            indexService.queueDeIndexOldVersion( applicationScope, cpEntity.getId(), cpEntity.getVersion());
         }
+    }
 
-        return skipIndexing;
+
+    private Boolean asyncIndexingForType( String type ) {
+        return CpCollectionUtils.asyncIndexingForType(collectionSettingsFactory, applicationId, type);
+
+    }
+
+    private boolean skipIndexingForType( String type ) {
+        return CpCollectionUtils.skipIndexingForType(collectionSettingsFactory, applicationId, type);
     }
 
 
@@ -1153,7 +1151,7 @@ public class CpEntityManager implements EntityManager {
         //Adding graphite metrics
 
         if ( !skipIndexingForType( cpEntity.getId().getType() ) ) {
-            indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 );
+            indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , null);
         }
     }
 
@@ -1813,9 +1811,10 @@ public class CpEntityManager implements EntityManager {
             updatedSettings.put( "lastReindexed", 0 );
         }
 
-        // if fields specified, then put in settings
-        if ( newSettings.get("fields") != null ) {
-            updatedSettings.put("fields", newSettings.get("fields"));
+        for (String validName : CpCollectionUtils.getValidSettings()) {
+            if (newSettings.containsKey(validName)) {
+                updatedSettings.put(validName, newSettings.get(validName));
+            }
         }
 
         // if region specified
@@ -2854,14 +2853,8 @@ public class CpEntityManager implements EntityManager {
         entity.setProperties( cpEntity );
 
         // add to and index in collection of the application
-        if ( !is_application ) {
-
-            String collectionName = Schema.defaultCollectionName( eType );
-            CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
-            cpr.addToCollection( collectionName, entity );
-
-            // Invoke counters
-            incrementEntityCollection( collectionName, timestamp );
+        if ( !is_application) {
+            updateIndexForEniity(eType, entity, timestamp);
         }
 
         //write to our types map
@@ -2871,6 +2864,14 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
+    private <A extends Entity> void updateIndexForEniity(String eType, A entity,  long timestamp) throws Exception {
+        String collectionName = Schema.defaultCollectionName( eType );
+        CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
+        cpr.addToCollection( collectionName, entity );
+
+        // Invoke counters
+        incrementEntityCollection( collectionName, timestamp );
+    }
 
     private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
         try {

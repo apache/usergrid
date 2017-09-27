@@ -59,6 +59,10 @@ public class ImportQueueManager implements LegacyQueueManager {
 
     }
 
+    @Override
+    public void sendMessagesAsync( final List bodies ) throws IOException {
+
+    }
 
     @Override
     public void sendMessages( final List bodies ) throws IOException {
@@ -73,13 +77,13 @@ public class ImportQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body, Boolean async) throws IOException {
 
     }
 
 
     @Override
-    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToAllRegions(final T body, Boolean async) throws IOException {
 
     }
 
