@@ -27,6 +27,7 @@ import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.DeDupConnectionDataMigration;
 import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadRepairFig;
 import org.apache.usergrid.corepersistence.rx.impl.*;
 import org.apache.usergrid.corepersistence.service.*;
 import org.apache.usergrid.locking.guice.LockModule;
@@ -159,6 +160,8 @@ public class CoreModule extends AbstractModule {
         install( new GuicyFigModule( CollectionSettingsCacheFig.class ) );
 
         install( new GuicyFigModule( EntityManagerFig.class ) );
+
+        install( new GuicyFigModule( ReadRepairFig.class ) );
 
         install( new GuicyFigModule( AsyncEventsSchedulerFig.class ) );
 
