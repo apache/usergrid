@@ -23,6 +23,11 @@ package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.*;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +57,17 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
     private static final Logger logger = LoggerFactory.getLogger( EntityLoadVerifyFilter.class );
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final GraphManagerFactory graphManagerFactory;
+    private final ReadRepairFig readRepairFig;
 
 
     @Inject
-    public EntityLoadVerifyFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory ) {
+    public EntityLoadVerifyFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                   final GraphManagerFactory graphManagerFactory,
+                                   final ReadRepairFig readRepairFig) {
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.graphManagerFactory = graphManagerFactory;
+        this.readRepairFig = readRepairFig;
     }
 
 
@@ -64,8 +75,9 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
     public Observable<FilterResult<Entity>> call( final Observable<FilterResult<Id>> filterResultObservable ) {
 
 
+        final ApplicationScope applicationScope = pipelineContext.getApplicationScope();
         final EntityCollectionManager entityCollectionManager =
-            entityCollectionManagerFactory.createCollectionManager( pipelineContext.getApplicationScope() );
+            entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
         //it's more efficient to make 1 network hop to get everything, then drop our results if required
         final Observable<FilterResult<Entity>> entityObservable =
@@ -80,9 +92,10 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
                               .flatMap( ids -> entityCollectionManager.load( ids ) );
 
 
-                //now we have a collection, validate our canidate set is correct.
-
-                return entitySetObservable.map( entitySet -> new EntityVerifier( entitySet, bufferedIds ) )
+                //now we have a collection, validate our candidate set is correct.
+                GraphManager graphManager = graphManagerFactory.createEdgeManager(applicationScope);
+                return entitySetObservable.map( entitySet -> new EntityVerifier( applicationScope, graphManager,
+                    entitySet, bufferedIds, readRepairFig ) )
                                           .doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
                         entityCollector -> Observable.from( entityCollector.getResults() ) );
             } );
@@ -102,12 +115,20 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
 
         private final List<FilterResult<Id>> candidateResults;
         private final EntitySet entitySet;
+        private final GraphManager graphManager;
+        private final ApplicationScope applicationScope;
+        private final ReadRepairFig readRepairFig;
 
 
-        public EntityVerifier( final EntitySet entitySet, final List<FilterResult<Id>> candidateResults ) {
+        public EntityVerifier( final ApplicationScope applicationScope, final GraphManager graphManager,
+                               final EntitySet entitySet, final List<FilterResult<Id>> candidateResults,
+                               final ReadRepairFig readRepairFig) {
+            this.applicationScope = applicationScope;
+            this.graphManager = graphManager;
             this.entitySet = entitySet;
             this.candidateResults = candidateResults;
             this.results = new ArrayList<>( entitySet.size() );
+            this.readRepairFig = readRepairFig;
         }
 
 
@@ -137,11 +158,44 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
 
             //doesn't exist warn and drop
             if ( entity == null || !entity.getEntity().isPresent() ) {
-                logger.warn( "Read graph edge and received candidate with entityId {}, yet was not found in cassandra."
-                    + "  Ignoring since this could be a region sync issue", candidateId );
+
+                // look for orphaned edges
+                String edgeTypeName = CpNamingUtils.getEdgeTypeFromCollectionName(Schema.defaultCollectionName(candidateId.getType()));
+                final SearchByEdge searchByEdge =
+                    new SimpleSearchByEdge( applicationScope.getApplication(), edgeTypeName, candidateId, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                        Optional.absent() );
+
+                int edgesDeleted = 0;
+                List<MarkedEdge> edgeList = graphManager.loadEdgeVersions(searchByEdge).toList().toBlocking().last();
+                if (edgeList.size() > 0) {
+                    MarkedEdge firstEdge = edgeList.get(0);
+                    long currentTimestamp = CpNamingUtils.createGraphOperationTimestamp();
+                    long edgeTimestamp = firstEdge.getTimestamp();
+                    long timestampDiff = currentTimestamp - edgeTimestamp;
+                    long orphanDelaySecs = readRepairFig.getEdgeOrphanDelaySecs();
+                    // timestamps are in 100 nanoseconds, convert from seconds
+                    long allowedDiff = orphanDelaySecs * 1000L * 1000L * 10L;
+                    if (timestampDiff > allowedDiff) {
+                        // edges must be orphans, delete edges
+                        for (MarkedEdge edge: edgeList) {
+                            MarkedEdge markedEdge = graphManager.markEdge(edge).toBlocking().lastOrDefault(null);
+                            if (markedEdge != null) {
+                                graphManager.deleteEdge(markedEdge).toBlocking().lastOrDefault(null);
+                                edgesDeleted += 1;
+                            }
+                        }
+                    }
+                }
+
+                if (edgesDeleted > 0) {
+                    logger.warn("Read graph edge and received candidate with entityId {}, yet was not found in cassandra."
+                        + "  Deleted {} edges.", candidateId, edgesDeleted);
+                } else {
+                    logger.warn("Read graph edge and received candidate with entityId {}, yet was not found in cassandra."
+                        + "  Ignoring since this could be a region sync issue", candidateId);
+                }
 
 
-                //TODO trigger an audit after a fail count where we explicitly try to repair from other regions
 
                 return;
             }

@@ -141,8 +141,9 @@ public class SearchRequestBuilderStrategy {
         //sort by the edge timestamp
         srb.addSort( SortBuilders.fieldSort( IndexingUtils.EDGE_TIMESTAMP_FIELDNAME ).order( SortOrder.DESC ) );
 
+        // removing secondary sort by entity ID -- takes ES resources and provides no benefit
         //sort by the entity id if our times are equal
-        srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
+        //srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
 
         return;
     }
