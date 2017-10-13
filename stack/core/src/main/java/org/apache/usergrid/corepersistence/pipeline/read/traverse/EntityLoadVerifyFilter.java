@@ -178,21 +178,19 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
                     if (timestampDiff > allowedDiff) {
                         // edges must be orphans, delete edges
                         for (MarkedEdge edge: edgeList) {
-                            MarkedEdge markedEdge = graphManager.markEdge(edge).toBlocking().lastOrDefault(null);
-                            if (markedEdge != null) {
-                                graphManager.deleteEdge(markedEdge).toBlocking().lastOrDefault(null);
-                                edgesDeleted += 1;
-                            }
+                            graphManager.markEdge(edge).toBlocking().lastOrDefault(null);
+                            edgesDeleted++;
                         }
+                        graphManager.deleteEdge(firstEdge).toBlocking().lastOrDefault(null);
                     }
                 }
 
                 if (edgesDeleted > 0) {
-                    logger.warn("Read graph edge and received candidate with entityId {}, yet was not found in cassandra."
-                        + "  Deleted {} edges.", candidateId, edgesDeleted);
+                    logger.warn("Read graph edge and received candidate with entityId {} (application {}), yet was not found in cassandra."
+                        + "  Deleted at least {} edges.", candidateId, applicationScope.getApplication().getUuid().toString(), edgesDeleted);
                 } else {
-                    logger.warn("Read graph edge and received candidate with entityId {}, yet was not found in cassandra."
-                        + "  Ignoring since this could be a region sync issue", candidateId);
+                    logger.warn("Read graph edge and received candidate with entityId {} (application {}), yet was not found in cassandra."
+                        + "  Ignoring since this could be a region sync issue", candidateId, applicationScope.getApplication().getUuid().toString());
                 }
 
 
