@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.DebugUtils;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.*;
@@ -431,6 +432,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                                     final int limit, final int offset, final Map<String, Class> fieldsWithType,
                                     final boolean analyzeOnly ) {
 
+        if (logger.isInfoEnabled()) {
+            logger.info("Start Search query={}  {} ",
+                query,
+                DebugUtils.getLogMessage());
+        }
+
         IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull(searchTypes, "searchTypes cannot be null");
         Preconditions.checkNotNull( query, "query cannot be null" );
@@ -508,6 +515,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
         finally{
             timerContext.stop();
+
+            if (logger.isInfoEnabled()) {
+                logger.info("End Search query={}  {} ",
+                    query,
+                    DebugUtils.getLogMessage());
+            }
+
         }
 
         failureMonitor.success();

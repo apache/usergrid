@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.core.util.DebugUtils;
 import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
 import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
@@ -699,8 +700,20 @@ public abstract class AbstractService implements Service {
         return null;
     }
 
+    private static ThreadLocal<UUID> MESSAGE_ID = new ThreadLocal<>();
+
 
     public ServiceResults invoke( ServiceContext context ) throws Exception {
+
+
+        if (logger.isInfoEnabled()) {
+            logger.info("Invocation start collectionName {} action {} {}",
+                context.collectionName,
+                context.action,
+                DebugUtils.getLogMessage());
+        }
+
+
         ServiceResults results = null;
         Timer.Context time = invokeTimer.time();
         String metadataType = checkForServiceMetadata( context );
@@ -733,6 +746,15 @@ public abstract class AbstractService implements Service {
         results = handleEntityCommand(context, results, entityCommand);
 
         time.stop();
+
+        if (logger.isInfoEnabled()) {
+            logger.info("Invocation end collectionName {} action {} {}",
+                context.collectionName,
+                context.action,
+                DebugUtils.getLogMessage());
+        }
+
+
         return results;
     }
 
