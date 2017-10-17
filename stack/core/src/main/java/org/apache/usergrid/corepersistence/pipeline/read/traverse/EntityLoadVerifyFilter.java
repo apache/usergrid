@@ -167,6 +167,7 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
 
                 int edgesDeleted = 0;
                 List<MarkedEdge> edgeList = graphManager.loadEdgeVersions(searchByEdge).toList().toBlocking().last();
+                boolean timestampAllowsDelete = false;
                 if (edgeList.size() > 0) {
                     MarkedEdge firstEdge = edgeList.get(0);
                     long currentTimestamp = CpNamingUtils.createGraphOperationTimestamp();
@@ -176,6 +177,7 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
                     // timestamps are in 100 nanoseconds, convert from seconds
                     long allowedDiff = orphanDelaySecs * 1000L * 1000L * 10L;
                     if (timestampDiff > allowedDiff) {
+                        timestampAllowsDelete = true;
                         // edges must be orphans, delete edges
                         for (MarkedEdge edge: edgeList) {
                             graphManager.markEdge(edge).toBlocking().lastOrDefault(null);
@@ -188,6 +190,14 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
                 if (edgesDeleted > 0) {
                     logger.warn("Read graph edge and received candidate with entityId {} (application {}), yet was not found in cassandra."
                         + "  Deleted at least {} edges.", candidateId, applicationScope.getApplication().getUuid().toString(), edgesDeleted);
+                } else if (edgeList.size() == 0) {
+                    logger.warn("Read graph edge and received candidate with entityId {} (application {}), yet was not found in cassandra."
+                            + "  No edges were deleted (loadEdgeVersions returned 0 edges)",
+                        candidateId, applicationScope.getApplication().getUuid().toString());
+                } else if (timestampAllowsDelete) {
+                    logger.warn("Read graph edge and received candidate with entityId {} (application {}), yet was not found in cassandra."
+                        + "  Timestamp is old enough to delete, but no edges were deleted (loadEdgeVersions returned {} edges)",
+                        candidateId, applicationScope.getApplication().getUuid().toString(), edgeList.size());
                 } else {
                     logger.warn("Read graph edge and received candidate with entityId {} (application {}), yet was not found in cassandra."
                         + "  Ignoring since this could be a region sync issue", candidateId, applicationScope.getApplication().getUuid().toString());
