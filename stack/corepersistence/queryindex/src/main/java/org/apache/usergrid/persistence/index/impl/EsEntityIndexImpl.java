@@ -461,23 +461,43 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
 
 
+        boolean inCache;
         final String cacheKey = applicationScope.getApplication().getUuid().toString()+"_"+searchEdge.getEdgeName();
         final Object totalEdgeSizeFromCache = sizeCache.getIfPresent(cacheKey);
         long totalEdgeSizeInBytes;
         if (totalEdgeSizeFromCache == null){
             totalEdgeSizeInBytes = getTotalEntitySizeInBytes(searchEdge);
             sizeCache.put(cacheKey, totalEdgeSizeInBytes);
+            inCache = false;
         }else{
             totalEdgeSizeInBytes = (long) totalEdgeSizeFromCache;
+            inCache = true;
         }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("After size cache key={} inCache={} {} ",
+                cacheKey,
+                inCache,
+                DebugUtils.getLogMessage());
+        }
+
 
         final Object totalIndexSizeFromCache = sizeCache.getIfPresent(indexLocationStrategy.getIndexRootName());
         long totalIndexSizeInBytes;
         if (totalIndexSizeFromCache == null){
             totalIndexSizeInBytes = getIndexSize();
             sizeCache.put(indexLocationStrategy.getIndexRootName(), totalIndexSizeInBytes);
+            inCache = false;
         }else{
             totalIndexSizeInBytes = (long) totalIndexSizeFromCache;
+            inCache = true;
+        }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("After indexLocationStrategy.getIndexRootName() cache key={} inCache={} {} ",
+                indexLocationStrategy.getIndexRootName(),
+                inCache,
+                DebugUtils.getLogMessage());
         }
 
         List<Map<String, Object>> violations = QueryAnalyzer.analyze(parsedQuery, totalEdgeSizeInBytes, totalIndexSizeInBytes, indexFig);
@@ -485,6 +505,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             throw new QueryAnalyzerEnforcementException(violations, parsedQuery.getOriginalQuery());
         }else if (violations.size() > 0){
             logger.warn( QueryAnalyzer.violationsAsString(violations, parsedQuery.getOriginalQuery()) );
+        }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("After QueryAnalyzer violations size={} {} ",
+                violations.size(),
+                inCache,
+                DebugUtils.getLogMessage());
         }
 
         if(analyzeOnly){
@@ -505,7 +532,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final Timer.Context timerContext = searchTimer.time();
 
         try {
-
+            if (logger.isInfoEnabled()) {
+                logger.info("Before Query execute {} ",
+                    DebugUtils.getLogMessage());
+            }
             searchResponse = srb.execute().actionGet();
         }
         catch ( Throwable t ) {

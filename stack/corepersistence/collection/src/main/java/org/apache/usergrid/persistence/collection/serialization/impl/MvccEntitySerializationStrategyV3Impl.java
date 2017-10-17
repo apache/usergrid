@@ -186,7 +186,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         }
 
         if (DebugUtils.getMessageId() != null) {
-            log.info("Reading {} keys from entityIds {} ",
+            log.info("Reading {} keys from entityIds {} {}",
                 rowKeys.size(),
                 entityIds,
                 DebugUtils.getLogMessage());
@@ -239,9 +239,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
         if (DebugUtils.getMessageId() != null) {
-            log.info("Read {} rows from Keyspace {} Message-ID={}",
+            log.info("Read {} rows from keyspace {} entityIds {} {}",
                 entitySetResults.size(),
-                keyspace.getKeyspaceName(),
+                keyspace,
+                entityIds,
                 DebugUtils.getLogMessage());
         }
 
