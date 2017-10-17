@@ -595,6 +595,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     }
 
+    @Ignore
     @Test
     public void sendNotificationWithBadAPIKey() throws Exception {
         final String badKey = API_KEY + "bad";
