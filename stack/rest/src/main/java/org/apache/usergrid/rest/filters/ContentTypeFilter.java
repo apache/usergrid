@@ -95,7 +95,7 @@ public class ContentTypeFilter implements Filter {
             DebugUtils.startRequest();
             logger.info("doFilter Start METHOD {} PATH {} Message-ID={}",
                 ((HttpServletRequest) request).getMethod(),
-                ((HttpServletRequest) request).getPathTranslated(),
+                ((HttpServletRequest) request).getQueryString(),
                 DebugUtils.getLogMessage());
         }
 
