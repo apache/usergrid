@@ -123,7 +123,9 @@ public class EsProvider {
         final String clusterName = indexFig.getClusterName();
         final int port = indexFig.getPort();
 
-        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put( "cluster.name", clusterName )
+        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
+            .put( "cluster.name", clusterName )
+            .put("size",32 )
             .put( "client.transport.sniff", true );
 
         String nodeName = indexFig.getNodeName();
