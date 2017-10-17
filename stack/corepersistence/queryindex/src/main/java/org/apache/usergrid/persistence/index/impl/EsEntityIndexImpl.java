@@ -536,7 +536,20 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 logger.info("Before Query execute {} ",
                     DebugUtils.getLogMessage());
             }
-            searchResponse = srb.execute().actionGet();
+
+            ListenableActionFuture<SearchResponse> f =  srb.execute();
+            long start = System.nanoTime();
+            searchResponse = f.actionGet();
+            long end = System.nanoTime();
+
+            if (logger.isInfoEnabled()) {
+                logger.info("Waiting for ES Client took {}  class of executor is {} class of future is {} {} ",
+                    TimeUnit.NANOSECONDS.toMillis(end - start),
+                    srb.getClass().getCanonicalName(),
+                    f.getClass().getCanonicalName(),
+                    DebugUtils.getLogMessage());
+            }
+
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with Elasticsearch: {}", t.getMessage() );
