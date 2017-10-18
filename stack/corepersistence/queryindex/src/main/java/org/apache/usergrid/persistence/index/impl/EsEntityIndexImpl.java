@@ -48,10 +48,7 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.ShardOperationFailedException;
+import org.elasticsearch.action.*;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
@@ -64,6 +61,7 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.PlainListenableActionFuture;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -77,6 +75,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.threadpool.ThreadPoolStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -533,7 +532,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         try {
             if (logger.isInfoEnabled()) {
-                logger.info("Before Query execute {} ",
+                logger.info("Before Query execute srb = {} {} ",
+                    srb.toString(),
                     DebugUtils.getLogMessage());
             }
 
@@ -542,7 +542,27 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             searchResponse = f.actionGet();
             long end = System.nanoTime();
 
+            String stats = "";
+            if (f instanceof PlainListenableActionFuture) {
+                PlainListenableActionFuture p = (PlainListenableActionFuture) f;
+                ThreadPoolStats ts = p.threadPool().stats();
+                for (ThreadPoolStats.Stats s : ts) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(" Thread Pool starts ")
+                        .append(s.getName())
+                        .append(s.getQueue())
+                        .append(s.getActive())
+                        .append(s.getThreads());
+                    stats += sb.toString();
+                }
+            }
+
             if (logger.isInfoEnabled()) {
+
+                logger.info("ThreadPool stats  {} {} ",
+                    stats,
+                    DebugUtils.getLogMessage());
+
                 logger.info("Waiting for ES Client took {}  class of executor is {} class of future is {} {} ",
                     TimeUnit.NANOSECONDS.toMillis(end - start),
                     srb.getClass().getCanonicalName(),
