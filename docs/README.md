@@ -6,8 +6,8 @@ Usergrid documentation is written in [Markdown](https://help.github.com/articles
 
 Sphinx requires Python and pip. Once you have Python, you can install sphinx and pip like so:
 
-	$ sudo easy_install sphinx
 	$ sudo easy_install pip
+	$ sudo pip install sphinx==1.3.2
 
 ## How to build the Usergrid documentation using Sphinx
 
