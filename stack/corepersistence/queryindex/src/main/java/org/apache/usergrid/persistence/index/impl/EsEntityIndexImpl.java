@@ -47,10 +47,8 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.ShardOperationFailedException;
+import org.elasticsearch.ResourceAlreadyExistsException;
+import org.elasticsearch.action.*;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
@@ -59,22 +57,21 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.admin.indices.stats.CommonStats;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
-import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
-import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,13 +203,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             //Create index
             try {
                 final AdminClient admin = esProvider.getClient().admin();
-                Settings settings = ImmutableSettings.settingsBuilder()
+                Settings settings = Settings.builder()
                     .put("index.number_of_shards", numberOfShards)
                     .put("index.number_of_replicas", numberOfReplicas)
                     //dont' allow unmapped queries, and don't allow dynamic mapping
                     .put("index.query.parse.allow_unmapped_fields", false)
                     .put("index.mapper.dynamic", false)
-                    .put("action.write_consistency", writeConsistency)
+                    //   .put("action.write_consistency", writeConsistency)
                     .build();
 
                 //Added For Graphite Metrics
@@ -230,7 +227,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
                 logger.info("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
-            } catch (IndexAlreadyExistsException e) {
+            } catch (ResourceAlreadyExistsException e) {
                 logger.info("Index Name [{}] already exists", indexName);
             }
             /**
@@ -244,7 +241,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             testNewIndex();
 
-        } catch (IndexAlreadyExistsException expected) {
+        } catch (ResourceAlreadyExistsException expected) {
             // this is expected to happen if index already exists, it's a no-op and swallow
         } catch (IOException e) {
             throw new RuntimeException("Unable to initialize index", e);
@@ -452,8 +449,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         for (SortPredicate sortPredicate : parsedQuery.getSortPredicates() ){
             hasGeoSortPredicates = visitor.getGeoSorts().contains(sortPredicate.getPropertyName());
         }
-
-
+        
         final String cacheKey = applicationScope.getApplication().getUuid().toString()+"_"+searchEdge.getEdgeName();
         final Object totalEdgeSizeFromCache = sizeCache.getIfPresent(cacheKey);
         long totalEdgeSizeInBytes;
@@ -498,6 +494,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final Timer.Context timerContext = searchTimer.time();
 
         try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Query to execute = {}", srb.toString());
+            }
 
             searchResponse = srb.execute().actionGet();
         }
@@ -594,21 +593,25 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         //Added For Graphite Metrics
         return Observable.from( indexes ).flatMap( index -> {
 
-            final ListenableActionFuture<DeleteByQueryResponse> response =
-                esProvider.getClient().prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
+            ListenableActionFuture<BulkByScrollResponse> response =
+                DeleteByQueryAction.INSTANCE.newRequestBuilder( esProvider.getClient())
+                    .filter(tqb)
+                    .source(indexes)
+                    .execute();
 
-            response.addListener( new ActionListener<DeleteByQueryResponse>() {
+
+            response.addListener( new ActionListener<BulkByScrollResponse>() {
 
                 @Override
-                public void onResponse( DeleteByQueryResponse response ) {
+                public void onResponse( BulkByScrollResponse response ) {
                     checkDeleteByQueryResponse( tqb, response );
                 }
 
-
                 @Override
-                public void onFailure( Throwable e ) {
+                public void onFailure(Exception e) {
                     logger.error( "Failed on delete index", e.getMessage() );
                 }
+
             } );
             return Observable.from( response );
         } ).doOnError( t -> logger.error( "Failed on delete application", t.getMessage() ) );
@@ -618,17 +621,14 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     /**
      * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
      */
-    private void checkDeleteByQueryResponse( final QueryBuilder query, final DeleteByQueryResponse response ) {
+    private void checkDeleteByQueryResponse( final QueryBuilder query, final BulkByScrollResponse response ) {
 
-        for ( IndexDeleteByQueryResponse indexDeleteByQueryResponse : response ) {
-            final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
+        List<BulkItemResponse.Failure> failures = response.getBulkFailures();
 
-            for ( ShardOperationFailedException failedException : failures ) {
-                logger.error("Unable to delete by query {}. Failed with code {} and reason {} on shard {} in index {}",
-                    query.toString(),
-                    failedException.status().getStatus(), failedException.reason(),
-                    failedException.shardId(), failedException.index() );
-            }
+
+        for ( BulkItemResponse.Failure failure : failures ) {
+            logger.error("Unable to delete by query {}. Failed with code {} and reason {} in index {}",
+                query.toString(), failure.getStatus() , failure.getMessage(), failure.getIndex());
         }
     }
 
@@ -817,7 +817,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 .actionGet();
             final CommonStats indexStats = statsResponse.getIndex(indexName).getTotal();
             indexSize = indexStats.getStore().getSizeInBytes();
-        } catch (IndexMissingException e) {
+        } catch (IndexNotFoundException e) {
             // if for some reason the index size does not exist,
             // log an error and we can assume size is 0 as it doesn't exist
             logger.error("Unable to get size for index {} due to IndexMissingException for app {}",
@@ -836,7 +836,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
     private long getEntitySizeAggregation( final SearchRequestBuilder builder ) {
         final String key = "entitySize";
-        SumBuilder sumBuilder = new SumBuilder(key);
+        SumAggregationBuilder sumBuilder = new SumAggregationBuilder(key);
         sumBuilder.field("entitySize");
         builder.addAggregation(sumBuilder);
 

@@ -26,10 +26,10 @@ import com.codahale.metrics.Histogram;
 
 
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
@@ -169,9 +169,26 @@ public class EsIndexProducerImpl implements IndexProducer {
      * initialize request
      */
     private BulkRequestBuilder initRequest() {
+
         BulkRequestBuilder bulkRequest = client.prepareBulk();
-        bulkRequest.setConsistencyLevel( WriteConsistencyLevel.fromString( config.getWriteConsistencyLevel() ) );
-        bulkRequest.setRefresh( config.isForcedRefresh() );
+
+        String refreshPolicyConfig = String.valueOf(config.isForcedRefresh());
+        bulkRequest.setRefreshPolicy(refreshPolicyConfig);
+
+        String consistencyLevel = config.getWriteConsistencyLevel();
+
+        if ("one".equals(consistencyLevel)) {
+            bulkRequest.setWaitForActiveShards(1);
+        }
+
+        if ("all".equals(consistencyLevel)) {
+            bulkRequest.setWaitForActiveShards(ActiveShardCount.ALL);
+        }
+
+        if ("none".equals(consistencyLevel)) {
+            bulkRequest.setWaitForActiveShards(ActiveShardCount.NONE);
+        }
+
         return bulkRequest;
     }
 
