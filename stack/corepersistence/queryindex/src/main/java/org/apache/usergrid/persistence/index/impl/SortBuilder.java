@@ -24,8 +24,8 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.TermFilterBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 
 
 /**
@@ -37,8 +37,8 @@ public class SortBuilder {
     /**
      * Create a term filter for our sorts
      */
-    public static TermFilterBuilder sortPropertyTermFilter( final String propertyName ) {
-        return FilterBuilders.termFilter( IndexingUtils.FIELD_NAME, propertyName );
+    public static TermQueryBuilder sortPropertyTermFilter( final String propertyName ) {
+        return QueryBuilders.termQuery( IndexingUtils.FIELD_NAME, propertyName );
     }
 
 }
