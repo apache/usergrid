@@ -189,7 +189,7 @@ public class EntityVersionAudit extends ToolBase {
         final Writer versionAuditWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("entity_version_audit.txt"), "utf-8"));
         final Writer versionAggWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("entity_version_agg.txt"), "utf-8"));
 
-        versionAuditWriter.write("collection,entityUUID,cassandraTimestamp,elasticsearchTimestamp,indexDelayMillis,existsInElasticsearch\n");
+        versionAuditWriter.write("collection,entityUUID,entityVersion,cassandraTimestamp,elasticsearchTimestamp,indexDelayMillis,existsInElasticsearch\n");
         versionAuditWriter.flush();
 
         final EsProvider esProvider = injector.getInstance(EsProvider.class);
@@ -239,9 +239,10 @@ public class EntityVersionAudit extends ToolBase {
                                 String csvLine =
                                     collectionName + "," +
                                     uuid + "," +
-                                        uuidTimestamp + "," +
-                                        indexTimestamp + "," +
-                                        diff + "," +
+                                    mvccLogEntry.getVersion() + "," +
+                                    uuidTimestamp + "," +
+                                    indexTimestamp + "," +
+                                    diff + "," +
                                     exists;
 
                                 //final String url = "/"+readAlias+"/entity/"+URLEncoder.encode(esDocId, "UTF-8");
