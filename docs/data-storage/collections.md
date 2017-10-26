@@ -119,7 +119,7 @@ you can tell Usergrid to completely skip indexing for a collection.
 There are three ways to specify a schema for a Collection. 
 You can specify that all fields are to be index, you can specify none or 
 you can specify a list of the fields that should be indexed. 
-You do this by POSTing or PUTing a _settings resource for the Collection with one field named "fields".
+You do this by POSTing a _settings resource for the Collection with one field named "fields".
 
 There are three possible values for "fields":
 
@@ -134,7 +134,7 @@ Fields Setting                 Type     Meaning
 
 This example shows how you would use curl to set the schema if you want to turn off indexing for a collection:
 
-	curl -X PUT "0:8080/test-organization/settingstest/_settings?access_token=YWM..." -d '{"fields":"none"}'
+	curl -X POST "0:8080/test-organization/settingstest/_settings?access_token=YWM..." -d '{"fields":"none"}'
 	{
 	  "action" : "put",
 	  "application" : "7fd6c414-2cb6-11e6-8b07-0a669fe1d66e",
@@ -163,7 +163,7 @@ This example shows how you would use curl to set the schema if you want to turn 
 
 This example shows how you would use curl to set the schema if you only want the "year" field to be indexed:
 
-	curl -X PUT "0:8080/test-organization/settingstest/_settings?access_token=YWM..." -d '{"fields":["year"]}'
+	curl -X POST "0:8080/test-organization/settingstest/_settings?access_token=YWM..." -d '{"fields":["year"]}'
 	{
 	  "action" : "put",
 	  "application" : "7fd6c414-2cb6-11e6-8b07-0a669fe1d66e",
