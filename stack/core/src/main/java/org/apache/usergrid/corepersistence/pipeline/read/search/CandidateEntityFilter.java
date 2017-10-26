@@ -307,10 +307,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                     entity.getStatus() == MvccEntity.Status.DELETED ) {
 
                 // when updating entities, we don't delete previous versions from ES so this action is expected
-                if(logger.isDebugEnabled()){
-                    logger.debug( "Deindexing stale entity on edge {} for entityId {} and version {}",
-                        searchEdge, entityId, entityVersion);
-                }
+                logger.warn( "Deindexing stale entity on edge {} for entityId {} and version {}",
+                    searchEdge, entityId, entityVersion);
 
                 batch.deindex( searchEdge, entityId, candidateVersion );
                 return;
