@@ -21,9 +21,11 @@ import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 
+import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+
 
 import java.util.*;
 
@@ -50,6 +52,16 @@ public class CpCollectionUtils {
 
     public static Set<String> getValidSettings() {
         return VALID_SETTING_NAMES;
+    }
+
+    public static IndexingStrategy getIndexingStrategyForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {
+
+        IndexingStrategy indexingStrategy = IndexingStrategy.DEFAULT;
+        String indexing = getFieldForType(applicationId, collectionSettingsFactory, type, SETTING_QUEUE_INDEX);
+        if (indexing != null) {
+            indexingStrategy = IndexingStrategy.get(indexing);
+        }
+        return indexingStrategy;
     }
 
     public static Boolean asyncIndexingForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {

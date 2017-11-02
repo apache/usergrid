@@ -32,6 +32,7 @@ import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
+import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
@@ -523,7 +524,7 @@ public class CpEntityManager implements EntityManager {
 
         String entityType = cpEntity.getId().getType();
         boolean skipIndexingForType = skipIndexingForType(entityType);
-        Boolean asyncIndex = asyncIndexingForType(entityType);
+        IndexingStrategy indexingStrategy = getIndexingStrategyForType(entityType);
 
         try {
 
@@ -551,14 +552,14 @@ public class CpEntityManager implements EntityManager {
         }
 
         if (!skipIndexingForType) {
-            indexEntity(cpEntity, asyncIndex);
+            indexEntity(cpEntity, indexingStrategy);
             deIndexOldVersionsOfEntity(cpEntity);
         }
     }
 
-    private void indexEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity, Boolean async) {
+    private void indexEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity, IndexingStrategy indexingStrategy) {
         // queue an event to update the new entity
-        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , async);
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , indexingStrategy);
     }
 
     private void deIndexOldVersionsOfEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity) {
@@ -568,11 +569,10 @@ public class CpEntityManager implements EntityManager {
         }
     }
 
-
-    private Boolean asyncIndexingForType( String type ) {
-        return CpCollectionUtils.asyncIndexingForType(collectionSettingsFactory, applicationId, type);
-
+    private IndexingStrategy getIndexingStrategyForType(String type ) {
+        return CpCollectionUtils.getIndexingStrategyForType(collectionSettingsFactory, applicationId, type);
     }
+
 
     private boolean skipIndexingForType( String type ) {
         return CpCollectionUtils.skipIndexingForType(collectionSettingsFactory, applicationId, type);

@@ -23,6 +23,7 @@ import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
+import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
@@ -396,8 +397,8 @@ public class CpRelationManager implements RelationManager {
 
                 String entityType = cpHeadEntity.getId().getType();
                 if ( !skipIndexingForType( entityType) ) {
-                    Boolean async = asyncIndexingForType(entityType);
-                    indexService.queueNewEdge(applicationScope, cpHeadEntity.getId(), reverseEdge, async);
+                    IndexingStrategy indexingStrategy = getIndexingStrategyForType(entityType);
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity.getId(), reverseEdge, indexingStrategy);
                 }
 
             } );
@@ -405,8 +406,8 @@ public class CpRelationManager implements RelationManager {
 
             String entityType = memberEntity.getId().getType();
             if ( !skipIndexingForType( entityType ) ) {
-                Boolean async = asyncIndexingForType(entityType);
-                indexService.queueNewEdge(applicationScope, memberEntityId, edge, async);
+                IndexingStrategy indexingStrategy = getIndexingStrategyForType(entityType);
+                indexService.queueNewEdge(applicationScope, memberEntityId, edge, indexingStrategy);
             }
 
 
@@ -714,7 +715,6 @@ public class CpRelationManager implements RelationManager {
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
-
         if ( logger.isTraceEnabled() ) {
             logger.trace( "createConnection(): Indexing connection type '{}'\n   from source {}:{}]\n   to target {}:{}\n   app {}",
                 connectionType, headEntity.getType(), headEntity.getUuid(), connectedEntityRef.getType(),
@@ -738,8 +738,8 @@ public class CpRelationManager implements RelationManager {
 
         String entityType = targetEntity.getId().getType();
         if ( !skipIndexingForType( entityType ) ) {
-            Boolean async = asyncIndexingForType(entityType);
-            indexService.queueNewEdge(applicationScope, targetEntity.getId(), edge, async);
+            IndexingStrategy indexingStrategy = getIndexingStrategyForType(entityType);
+            indexService.queueNewEdge(applicationScope, targetEntity.getId(), edge, indexingStrategy);
         }
 
         // remove any duplicate edges (keeps the duplicate edge with same timestamp)
@@ -1100,8 +1100,8 @@ public class CpRelationManager implements RelationManager {
 
     }
 
-    private Boolean asyncIndexingForType( String type ) {
-        return CpCollectionUtils.asyncIndexingForType(collectionSettingsFactory, applicationId, type);
+    private IndexingStrategy getIndexingStrategyForType(String type ) {
+        return CpCollectionUtils.getIndexingStrategyForType(collectionSettingsFactory, applicationId, type);
 
     }
 
