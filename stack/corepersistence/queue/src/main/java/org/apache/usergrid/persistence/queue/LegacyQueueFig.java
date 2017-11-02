@@ -114,4 +114,9 @@ public interface LegacyQueueFig extends GuicyFig {
     @Default("true")
     boolean isAsyncQueue();
 
+
+    @Key("usergrid.queue.strategy")
+    @Default("async")
+    String getQueueStrategy();
+
 }
