@@ -42,6 +42,7 @@ public class CollectionSearch {
     private final Optional<String> cursor;
     private Level level = Level.ALL;
     private boolean analyzeOnly;
+    private boolean keepStaleEntries;
 
 
     public CollectionSearch( final ApplicationScope applicationScope, final Id collectionOwnerId, final String
@@ -102,5 +103,13 @@ public class CollectionSearch {
 
     public void setAnalyzeOnly(final boolean analyzeOnly){
         this.analyzeOnly = analyzeOnly;
+    }
+
+    public boolean getKeepStaleEntries() {
+        return keepStaleEntries;
+    }
+
+    public void setKeepStaleEntries(final boolean keepStaleEntries){
+        this.keepStaleEntries = keepStaleEntries;
     }
 }

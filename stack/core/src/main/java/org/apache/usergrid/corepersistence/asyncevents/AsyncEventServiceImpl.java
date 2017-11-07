@@ -29,7 +29,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
 import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
@@ -58,6 +57,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -214,7 +214,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         start();
     }
 
-    protected Histogram getMessageCycye() {
+    protected Histogram getMessageCycle() {
         return messageCycle;
     }
 
@@ -278,28 +278,25 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Offer the EntityIdScope to SQS
      */
     protected void offer(final Serializable operation) {
-        offer(operation, AsyncEventQueueType.REGULAR, IndexingStrategy.DIRECT);
+        offer(operation, AsyncEventQueueType.REGULAR, QueueIndexingStrategy.DIRECT);
     }
 
     /**
      * Offer the EntityIdScope to SQS
      */
-    protected void offer(final Serializable operation, IndexingStrategy indexingStrategy) {
-        offer(operation, AsyncEventQueueType.REGULAR, indexingStrategy);
+    protected void offer(final Serializable operation, QueueIndexingStrategy queueIndexingStrategy) {
+        offer(operation, AsyncEventQueueType.REGULAR, queueIndexingStrategy);
     }
 
      /**
       * Offer the EntityIdScope to SQS
       */
-    private void offer(final Serializable operation, AsyncEventQueueType queueType, IndexingStrategy indexingStrategy) {
+    private void offer(final Serializable operation, AsyncEventQueueType queueType, QueueIndexingStrategy queueIndexingStrategy) {
         final Timer.Context timer = this.writeTimer.time();
 
         try {
             //signal to SQS
-            Boolean async = null;
-            if (indexingStrategy != IndexingStrategy.DEFAULT) {
-                async = (indexingStrategy == IndexingStrategy.ASYNC);
-            }
+            Boolean async = (queueIndexingStrategy == QueueIndexingStrategy.ASYNC);
             getQueue(queueType).sendMessageToLocalRegion(operation, async);
 
         } catch (IOException e) {
@@ -548,7 +545,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     @Override
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
-                                       final Entity entity, long updatedAfter, IndexingStrategy indexingStrategy) {
+                                       final Entity entity, long updatedAfter, QueueIndexingStrategy queueIndexingStrategy) {
 
 
         if (logger.isTraceEnabled()) {
@@ -561,7 +558,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             new EntityIdScope(applicationScope, entity.getId()),
             updatedAfter);
 
-        offer(event, indexingStrategy);
+        offer(event, queueIndexingStrategy);
 
     }
 
@@ -599,14 +596,14 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public void queueNewEdge(final ApplicationScope applicationScope,
                              final Id entityId,
                              final Edge newEdge,
-                             IndexingStrategy indexingStrategy) {
+                             QueueIndexingStrategy queueIndexingStrategy) {
 
         if (logger.isTraceEnabled()) {
             logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
                 newEdge.getType(), entityId.getUuid(), entityId.getType());
         }
 
-        offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entityId, newEdge ), indexingStrategy);
+        offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entityId, newEdge ), queueIndexingStrategy);
 
     }
 
@@ -710,7 +707,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         offerTopic( elasticsearchIndexEvent, queueType );
     }
 
-    protected ElasticsearchIndexEvent getIndexOperationMessage(final IndexOperationMessage indexOperationMessage) {
+    protected ElasticsearchIndexEvent getESIndexEvent(final IndexOperationMessage indexOperationMessage) {
 
         final String jsonValue = ObjectJsonSerializer.INSTANCE.toString( indexOperationMessage );
 

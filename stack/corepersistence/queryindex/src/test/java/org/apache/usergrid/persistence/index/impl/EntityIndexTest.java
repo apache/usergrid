@@ -484,6 +484,7 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
+
     @Test
     public void deleteVerification() throws Throwable {
 

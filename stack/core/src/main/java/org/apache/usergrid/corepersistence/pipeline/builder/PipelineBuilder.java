@@ -44,6 +44,8 @@ public class PipelineBuilder {
     private Optional<String> cursor = Optional.absent();
     private int limit = 10;
     private final FilterFactory filterFactory;
+    private boolean keepStaleEntries = false;
+    private String query = "";
 
 
     /**
@@ -81,6 +83,21 @@ public class PipelineBuilder {
         return this;
     }
 
+    /**
+     */
+    public PipelineBuilder keepStaleEntries(final boolean keepStaleEntries){
+        this.keepStaleEntries = keepStaleEntries;
+        return this;
+    }
+
+    /**
+     */
+    public PipelineBuilder query(final  Optional<String> query){
+        if (query.isPresent()) {
+            this.query = query.get();
+        }
+        return this;
+    }
 
     /**
      * Set our start point in our graph traversal to the specified entity id. A 1.0 compatibility API.  eventually this should be replaced with
@@ -91,7 +108,7 @@ public class PipelineBuilder {
      */
     @Deprecated
     public IdBuilder fromId(final Id entityId){
-        Pipeline<FilterResult<Id>> pipeline =  new Pipeline( applicationScope, this.cursor,limit ).withFilter(  filterFactory.getEntityIdFilter( entityId ) );
+        Pipeline<FilterResult<Id>> pipeline =  new Pipeline( applicationScope, this.cursor,limit,keepStaleEntries,query ).withFilter(  filterFactory.getEntityIdFilter( entityId ) );
 
         return new IdBuilder( pipeline, filterFactory );
     }
