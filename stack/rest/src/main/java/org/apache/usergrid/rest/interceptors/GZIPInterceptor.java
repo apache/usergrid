@@ -35,12 +35,13 @@ import javax.ws.rs.ext.Provider;
  * If the request had an ACCEPT_ENCODING header containing 'gzip' then
  * gzip the response and add CONTENT_ENCODING gzip header
  *
- * * If the request had an CONTENT_ENCODING header containing 'gzip' then
+ * If the request had an CONTENT_ENCODING header containing 'gzip' then
  *  unzip the request and remove the CONTENT_ENCODING gzip header
+ *
  *  Created by peterajohnson on 11/1/17.
  */
 @Provider
-public class GZIPWriterInterceptor implements ReaderInterceptor, WriterInterceptor {
+public class GZIPInterceptor implements ReaderInterceptor, WriterInterceptor {
 
     final private static String GZIP = "gzip";
     @Inject

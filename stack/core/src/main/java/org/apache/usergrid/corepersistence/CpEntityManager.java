@@ -32,7 +32,6 @@ import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
-import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
@@ -70,6 +69,7 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.mq.Message;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -524,7 +524,7 @@ public class CpEntityManager implements EntityManager {
 
         String entityType = cpEntity.getId().getType();
         boolean skipIndexingForType = skipIndexingForType(entityType);
-        IndexingStrategy indexingStrategy = getIndexingStrategyForType(entityType);
+        QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
 
         try {
 
@@ -552,14 +552,14 @@ public class CpEntityManager implements EntityManager {
         }
 
         if (!skipIndexingForType) {
-            indexEntity(cpEntity, indexingStrategy);
+            indexEntity(cpEntity, queueIndexingStrategy);
             deIndexOldVersionsOfEntity(cpEntity);
         }
     }
 
-    private void indexEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity, IndexingStrategy indexingStrategy) {
+    private void indexEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity, QueueIndexingStrategy queueIndexingStrategy) {
         // queue an event to update the new entity
-        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , indexingStrategy);
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , queueIndexingStrategy);
     }
 
     private void deIndexOldVersionsOfEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity) {
@@ -569,7 +569,7 @@ public class CpEntityManager implements EntityManager {
         }
     }
 
-    private IndexingStrategy getIndexingStrategyForType(String type ) {
+    private QueueIndexingStrategy getIndexingStrategyForType(String type ) {
         return CpCollectionUtils.getIndexingStrategyForType(collectionSettingsFactory, applicationId, type);
     }
 
@@ -1813,7 +1813,8 @@ public class CpEntityManager implements EntityManager {
 
         for (String validName : CpCollectionUtils.getValidSettings()) {
             if (newSettings.containsKey(validName)) {
-                updatedSettings.put(validName, newSettings.get(validName));
+                Object value = CpCollectionUtils.validateValue(validName, newSettings.get(validName));
+                updatedSettings.put(validName, value);
             }
         }
 

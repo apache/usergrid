@@ -21,10 +21,11 @@ import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 
-import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.settings.IndexConsistency;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 
 
 import java.util.*;
@@ -42,38 +43,60 @@ public class CpCollectionUtils {
 
     public static final String SETTING_FIELDS = "fields";
     public static final String SETTING_QUEUE_INDEX = "queueIndex";
+    public static final String SETTING_INDEX_CONSISTENCY = "indexConsistency";
 
     private static Set<String> VALID_SETTING_NAMES = new HashSet<>();
 
     static {
         VALID_SETTING_NAMES.add(SETTING_FIELDS);
         VALID_SETTING_NAMES.add(SETTING_QUEUE_INDEX);
+        VALID_SETTING_NAMES.add(SETTING_INDEX_CONSISTENCY);
     }
 
     public static Set<String> getValidSettings() {
         return VALID_SETTING_NAMES;
     }
 
-    public static IndexingStrategy getIndexingStrategyForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {
-
-        IndexingStrategy indexingStrategy = IndexingStrategy.DEFAULT;
-        String indexing = getFieldForType(applicationId, collectionSettingsFactory, type, SETTING_QUEUE_INDEX);
-        if (indexing != null) {
-            indexingStrategy = IndexingStrategy.get(indexing);
-        }
-        return indexingStrategy;
+    // When running in debug mode we all some normally invalid index settings
+    // like update C* but not ES.
+    private static boolean debugMode = false;
+    public static boolean getDebugMode() {
+        return debugMode;
     }
 
-    public static Boolean asyncIndexingForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {
+    public static void setDebugMode(boolean set) {
+        debugMode = set;
+    }
 
+    public static Object validateValue(String name, Object value) {
+        if (SETTING_QUEUE_INDEX.equals(name)) {
+            return QueueIndexingStrategy.get(value.toString()).getName();
+        }
+        if (SETTING_INDEX_CONSISTENCY.equals(name)) {
+            return IndexConsistency.get(value.toString()).getName();
+        }
+        return value;
+    }
+
+    public static QueueIndexingStrategy getIndexingStrategyForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {
+
+        QueueIndexingStrategy queueIndexingStrategy = QueueIndexingStrategy.CONFIG;
         String indexing = getFieldForType(applicationId, collectionSettingsFactory, type, SETTING_QUEUE_INDEX);
-        if ("async".equals(indexing)) {
-            return Boolean.TRUE;
+        if (indexing != null) {
+            queueIndexingStrategy = QueueIndexingStrategy.get(indexing);
         }
-        if ("sync".equals(indexing)) {
-            return Boolean.FALSE;
+        return queueIndexingStrategy;
+    }
+
+
+    public static IndexConsistency getIndexConsistencyForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {
+
+        IndexConsistency indexConsistency = IndexConsistency.STRICT;
+        String indexConsistencyString = getFieldForType(applicationId, collectionSettingsFactory, type, SETTING_INDEX_CONSISTENCY);
+        if ( indexConsistencyString != null) {
+            indexConsistency = IndexConsistency.get(indexConsistencyString);
         }
-        return null;
+        return indexConsistency;
     }
 
     public static boolean skipIndexingForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {

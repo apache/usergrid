@@ -22,6 +22,7 @@ import org.apache.usergrid.corepersistence.pipeline.builder.EntityBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.IdBuilder;
 import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
@@ -58,8 +59,12 @@ public class CollectionServiceImpl implements CollectionService {
         final Optional<String> query = search.getQuery();
 
         final IdBuilder pipelineBuilder =
-            pipelineBuilderFactory.create( applicationScope ).withCursor( search.getCursor() )
-                                  .withLimit( search.getLimit() ).fromId( search.getCollectionOwnerId() );
+            pipelineBuilderFactory.create( applicationScope )
+                .withCursor( search.getCursor() )
+                .withLimit( search.getLimit() )
+                .keepStaleEntries(search.getKeepStaleEntries())
+                .query(query)
+                .fromId( search.getCollectionOwnerId() );
 
 
         final EntityBuilder results;
@@ -68,7 +73,7 @@ public class CollectionServiceImpl implements CollectionService {
             results = pipelineBuilder.traverseCollection( collectionName ).loadEntities();
         }
         else {
-            results = pipelineBuilder.searchCollection( collectionName, query.get(),search.getEntityType(), search.getAnalyzeOnly()).loadEntities();
+            results = pipelineBuilder.searchCollection( collectionName, query.get(),search).loadEntities();
         }
 
 
@@ -81,7 +86,6 @@ public class CollectionServiceImpl implements CollectionService {
 
         final ApplicationScope applicationScope = search.getApplicationScope();
         final String collectionName = search.getCollectionName();
-        final Optional<String> query = search.getQuery();
 
         final IdBuilder pipelineBuilder =
             pipelineBuilderFactory.create( applicationScope ).withCursor( search.getCursor() )

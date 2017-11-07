@@ -16,48 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.persistence.queue.settings;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class describes the paths an index request can take
- * between tomcat and ES.
+ * This class describes the consistency rules when returning results set between C* and ES
  *
  * Created by peterajohnson on 10/30/17.
  */
-public enum IndexingStrategy {
+public enum IndexConsistency {
 
-    DIRECTONLY("directonly"),   // Index request is sent directly to ES and not to AWS
-    DIRECT("direct"),   // Index request is sent directly to ES before sync ASW
-    SYNC("sync"),     // Index request is sent via a sync AWS to ES
-    ASYNC("async"),     // Index request is sent via an async AWS to ES
-    DEFAULT("default");    // Follow the default setting
+    STRICT("strict"),       // Result canidate must be exact match to be returned in result set
+    LATEST("latest");       // Result canidate must be exact match OR most recent version to be returned in result set
 
     private String name;
 
-    private static final Map<String,IndexingStrategy> NAME_MAP;
+    private static final Map<String,IndexConsistency> NAME_MAP;
 
     static {
-        Map<String,IndexingStrategy> map = new HashMap<String,IndexingStrategy>();
-        for (IndexingStrategy instance : IndexingStrategy.values()) {
+        Map<String,IndexConsistency> map = new HashMap<>();
+        for (IndexConsistency instance : IndexConsistency.values()) {
             map.put(instance.getName(),instance);
         }
         NAME_MAP = Collections.unmodifiableMap(map);
     }
 
-    IndexingStrategy(String name) {
+    IndexConsistency(String name) {
         this.name = name;
     }
 
-    public static IndexingStrategy get(String name) {
-        IndexingStrategy indexingStrategy =  NAME_MAP.get(name);
-        if (indexingStrategy == null) {
-            return DEFAULT;
+    public static IndexConsistency get(String name) {
+        IndexConsistency queueIndexingStrategy =  NAME_MAP.get(name);
+        if (queueIndexingStrategy == null) {
+            return LATEST;
         }
-        return indexingStrategy;
+        return queueIndexingStrategy;
     }
 
 
@@ -66,4 +62,3 @@ public enum IndexingStrategy {
     }
 
 }
-

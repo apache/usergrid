@@ -24,6 +24,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
 import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
+import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -33,12 +34,20 @@ public class CandidateBuilder {
 
     private final Pipeline<FilterResult<Candidate>> pipeline;
     private final FilterFactory filterFactory;
+    private CollectionSearch search;
+
+    public CandidateBuilder(final Pipeline<FilterResult<Candidate>> pipeline,
+                            final FilterFactory filterFactory) {
+        this(pipeline,filterFactory,null);
+    }
 
 
-    public CandidateBuilder( final Pipeline<FilterResult<Candidate>> pipeline,
-                             final FilterFactory filterFactory ) {
+    public CandidateBuilder(final Pipeline<FilterResult<Candidate>> pipeline,
+                            final FilterFactory filterFactory,
+                            CollectionSearch search) {
         this.pipeline = pipeline;
         this.filterFactory = filterFactory;
+        this.search = search;
     }
 
 

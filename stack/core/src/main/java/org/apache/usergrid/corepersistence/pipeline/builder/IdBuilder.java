@@ -31,6 +31,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefRe
 import org.apache.usergrid.corepersistence.pipeline.read.collect.IdResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
+import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -125,9 +126,16 @@ public class IdBuilder {
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
             ql, collectionName, entityType, analyzeOnly ) );
 
-        return new CandidateBuilder( newFilter, filterFactory );
+        return new CandidateBuilder( newFilter, filterFactory , null);
     }
 
+    public CandidateBuilder searchCollection(final String collectionName, final String ql, final CollectionSearch search ) {
+
+        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
+            ql, collectionName, search.getEntityType(), search.getAnalyzeOnly() ) );
+
+        return new CandidateBuilder( newFilter, filterFactory, search );
+    }
 
     /**
      * Search all connections from our input Id and search their connections
