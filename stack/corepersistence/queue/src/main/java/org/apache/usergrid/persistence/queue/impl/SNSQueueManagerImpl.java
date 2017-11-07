@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.sqs.model.*;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -541,17 +542,15 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
         }
     }
 
-
     @Override
     public <T extends Serializable> void sendMessageToAllRegions(final T body, Boolean async) throws IOException {
-        boolean sendAsync = async == null ? fig.isAsyncQueue() : async.booleanValue();
+        boolean sendAsync = async == null || async.booleanValue();
         if (sendAsync) {
             sendMessageToAllRegionsAsync(body);
         } else {
             sendMessageToAllRegionsSync(body);
         }
     }
-
 
     private <T extends Serializable> void sendMessageToAllRegionsSync(final T body) throws IOException {
         if ( sns == null ) {
@@ -634,8 +633,9 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
     @Override
     public void sendMessages( final List bodies ) throws IOException {
+        QueueIndexingStrategy queueIndexingStrategy = QueueIndexingStrategy.get(fig.getQueueStrategy());
         for ( Object body : bodies ) {
-            if (fig.isAsyncQueue()) {
+            if (queueIndexingStrategy == QueueIndexingStrategy.ASYNC) {
                 sendMessageToLocalRegionAsync((Serializable) body);
             } else {
                 sendMessageToLocalRegionSync((Serializable) body);
@@ -682,7 +682,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
     @Override
     public <T extends Serializable> void sendMessageToLocalRegion(final T body, Boolean async) throws IOException {
-        boolean sendAsync = async == null ? fig.isAsyncQueue() : async.booleanValue();
+        boolean sendAsync = async.booleanValue();
         if (sendAsync) {
             sendMessageToLocalRegionAsync(body);
         } else {

@@ -21,13 +21,13 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import org.apache.usergrid.corepersistence.index.CollectionDeleteAction;
-import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.corepersistence.index.ReIndexAction;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 
 import java.util.UUID;
 
@@ -55,7 +55,7 @@ public interface AsyncEventService extends ReIndexAction, CollectionDeleteAction
      * @param updatedAfter
      * @param
      */
-    void queueEntityIndexUpdate(final ApplicationScope applicationScope, final Entity entity, long updatedAfter, IndexingStrategy strategy);
+    void queueEntityIndexUpdate(final ApplicationScope applicationScope, final Entity entity, long updatedAfter, QueueIndexingStrategy strategy);
 
 
     /**
@@ -68,7 +68,7 @@ public interface AsyncEventService extends ReIndexAction, CollectionDeleteAction
      * @param entityId
      * @param newEdge
      */
-    void queueNewEdge(final ApplicationScope applicationScope, final Id entityId, final Edge newEdge, IndexingStrategy indexingStrategy);
+    void queueNewEdge(final ApplicationScope applicationScope, final Id entityId, final Edge newEdge, QueueIndexingStrategy queueIndexingStrategy);
 
     /**
      * Queue the deletion of an edge
