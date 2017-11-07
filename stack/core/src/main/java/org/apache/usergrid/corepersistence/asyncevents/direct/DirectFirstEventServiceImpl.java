@@ -23,7 +23,6 @@ import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.model.ElasticsearchIndexEvent;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.IndexingStrategy;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
@@ -34,6 +33,7 @@ import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.LegacyQueueFig;
 import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
 import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,17 +54,19 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(DirectFirstEventServiceImpl.class);
 
-    private IndexingStrategy configIndexingStrategy = IndexingStrategy.ASYNC;
+    private boolean indexDebugMode = false;
+    private QueueIndexingStrategy configQueueIndexingStrategy = QueueIndexingStrategy.ASYNC;
 
     private BufferedQueue<Serializable> bufferedBatchQueue = new BufferedQueueNOP<>();
 
     public DirectFirstEventServiceImpl(LegacyQueueManagerFactory queueManagerFactory, IndexProcessorFig indexProcessorFig, IndexProducer indexProducer, MetricsFactory metricsFactory, EntityCollectionManagerFactory entityCollectionManagerFactory, IndexLocationStrategyFactory indexLocationStrategyFactory, EntityIndexFactory entityIndexFactory, EventBuilder eventBuilder, MapManagerFactory mapManagerFactory, LegacyQueueFig queueFig, RxTaskScheduler rxTaskScheduler) {
         super(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory, entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, rxTaskScheduler);
 
-        //bufferedBatchQueue = new BufferedQueueImpl<>(5000, 100, TimeUnit.MILLISECONDS);
         bufferedBatchQueue.setConsumer((c) -> { dispatchToES(c); });
 
-        configIndexingStrategy = IndexingStrategy.get(queueFig.getQueueStrategy());
+        configQueueIndexingStrategy = QueueIndexingStrategy.get(queueFig.getQueueStrategy());
+
+        indexDebugMode = Boolean.valueOf(queueFig.getQueueDebugMode());
 
     }
 
@@ -82,8 +84,10 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
         // failed to dispatch send to SQS
         try {
             List<LegacyQueueMessage> indexedMessages = submitToIndex(result, false);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Sent {} messages to ES ", indexedMessages.size());
+            }
         } catch (Exception e) {
-            e.printStackTrace();
             for (Serializable body : bodies) {
                 super.offer(body);
             }
@@ -123,16 +127,16 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
     }
 
 
-    protected void offer(final Serializable operation, IndexingStrategy indexingStrategy) {
-        if  (shouldSendToDirectToES(indexingStrategy)) {
+    protected void offer(final Serializable operation, QueueIndexingStrategy queueIndexingStrategy) {
+        queueIndexingStrategy = resolveIndexingStrategy(queueIndexingStrategy);
+        if  (queueIndexingStrategy.shouldSendDirectToES()) {
             List<LegacyQueueMessage> messages = getMessageArray(operation);
             List<IndexEventResult> result = callEventHandlers(messages);
             submitToIndex( result, false );
         }
 
-        // only if single region.
-        if (shouldSendToAWS(indexingStrategy)) {
-            super.offer(operation, indexingStrategy);
+        if (queueIndexingStrategy.shouldSendToAWS()) {
+            super.offer(operation, queueIndexingStrategy);
         }
     }
 
@@ -152,7 +156,7 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
             .map(indexEventResult -> {
 
                 //record the cycle time
-                getMessageCycye().update(System.currentTimeMillis() - indexEventResult.getCreationTime());
+                getMessageCycle().update(System.currentTimeMillis() - indexEventResult.getCreationTime());
 
                 // ingest each index op into our combined, single index op for the index producer
                 if(indexEventResult.getIndexOperationMessage().isPresent()){
@@ -166,23 +170,24 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
 
 
         // dispatch to ES
-        ElasticsearchIndexEvent elasticsearchIndexEvent = getIndexOperationMessage(combined);
+        ElasticsearchIndexEvent elasticsearchIndexEvent = getESIndexEvent(combined);
         handleIndexOperation(elasticsearchIndexEvent);
         return queueMessages;
     }
 
-    private boolean shouldSendToDirectToES(IndexingStrategy indexingStrategy) {
-        if (indexingStrategy == IndexingStrategy.DEFAULT) {
-            indexingStrategy = configIndexingStrategy;
+    // If the collection has not defined an indexing strategy then use the default from the fig.
+    // only allow NOINDEX or DIRECTONLY when in debug mode
+    private QueueIndexingStrategy resolveIndexingStrategy(QueueIndexingStrategy queueIndexingStrategy) {
+        switch (queueIndexingStrategy) {
+            case CONFIG:
+                return configQueueIndexingStrategy;
+            case NOINDEX:
+            case DIRECTONLY:
+                if (!indexDebugMode) {
+                    return configQueueIndexingStrategy;
+                }
+            default:
+                return queueIndexingStrategy;
         }
-        return  (indexingStrategy == IndexingStrategy.DIRECT || indexingStrategy == IndexingStrategy.DIRECTONLY);
-    }
-
-    private boolean shouldSendToAWS(IndexingStrategy indexingStrategy) {
-        if (indexingStrategy == IndexingStrategy.DEFAULT) {
-            indexingStrategy = configIndexingStrategy;
-        }
-        // and is in same region.
-        return  (indexingStrategy != IndexingStrategy.DIRECTONLY);
     }
 }

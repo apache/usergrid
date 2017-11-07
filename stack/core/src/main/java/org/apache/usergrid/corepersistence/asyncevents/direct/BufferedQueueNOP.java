@@ -21,6 +21,9 @@ package org.apache.usergrid.corepersistence.asyncevents.direct;
 import java.util.function.Consumer;
 
 /**
+ * This is NOP buffer. An alternate implementation of this interface might buffer the
+ * events to smooth out 'bursts'
+ *
  * Created by peterajohnson on 10/27/17.
  */
 public class BufferedQueueNOP<T> implements BufferedQueue<T> {

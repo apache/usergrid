@@ -153,7 +153,6 @@ public interface EntityIndex extends CPManager {
      */
     String[] getIndexes();
 
-
     /**
      * type of alias
      */
