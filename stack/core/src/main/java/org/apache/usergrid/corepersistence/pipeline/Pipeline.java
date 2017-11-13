@@ -50,6 +50,8 @@ public class Pipeline<InputType> {
 
     private final RequestCursor requestCursor;
     private int limit;
+    private boolean keepStaleEntries;
+    private String query;
 
     //Generics hell, intentionally without a generic, we check at the filter level
     private Observable currentObservable;
@@ -58,7 +60,7 @@ public class Pipeline<InputType> {
     /**
      * Create our filter pipeline
      */
-    public Pipeline( final ApplicationScope applicationScope, final Optional<String> cursor, final int limit ) {
+    public Pipeline( final ApplicationScope applicationScope, final Optional<String> cursor, final int limit, boolean keepStaleEntries, String query) {
 
 
         ValidationUtils.validateApplicationScope( applicationScope );
@@ -78,6 +80,9 @@ public class Pipeline<InputType> {
         final FilterResult<Id> filter = new FilterResult<>( applicationScope.getApplication(), Optional.absent() );
 
         this.currentObservable = Observable.just( filter );
+
+        this.keepStaleEntries = keepStaleEntries;
+        this.query = query;
     }
 
 
@@ -86,7 +91,7 @@ public class Pipeline<InputType> {
 
 
 
-        final PipelineContext context = new PipelineContext( applicationScope, requestCursor, limit, idCount );
+        final PipelineContext context = new PipelineContext( applicationScope, requestCursor, limit, idCount, keepStaleEntries, query );
 
         filter.setContext( context );
 

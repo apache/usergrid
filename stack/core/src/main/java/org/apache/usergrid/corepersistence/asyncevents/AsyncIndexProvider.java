@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.asyncevents.direct.DirectFirstEventServiceImpl;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -105,7 +106,40 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
         final LegacyQueueManager.Implementation impl = LegacyQueueManager.Implementation.valueOf(value);
 
-        final AsyncEventServiceImpl asyncEventService = new AsyncEventServiceImpl(
+        final AsyncEventServiceImpl asyncEventService = getAsyncEventService();
+
+        if ( impl.equals( LOCAL )) {
+            asyncEventService.MAX_TAKE = 1000;
+        }
+
+        if ( impl.equals( DISTRIBUTED )) {
+            asyncEventService.MAX_TAKE = 500;
+        }
+
+        return asyncEventService;
+    }
+
+
+    private AsyncEventServiceImpl getAsyncEventService() {
+
+
+        AsyncEventServiceImpl asyncEventService;
+/*
+       asyncEventService =  new AsyncEventServiceImpl(
+                queueManagerFactory,
+                indexProcessorFig,
+                indexProducer,
+                metricsFactory,
+                entityCollectionManagerFactory,
+                indexLocationStrategyFactory,
+                entityIndexFactory,
+                eventBuilder,
+                mapManagerFactory,
+                queueFig,
+                rxTaskScheduler);
+        */
+
+        asyncEventService = new DirectFirstEventServiceImpl(
             queueManagerFactory,
             indexProcessorFig,
             indexProducer,
@@ -117,14 +151,6 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
             mapManagerFactory,
             queueFig,
             rxTaskScheduler );
-
-        if ( impl.equals( LOCAL )) {
-            asyncEventService.MAX_TAKE = 1000;
-        }
-
-        if ( impl.equals( DISTRIBUTED )) {
-            asyncEventService.MAX_TAKE = 500;
-        }
 
         return asyncEventService;
     }
