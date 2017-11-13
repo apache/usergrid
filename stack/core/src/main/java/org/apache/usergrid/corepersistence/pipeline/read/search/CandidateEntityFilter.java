@@ -26,10 +26,10 @@ import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.model.field.DistanceField;
-import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.apache.usergrid.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +74,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.indexProducer = indexProducer;
+
     }
 
 
@@ -95,6 +96,9 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
         final EntityIndex applicationIndex = entityIndexFactory
             .createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+
+        boolean keepStaleEntries = pipelineContext.getKeepStaleEntries();
+        String query = pipelineContext.getQuery();
 
         //buffer them to get a page size we can make 1 network hop
         final Observable<FilterResult<Entity>> searchIdSetObservable =
@@ -119,7 +123,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                             entitySet -> new EntityVerifier(
                                 applicationIndex.createBatch(), entitySet, candidateResults,indexProducer)
                         )
-                            .doOnNext(entityCollector -> entityCollector.merge())
+                            .doOnNext(entityCollector -> entityCollector.merge(keepStaleEntries, query))
                             .flatMap(entityCollector -> Observable.from(entityCollector.getResults()))
                             .map(entityFilterResult -> {
                                 final Entity entity = entityFilterResult.getValue();
@@ -246,10 +250,10 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         /**
          * Merge our candidates and our entity set into results
          */
-        public void merge() {
+        public void merge(boolean keepStaleEntries, String query) {
 
             for ( final FilterResult<Candidate> candidateResult : candidateResults ) {
-                validate( candidateResult );
+                validate( candidateResult , keepStaleEntries, query);
             }
 
             indexProducer.put(batch.build()).toBlocking().lastOrDefault(null); // want to rethrow if batch fails
@@ -267,7 +271,23 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         }
 
 
-        private void validate( final FilterResult<Candidate> filterResult ) {
+        // Helper function to convert a UUID time stamp into a unix date
+        private Date UUIDTimeStampToDate(UUID uuid) {
+            long timeStamp = 0L;
+            // The UUID is supposed to be time based so this should always be '1'
+            // but this is just used for logging so we don't want to throw an error i it is misused.
+            if (uuid.version() == 1) {
+                // this is the difference between midnight October 15, 1582 UTC and midnight January 1, 1970 UTC as 100 nanosecond units
+                long epochDiff = 122192928000000000L;
+                // the UUID timestamp is in 100 nanosecond units.
+                // convert that to milliseconds
+                timeStamp =  ((uuid.timestamp()-epochDiff)/10000);
+            }
+            return new Date(timeStamp);
+        }
+
+
+        private void validate( final FilterResult<Candidate> filterResult, boolean keepStaleEntries, String query ) {
 
             final Candidate candidate = filterResult.getValue();
             final CandidateResult candidateResult = candidate.getCandidateResult();
@@ -297,18 +317,42 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             final UUID entityVersion = entity.getVersion();
             final Id entityId = entity.getId();
 
+            //entity is newer than ES version, could be a missed or slow index event
+            if ( UUIDComparator.staticCompare(entityVersion, candidateVersion) > 0 ) {
+
+               Date candidateTimeStamp = UUIDTimeStampToDate(candidateVersion);
+               Date entityTimeStamp = UUIDTimeStampToDate(entityVersion);
+
+               Map<String,String> fields = new HashMap<>();
+               for  (Field field : entity.getEntity().get().getFields()) {
+                   fields.put(field.getName(),String.valueOf(field.getValue()));
+               }
+
+               logger.warn( "Found stale entity on edge {} for entityId {} Entity version date = {}.  Candidate version date = {}. Will be returned in result set = {} Query = [{}] Entity fields = {}",
+                   searchEdge,
+                   entityId.getUuid(),
+                   DateUtils.instance.formatIso8601Date(entityTimeStamp),
+                   DateUtils.instance.formatIso8601Date(candidateTimeStamp),
+                   keepStaleEntries,
+                   query,
+                   fields
+               );
+
+                if (!keepStaleEntries) {
+                    batch.deindex(searchEdge, entityId, candidateVersion);
+                    return;
+                }
+            }
 
 
-
-
-            //entity is newer than ES version, could be an update or the entity is marked as deleted
-            if ( UUIDComparator.staticCompare( entityVersion, candidateVersion ) > 0 ||
-                    !entity.getEntity().isPresent()  ||
-                    entity.getStatus() == MvccEntity.Status.DELETED ) {
+            // The entity is marked as deleted
+            if (!entity.getEntity().isPresent() || entity.getStatus() == MvccEntity.Status.DELETED ) {
 
                 // when updating entities, we don't delete previous versions from ES so this action is expected
-                logger.warn( "Deindexing stale entity on edge {} for entityId {} and version {}",
-                    searchEdge, entityId, entityVersion);
+                if(logger.isDebugEnabled()){
+                    logger.debug( "Deindexing deleted entity on edge {} for entityId {} and version {}",
+                        searchEdge, entityId, entityVersion);
+                }
 
                 batch.deindex( searchEdge, entityId, candidateVersion );
                 return;

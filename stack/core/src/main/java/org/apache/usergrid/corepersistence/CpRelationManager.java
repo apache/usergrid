@@ -20,9 +20,7 @@ package org.apache.usergrid.corepersistence;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
@@ -49,6 +47,8 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.settings.IndexConsistency;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.MapUtils;
@@ -61,7 +61,6 @@ import java.util.*;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.*;
 import static org.apache.usergrid.persistence.Schema.*;
-import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
 
@@ -396,8 +395,8 @@ public class CpRelationManager implements RelationManager {
 
                 String entityType = cpHeadEntity.getId().getType();
                 if ( !skipIndexingForType( entityType) ) {
-                    Boolean async = asyncIndexingForType(entityType);
-                    indexService.queueNewEdge(applicationScope, cpHeadEntity.getId(), reverseEdge, async);
+                    QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity.getId(), reverseEdge, queueIndexingStrategy);
                 }
 
             } );
@@ -405,8 +404,8 @@ public class CpRelationManager implements RelationManager {
 
             String entityType = memberEntity.getId().getType();
             if ( !skipIndexingForType( entityType ) ) {
-                Boolean async = asyncIndexingForType(entityType);
-                indexService.queueNewEdge(applicationScope, memberEntityId, edge, async);
+                QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
+                indexService.queueNewEdge(applicationScope, memberEntityId, edge, queueIndexingStrategy);
             }
 
 
@@ -667,6 +666,8 @@ public class CpRelationManager implements RelationManager {
                         queryString, cursor );
 
                 search.setAnalyzeOnly(analyzeOnly);
+                IndexConsistency indexConsistency = getIndexConsistencyForType(collectionName);
+                search.setKeepStaleEntries(indexConsistency == IndexConsistency.LATEST);
 
                 return collectionService.searchCollection( search );
             }
@@ -714,7 +715,6 @@ public class CpRelationManager implements RelationManager {
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
-
         if ( logger.isTraceEnabled() ) {
             logger.trace( "createConnection(): Indexing connection type '{}'\n   from source {}:{}]\n   to target {}:{}\n   app {}",
                 connectionType, headEntity.getType(), headEntity.getUuid(), connectedEntityRef.getType(),
@@ -738,8 +738,8 @@ public class CpRelationManager implements RelationManager {
 
         String entityType = targetEntity.getId().getType();
         if ( !skipIndexingForType( entityType ) ) {
-            Boolean async = asyncIndexingForType(entityType);
-            indexService.queueNewEdge(applicationScope, targetEntity.getId(), edge, async);
+            QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
+            indexService.queueNewEdge(applicationScope, targetEntity.getId(), edge, queueIndexingStrategy);
         }
 
         // remove any duplicate edges (keeps the duplicate edge with same timestamp)
@@ -1100,8 +1100,12 @@ public class CpRelationManager implements RelationManager {
 
     }
 
-    private Boolean asyncIndexingForType( String type ) {
-        return CpCollectionUtils.asyncIndexingForType(collectionSettingsFactory, applicationId, type);
+    private IndexConsistency getIndexConsistencyForType(String type ) {
+        return CpCollectionUtils.getIndexConsistencyForType(collectionSettingsFactory, applicationId, type);
+    }
+
+    private QueueIndexingStrategy getIndexingStrategyForType(String type ) {
+        return CpCollectionUtils.getIndexingStrategyForType(collectionSettingsFactory, applicationId, type);
 
     }
 

@@ -773,6 +773,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
+            ex.printStackTrace();
             logger.error( "Error connecting to ElasticSearch", ex.getMessage() );
         }
 
@@ -857,7 +858,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public int getImplementationVersion() {
         return IndexDataVersions.SINGLE_INDEX.getVersion();
     }
-
 
 
     /**

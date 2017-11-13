@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 
 import java.util.UUID;
 
@@ -52,8 +53,9 @@ public interface AsyncEventService extends ReIndexAction, CollectionDeleteAction
      * @param applicationScope
      * @param entity The entity to index.  Should be fired when an entity is updated
      * @param updatedAfter
+     * @param
      */
-    void queueEntityIndexUpdate(final ApplicationScope applicationScope, final Entity entity, long updatedAfter, Boolean async);
+    void queueEntityIndexUpdate(final ApplicationScope applicationScope, final Entity entity, long updatedAfter, QueueIndexingStrategy strategy);
 
 
     /**
@@ -66,7 +68,7 @@ public interface AsyncEventService extends ReIndexAction, CollectionDeleteAction
      * @param entityId
      * @param newEdge
      */
-    void queueNewEdge(final ApplicationScope applicationScope, final Id entityId, final Edge newEdge, Boolean async);
+    void queueNewEdge(final ApplicationScope applicationScope, final Id entityId, final Edge newEdge, QueueIndexingStrategy queueIndexingStrategy);
 
     /**
      * Queue the deletion of an edge

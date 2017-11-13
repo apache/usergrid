@@ -110,8 +110,12 @@ public interface LegacyQueueFig extends GuicyFig {
     @Default("900000") // 15 minutes
     int getMapMessageTimeout();
 
-    @Key("usergrid.queue.is.async")
-    @Default("true")
-    boolean isAsyncQueue();
+    @Key("usergrid.queue.strategy")
+    @Default("async")
+    String getQueueStrategy();
+
+    @Key("usergrid.queue.test")
+    @Default("false")
+    String getQueueDebugMode();
 
 }
