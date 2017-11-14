@@ -57,14 +57,25 @@ public class CpCollectionUtils {
         return VALID_SETTING_NAMES;
     }
 
-    public static String validateValue(String name, Object value) {
+    // When running in debug mode we allow some normally invalid index settings
+    // like update C* but not ES.
+    private static boolean debugMode = false;
+    public static boolean getDebugMode() {
+        return debugMode;
+    }
+
+    public static void setDebugMode(boolean set) {
+        debugMode = set;
+    }
+
+    public static Object validateValue(String name, Object value) {
         if (SETTING_QUEUE_INDEX.equals(name)) {
             return QueueIndexingStrategy.get(value.toString()).getName();
         }
         if (SETTING_INDEX_CONSISTENCY.equals(name)) {
             return IndexConsistency.get(value.toString()).getName();
         }
-        return "";
+        return value;
     }
 
     public static QueueIndexingStrategy getIndexingStrategyForType(CollectionSettingsFactory collectionSettingsFactory, UUID applicationId, String type ) {

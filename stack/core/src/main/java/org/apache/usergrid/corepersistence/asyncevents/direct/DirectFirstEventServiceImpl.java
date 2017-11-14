@@ -23,6 +23,7 @@ import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.model.ElasticsearchIndexEvent;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
@@ -54,7 +55,6 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(DirectFirstEventServiceImpl.class);
 
-    private boolean indexDebugMode = false;
     private QueueIndexingStrategy configQueueIndexingStrategy = QueueIndexingStrategy.ASYNC;
 
     private BufferedQueue<Serializable> bufferedBatchQueue = new BufferedQueueNOP<>();
@@ -66,7 +66,8 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
 
         configQueueIndexingStrategy = QueueIndexingStrategy.get(queueFig.getQueueStrategy());
 
-        indexDebugMode = Boolean.valueOf(queueFig.getQueueDebugMode());
+        boolean indexDebugMode = Boolean.valueOf(queueFig.getQueueDebugMode());
+        CpCollectionUtils.setDebugMode(indexDebugMode);
 
     }
 
@@ -183,7 +184,7 @@ public class DirectFirstEventServiceImpl extends AsyncEventServiceImpl {
                 return configQueueIndexingStrategy;
             case NOINDEX:
             case DIRECTONLY:
-                if (!indexDebugMode) {
+                if (!CpCollectionUtils.getDebugMode()) {
                     return configQueueIndexingStrategy;
                 }
             default:

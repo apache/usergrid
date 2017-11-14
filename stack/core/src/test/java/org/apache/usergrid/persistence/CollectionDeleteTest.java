@@ -138,7 +138,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
         logger.info("Created {} entities after delete time", ENTITIES_TO_ADD_AFTER_TIME);
 
 
-        app.waitForQueueDrainAndRefreshIndex(5000);
+        app.waitForQueueDrainAndRefreshIndex(15000);
 
         final CollectionDeleteRequestBuilder builder =
             collectionDeleteService.getBuilder()

@@ -18,7 +18,9 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -37,6 +39,7 @@ import java.util.*;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -47,12 +50,159 @@ import static org.junit.Assert.*;
  *  misc tests for collections
  */
 
+@NotThreadSafe
 public class CollectionsResourceIT extends AbstractRestIT {
 
     private final String REGION_SETTING = "authoritativeRegion";
 
     private static final Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
 
+    @Test
+    public void testValidSettings() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "collection" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity = new Entity();
+
+        testEntity.put( "one","value" );
+        app().collection( collectionName ).post( testEntity );
+
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "one" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+        payload.put( "queueIndex", "direct");
+
+        //Post index to the collection metadata
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        Object queueIndexValue = settings.get("queueIndex");
+        assertEquals( "direct", queueIndexValue);
+
+        Object feildsValue = settings.get("fields");
+        assertTrue(feildsValue  instanceof  List);
+        List list = (List) feildsValue;
+        assertEquals(1, list.size()  );
+        assertEquals( "one", list.get(0) );
+
+    }
+
+
+    @Test
+    public void testInvalidSettings() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "collection" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity = new Entity();
+
+        testEntity.put( "one","value" );
+        app().collection( collectionName ).post( testEntity );
+
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "one" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "queueIndex", "BADVALUE");
+
+        //Post index to the collection metadata
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        Object queueIndexValue = settings.get("queueIndex");
+        // BAD value should be rejected and we get the default.
+        assertEquals( "config", queueIndexValue);
+    }
+
+
+    @Test
+    public void testStaleEntries() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "cars_" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity1 = new Entity();
+        testEntity1.put( "make","tesla" );
+        testEntity1.put( "color","red" );
+        testEntity1 = app().collection( collectionName ).post( testEntity1 );
+
+        Entity testEntity2 = new Entity();
+        testEntity2.put( "make","honda" );
+        testEntity2.put( "color","red" );
+        testEntity2 = app().collection( collectionName ).post( testEntity2 );
+
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "make" );
+        indexingArray.add( "color" );
+
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+        payload.put( "queueIndex", "direct");
+
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        String query = "color ='red'";
+        QueryParameters queryParameters = new QueryParameters().setQuery( query );
+
+        Collection resultEntity = app().collection( collectionName ).get( queryParameters, true );
+
+        assertNotNull(resultEntity);
+        assertEquals(resultEntity.getResponse().getEntities().size(), 2);
+
+        Object color0 = resultEntity.getResponse().getEntities().get(0).get("color");
+        Object color1 = resultEntity.getResponse().getEntities().get(1).get("color");
+
+        assertEquals("red", color0);
+        assertEquals("red", color1);
+
+        // Allow illegal settings
+        CpCollectionUtils.setDebugMode(true);
+        payload.put( "queueIndex", "debug_noindex");
+        payload.put( "indexConsistency", "latest");
+        settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+
+        testEntity2.put("color", "blue");
+        Entity response = app().collection( collectionName ).entity(testEntity2.getUuid()).put(testEntity2);
+
+        queryParameters = new QueryParameters().setQuery( "color ='red'" );
+
+        resultEntity = app().collection( collectionName ).get( queryParameters, true );
+
+        waitForQueueDrainAndRefreshIndex();
+
+        assertEquals(resultEntity.getResponse().getEntities().size(), 2);
+
+        Entity entity0 = resultEntity.getResponse().getEntities().get(0);
+        Entity entity1 = resultEntity.getResponse().getEntities().get(1);
+
+        color0 = entity0.get("color");
+        color1 = entity1.get("color");
+
+        Object make0 = entity0.get("make");
+        Object make1 = entity1.get("make");
+
+        if (make0.equals("honda")) {
+            assertEquals("blue", color0);
+            assertEquals("red", color1);
+        } else {
+            assertEquals("red", color0);
+            assertEquals("blue", color1);
+        }
+
+    }
 
     /***
      *
@@ -285,6 +435,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //field "fields" is required.
         Entity payload = new Entity();
         payload.put( "fields", indexingArray);
+        payload.put( "queueIndex", "direct");
 
         //Post index to the collection metadata
         Entity thing = this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );

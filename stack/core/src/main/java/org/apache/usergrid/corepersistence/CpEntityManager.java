@@ -1813,7 +1813,7 @@ public class CpEntityManager implements EntityManager {
 
         for (String validName : CpCollectionUtils.getValidSettings()) {
             if (newSettings.containsKey(validName)) {
-                String value = CpCollectionUtils.validateValue(validName, newSettings.get(validName));
+                Object value = CpCollectionUtils.validateValue(validName, newSettings.get(validName));
                 updatedSettings.put(validName, value);
             }
         }
