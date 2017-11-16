@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.index.CollectionDeleteRequestBuilder;
 import org.apache.usergrid.corepersistence.index.CollectionDeleteRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.CollectionDeleteService;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.persistence.index.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 
 /**
@@ -71,6 +73,34 @@ public class CollectionResource extends ServiceResource {
     }
 
 
+    /*
+     *  Combine the passed settings with the settings already in the collection
+     */
+    private void combineSettings(ServicePayload newSettings, UriInfo ui) throws Exception {
+
+
+        //  Get the existing collection settings.
+        ApiResponse response = createApiResponse();
+        response.setAction( "get" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        executeServiceGetRequestForSettings( ui,response,ServiceAction.GET,null );
+
+        // now add the old settings to the new if they are not alreday in the new.
+        Object oldSettings = response.getData();
+        if (oldSettings instanceof Map) {
+            Map<String,Object> oldProps = (Map) oldSettings;
+            Map<String,Object> newProps =  newSettings.getProperties();
+            for (String key : oldProps.keySet()) {
+                if (CpCollectionUtils.getValidSettings().contains(key) && !newProps.containsKey(key)) {
+                    Object value = oldProps.get(key);
+                    newSettings.setProperty(key, value);
+                }
+            }
+        }
+    }
+
     /**
      * POST settings for a collection.
      *
@@ -87,7 +117,9 @@ public class CollectionResource extends ServiceResource {
         @Context UriInfo ui,
         @PathParam("itemName") PathSegment itemName,
         String body,
-        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+        @QueryParam("callback") @DefaultValue("callback") String callback,
+        @QueryParam("replace_all") @DefaultValue("true") String replace_all
+        ) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "CollectionResource.executePostOnSettingsWithCollectionName" );
@@ -109,6 +141,10 @@ public class CollectionResource extends ServiceResource {
         response.setParams( ui.getQueryParameters() );
 
         ServicePayload payload = getPayload( json );
+
+        if ("false".equals(replace_all)) {
+            combineSettings(payload, ui);
+        }
 
         executeServicePostRequestForSettings( ui,response, ServiceAction.POST, payload );
 

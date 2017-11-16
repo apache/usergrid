@@ -323,13 +323,15 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
 
         // delay until the scheduler has time to run
-        logger.info("Sleeping while the scheduler does its work");
-        Thread.sleep(5000);
+        Notification.State notificationState = Notification.State.SCHEDULED;
+        int retry = 60;
+        do {
+            logger.info("Sleeping while the scheduler does its work " + retry);
+            Thread.sleep(1000);
+            notificationState = app.getEntityManager().get(e.getUuid(), Notification.class).getState();
+        } while (Notification.State.FINISHED != notificationState && --retry >= 0 );
 
-
-        notification = app.getEntityManager().get(e.getUuid(), Notification.class);
-
-        assertEquals(Notification.State.FINISHED, notification.getState());
+        assertEquals(Notification.State.FINISHED,  notificationState);
 
     }
 

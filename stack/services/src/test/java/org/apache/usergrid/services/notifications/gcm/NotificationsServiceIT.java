@@ -632,10 +632,17 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
 
         // receipts are created and queried, wait a bit longer for this to happen as indexing
-        app.waitForQueueDrainAndRefreshIndex(5000);
+        app.waitForQueueDrainAndRefreshIndex(2000);
 
         // get the receipts entity IDs
         List<EntityRef> receipts = getNotificationReceipts(notification);
+
+        int retry = 30;
+        while (receipts.size() == 0 && --retry >=0 ) {
+            app.waitForQueueDrainAndRefreshIndex(1000);
+            receipts = getNotificationReceipts(notification);
+        }
+
         assertEquals(1, receipts.size());
 
         // Validate the error is the correct type InvalidRegistration

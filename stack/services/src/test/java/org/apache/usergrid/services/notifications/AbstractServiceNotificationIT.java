@@ -49,15 +49,17 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
 
     protected Notification notificationWaitForComplete(Notification notification)
             throws Exception {
-        long timeout = System.currentTimeMillis() + 120000;
-        while (System.currentTimeMillis() < timeout) {
-            app.waitForQueueDrainAndRefreshIndex(1000);
+
+        int retry = 18;  // 3 mins  18 * 10 seconds
+        while (-- retry > 0) {
+            logger.info("notificationWaitForComplete {} retry {}", notification.getUuid(), retry);
+            app.waitForQueueDrainAndRefreshIndex(10000);
             notification = app.getEntityManager().get(notification.getUuid(), Notification.class);
             if (notification.getFinished() != null) {
                 return notification;
             }
         }
-        fail("Notification failed to complete");
+        fail("Notification failed to complete error message " + notification.getErrorMessage());
         return null;
     }
 

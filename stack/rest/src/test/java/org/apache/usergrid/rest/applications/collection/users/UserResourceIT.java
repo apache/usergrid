@@ -75,7 +75,19 @@ public class UserResourceIT extends AbstractRestIT {
         usersResource = this.app().collection("users");
         userResource = this.app().collection("user");
 
+        // make the queueindex direct to speed up the tests.
+        Entity payload = new Entity();
+        payload.put( "queueIndex", "direct");
+
+        //Post index to the collection metadata
+        app().collection( "user" ).collection( "_settings" ).post( payload );
+        app().collection( "users" ).collection( "_settings" ).post( payload );
+
         waitForQueueDrainAndRefreshIndex();
+    }
+
+    public void waitForQueueDrainAndRefreshIndex() {
+        waitForQueueDrainAndRefreshIndex(50);
     }
 
     @Test
@@ -398,7 +410,7 @@ public class UserResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void clientNameQuery() {
+    public void clientNameQuery() throws Exception {
 
 
         String username = "username";
@@ -410,7 +422,18 @@ public class UserResourceIT extends AbstractRestIT {
         UUID createdId = entity.getUuid();
 
         waitForQueueDrainAndRefreshIndex();
-        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("name = '%s'", name)));
+
+        QueryParameters queryParameters = new QueryParameters().setQuery(String.format("name = '%s'", name));
+        Collection results = usersResource.get(queryParameters);
+
+        int retry = 30;
+        while (results.getResponse().getEntities().size() == 0 && --retry >= 0) {
+            Thread.sleep(1000);
+            results = usersResource.get(queryParameters);
+            logger.info("clientNameQuery results size {} ", results.getResponse().getEntities().size());
+        }
+        assertEquals(1 , results.getResponse().getEntities().size());
+
         entity = new User(results.getResponse().getEntities().get(0));
         assertEquals(createdId, entity.getUuid());
     }
@@ -1214,7 +1237,11 @@ public class UserResourceIT extends AbstractRestIT {
         ql = "uuid = " + userId;
 
         Collection response = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
-
+        int retry = 30;
+        while (response.getResponse().getEntities().isEmpty() &&--retry >= 0) {
+            Thread.sleep(1000);
+        }
+        assertFalse(response.getResponse().getEntities().isEmpty());
         assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
     }
 
