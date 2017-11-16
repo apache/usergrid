@@ -58,10 +58,10 @@ public class CollectionsResourceIT extends AbstractRestIT {
     private static final Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
 
     @Test
-    public void testValidSettings() throws IOException {
+    public void testPostValidSettings() throws IOException {
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
-        String collectionName = "collection" + randomizer;
+        String collectionName = "collection_" + randomizer;
 
         //Create test collection with test entity that is full text indexed.
         Entity testEntity = new Entity();
@@ -91,12 +91,15 @@ public class CollectionsResourceIT extends AbstractRestIT {
         List list = (List) feildsValue;
         assertEquals(1, list.size()  );
         assertEquals( "one", list.get(0) );
-
     }
 
 
+    /**
+     * test that invalid settings are ignored
+     * @throws IOException
+     */
     @Test
-    public void testInvalidSettings() throws IOException {
+    public void testPostInvalidSettings() throws IOException {
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String collectionName = "collection" + randomizer;
@@ -124,6 +127,78 @@ public class CollectionsResourceIT extends AbstractRestIT {
         // BAD value should be rejected and we get the default.
         assertEquals( "config", queueIndexValue);
     }
+
+
+
+    /**
+     * test that we can add new properties and modify existing ones.
+     * @throws IOException
+     */
+    @Test
+    public void testAddNewSettings() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "collection_" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity = new Entity();
+
+        testEntity.put( "one","value" );
+        testEntity.put( "two","value" );
+        app().collection( collectionName ).post( testEntity );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", Collections.singletonList("one"));
+
+        //Post index to the collection metadata
+        app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        // Now add a new setting 'queueIndex'
+
+        payload = new Entity();
+        payload.put( "queueIndex", "direct");
+
+        Map<String, String> queryParams = Collections.singletonMap("replace_all","false");
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload , queryParams );
+        waitForQueueDrainAndRefreshIndex();
+
+        // assert that both old and new are in the setting.
+
+        Object queueIndexValue = settings.get("queueIndex");
+        assertEquals( "direct", queueIndexValue);
+
+        Object feildsValue = settings.get("fields");
+        assertNotNull(feildsValue);
+        assertTrue(feildsValue  instanceof  List);
+        List list = (List) feildsValue;
+        assertEquals(1, list.size()  );
+        assertEquals( "one", list.get(0) );
+
+        // now replace the settings
+
+        payload = new Entity();
+        payload.put( "queueIndex", "async");
+        payload.put( "fields", Collections.singletonList("two"));
+
+        settings = app().collection( collectionName ).collection( "_settings" ).post( payload , queryParams );
+        waitForQueueDrainAndRefreshIndex();
+
+        // assert that they have new values
+
+        queueIndexValue = settings.get("queueIndex");
+        assertEquals( "async", queueIndexValue);
+
+        feildsValue = settings.get("fields");
+        assertNotNull(feildsValue);
+        assertTrue(feildsValue  instanceof  List);
+        list = (List) feildsValue;
+        assertEquals(1, list.size()  );
+        assertEquals( "two", list.get(0) );
+
+    }
+
 
 
     @Test

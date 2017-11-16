@@ -130,9 +130,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
             }
 
             entityRefs.add( new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
-            if ( i % 10 == 0 ) {
-                logger.info( "Created {} entities after delete time", i );
-            }
+            logger.info( "Created {} entities after delete time created time {} ", i , entity.getCreated());
 
         }
         logger.info("Created {} entities after delete time", ENTITIES_TO_ADD_AFTER_TIME);
@@ -155,11 +153,11 @@ public class CollectionDeleteTest extends AbstractCoreIT {
 
         waitForDelete( status, collectionDeleteService );
 
-        app.waitForQueueDrainAndRefreshIndex(15000);
+        //app.waitForQueueDrainAndRefreshIndex(15000);
 
         // ----------------- test that we can read the entries after the timestamp
 
-        readData( em, collectionName,ENTITIES_TO_ADD_AFTER_TIME);
+        retryReadData( em, collectionName, ENTITIES_TO_ADD_AFTER_TIME, 60);
     }
 
     /**
@@ -199,6 +197,19 @@ public class CollectionDeleteTest extends AbstractCoreIT {
         }
     }
 
+    private int retryReadData(EntityManager em, String collectionName, int expectedEntities,  int retry) throws Exception {
+        int count = -1;
+        do {
+            try {
+                count = readData(em, collectionName, expectedEntities);
+            } catch (Exception ignore) {
+                logger.info( "caught exception ", ignore);
+            }
+            logger.info( "read {} expected {}" , count, expectedEntities);
+        } while (count != expectedEntities && --retry >=0);
+        assertEquals( "Did not get expected entities", expectedEntities, count );
+        return count;
+    }
 
     private int readData(EntityManager em, String collectionName, int expectedEntities)
         throws Exception {
@@ -209,6 +220,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
             Query.Level.ALL_PROPERTIES, false);
 
         int count = 0;
+        List<Entity> list = new ArrayList<>();
         while ( true ) {
 
             if (results.getEntities().size() == 0) {
@@ -225,6 +237,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
                 }
                 lastEntityUUID = e.getUuid();
                 count++;
+                list.add(e);
             }
 
             results = em.getCollection(em.getApplicationRef(), collectionName, lastEntityUUID, expectedEntities,
@@ -232,6 +245,16 @@ public class CollectionDeleteTest extends AbstractCoreIT {
 
         }
         logger.info("read {} total entities", count);
+
+        if (count != expectedEntities) {
+            logger.info("Expected {} did not match actual {}", expectedEntities, count);
+            if (count < 20) {
+                for (Entity e : list) {
+                    Object key = e.getProperty("key2");
+                    logger.info("Entity key {} ceated {}", key, e.getCreated());
+                }
+            }
+        }
 
         assertEquals( "Did not get expected entities", expectedEntities, count );
         return count;

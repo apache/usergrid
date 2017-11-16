@@ -18,9 +18,7 @@ package org.apache.usergrid.rest.test.resource.endpoints;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -229,7 +227,7 @@ public class CollectionEndpoint extends NamedResource {
     }
 
     /**
-     * Post an entity to a collection.
+     * Post an entity to a collection with query params
      *
      * <pre>
      * app.collection("users").post(entity);
@@ -237,15 +235,20 @@ public class CollectionEndpoint extends NamedResource {
      * </pre>
      */
     public org.apache.usergrid.rest.test.resource.model.Entity post(
-        org.apache.usergrid.rest.test.resource.model.Entity payload){
+        org.apache.usergrid.rest.test.resource.model.Entity payload, Map<String,String> queryParams){
 
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
 
+        WebTarget target = getTarget(true);
+        for (String key : queryParams.keySet()) {
+            target = target.queryParam(key, queryParams.get(key));
+        }
+
         // use string type so we can log actual response from server
-        String responseString = getTarget( true )
+        String responseString = target
             .request()
             .accept(acceptHeader)
             .post( javax.ws.rs.client.Entity.json( payload ), String.class);
@@ -264,6 +267,21 @@ public class CollectionEndpoint extends NamedResource {
         }
 
         return new org.apache.usergrid.rest.test.resource.model.Entity(response);
+    }
+
+
+    /**
+     * Post an entity to a collection.
+     *
+     * <pre>
+     * app.collection("users").post(entity);
+     * POST /users {"color","red"}
+     * </pre>
+     */
+    public org.apache.usergrid.rest.test.resource.model.Entity post(
+        org.apache.usergrid.rest.test.resource.model.Entity payload){
+
+        return post(payload, Collections.emptyMap());
     }
 
     public org.apache.usergrid.rest.test.resource.model.Entity post() {
