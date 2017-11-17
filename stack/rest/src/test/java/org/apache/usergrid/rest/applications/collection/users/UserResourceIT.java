@@ -75,19 +75,7 @@ public class UserResourceIT extends AbstractRestIT {
         usersResource = this.app().collection("users");
         userResource = this.app().collection("user");
 
-        // make the queueindex direct to speed up the tests.
-        Entity payload = new Entity();
-        payload.put( "queueIndex", "direct");
-
-        //Post index to the collection metadata
-        app().collection( "user" ).collection( "_settings" ).post( payload );
-        app().collection( "users" ).collection( "_settings" ).post( payload );
-
         waitForQueueDrainAndRefreshIndex();
-    }
-
-    public void waitForQueueDrainAndRefreshIndex() {
-        waitForQueueDrainAndRefreshIndex(50);
     }
 
     @Test
