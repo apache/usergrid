@@ -38,7 +38,7 @@ public class SortBuilder {
      * Create a term filter for our sorts
      */
     public static TermQueryBuilder sortPropertyTermFilter( final String propertyName ) {
-        return QueryBuilders.termQuery( IndexingUtils.FIELD_NAME, propertyName );
+        return QueryBuilders.termQuery( IndexingUtils.FIELD_NAME_NESTED, propertyName );
     }
 
 }
