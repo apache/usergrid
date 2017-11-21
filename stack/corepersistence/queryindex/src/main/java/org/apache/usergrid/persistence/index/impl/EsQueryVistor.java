@@ -29,6 +29,7 @@ import org.elasticsearch.index.query.*;
 
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -300,10 +301,12 @@ public class EsQueryVistor implements QueryVisitor {
         final GeoDistanceSortBuilder geoSort =
                 SortBuilders.geoDistanceSort( IndexingUtils.FIELD_LOCATION_NESTED, lat, lon )
                             .unit( DistanceUnit.METERS )
-                            .geoDistance(GeoDistance.ARC).point(lat, lon);
+                            .sortMode(SortMode.MIN)
+                            .geoDistance(GeoDistance.ARC);
 
-        final TermQueryBuilder sortPropertyName = sortPropertyTermFilter(name);
+       final TermQueryBuilder sortPropertyName = sortPropertyTermFilter(name);
 
+        geoSort.setNestedPath(IndexingUtils.ENTITY_FIELDS);
         geoSort.setNestedFilter( sortPropertyName );
 
 

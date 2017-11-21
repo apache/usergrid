@@ -49,7 +49,7 @@ import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.SortBuilder.sortPropertyTermFilter;
 
 
@@ -267,12 +267,11 @@ public class SearchRequestBuilderStrategy {
     private FieldSortBuilder createSort( final SortOrder sortOrder, final String fieldName,
                                          final String propertyName ) {
 
-        final TermQueryBuilder propertyFilter = QueryBuilders.termQuery( ENTITY_FIELDS + "." + IndexingUtils.FIELD_NAME, propertyName );
-
+        final TermQueryBuilder propertyFilter = sortPropertyTermFilter(propertyName);
         FieldSortBuilder fieldSortBuilder =  SortBuilders.fieldSort( fieldName )
             .order( sortOrder )
             .setNestedFilter( propertyFilter )
-            .setNestedPath(ENTITY_FIELDS );
+            .setNestedPath(IndexingUtils.ENTITY_FIELDS );
 
         return fieldSortBuilder;
     }
