@@ -42,6 +42,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.persistence.core.util.DebugUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -90,10 +91,30 @@ public class ContentTypeFilter implements Filter {
         HeaderWrapperRequest newRequest = new HeaderWrapperRequest( origRequest );
         newRequest.adapt();
 
+        if (logger.isInfoEnabled()) {
+            DebugUtils.startRequest();
+            logger.info("doFilter Start METHOD {} PATH {} Message-ID={}",
+                ((HttpServletRequest) request).getMethod(),
+                ((HttpServletRequest) request).getQueryString(),
+                DebugUtils.getLogMessage());
+        }
+
         try {
             chain.doFilter( newRequest, response );
         } catch ( Exception e ) {
             logger.error("Error in filter", e);
+        }
+
+        long took = DebugUtils.timeTaken();
+        if (logger.isInfoEnabled()) {
+            logger.info("doFilter End METHOD {} PATH {} {}",
+                ((HttpServletRequest) request).getMethod(),
+                ((HttpServletRequest) request).getPathTranslated(),
+                DebugUtils.getLogMessage());
+
+            if (took > 1000) {
+                logger.debug("doFilter took more than one second " + DebugUtils.getLogMessage());
+            }
         }
     }
 

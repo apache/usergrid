@@ -15,9 +15,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.serializers.StringSerializer;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.util.DebugUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,6 +185,12 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             scheduler = Schedulers.io();
         }
 
+        if (DebugUtils.getMessageId() != null) {
+            log.info("Reading {} keys from entityIds {} {}",
+                rowKeys.size(),
+                entityIds,
+                DebugUtils.getLogMessage());
+        }
 
         final EntitySetImpl entitySetResults = Observable.from( rowKeys )
             //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
@@ -193,10 +201,12 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                 // if we have more than 1 request
                 return Observable.just( listObservable ).map( scopedRowKeys -> {
 
-
                     try {
-                        return keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( scopedRowKeys )
+                        Rows<ScopedRowKey<Id>, Boolean> resultRows =
+                         keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( scopedRowKeys )
                             .withColumnSlice( COL_VALUE ).execute().getResult();
+
+                        return resultRows;
                     }
                     catch ( ConnectionException e ) {
                         throw new CollectionRuntimeException( null, applicationScope,
@@ -228,6 +238,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                } ) ).toBlocking().last();
 
 
+        if (DebugUtils.getMessageId() != null) {
+            log.info("Read {} rows from keyspace {} entityIds {} {}",
+                entitySetResults.size(),
+                keyspace,
+                entityIds,
+                DebugUtils.getLogMessage());
+        }
 
         return entitySetResults;
     }

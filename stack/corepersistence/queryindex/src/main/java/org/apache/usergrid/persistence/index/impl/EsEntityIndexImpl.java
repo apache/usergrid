@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.DebugUtils;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.*;
@@ -47,10 +48,7 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.ShardOperationFailedException;
+import org.elasticsearch.action.*;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
@@ -63,6 +61,7 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.PlainListenableActionFuture;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -76,6 +75,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.threadpool.ThreadPoolStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -431,6 +431,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                                     final int limit, final int offset, final Map<String, Class> fieldsWithType,
                                     final boolean analyzeOnly ) {
 
+        if (logger.isInfoEnabled()) {
+            logger.info("Start Search query={}  {} ",
+                query,
+                DebugUtils.getLogMessage());
+        }
+
         IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull(searchTypes, "searchTypes cannot be null");
         Preconditions.checkNotNull( query, "query cannot be null" );
@@ -454,23 +460,43 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
 
 
+        boolean inCache;
         final String cacheKey = applicationScope.getApplication().getUuid().toString()+"_"+searchEdge.getEdgeName();
         final Object totalEdgeSizeFromCache = sizeCache.getIfPresent(cacheKey);
         long totalEdgeSizeInBytes;
         if (totalEdgeSizeFromCache == null){
             totalEdgeSizeInBytes = getTotalEntitySizeInBytes(searchEdge);
             sizeCache.put(cacheKey, totalEdgeSizeInBytes);
+            inCache = false;
         }else{
             totalEdgeSizeInBytes = (long) totalEdgeSizeFromCache;
+            inCache = true;
         }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("After size cache key={} inCache={} {} ",
+                cacheKey,
+                inCache,
+                DebugUtils.getLogMessage());
+        }
+
 
         final Object totalIndexSizeFromCache = sizeCache.getIfPresent(indexLocationStrategy.getIndexRootName());
         long totalIndexSizeInBytes;
         if (totalIndexSizeFromCache == null){
             totalIndexSizeInBytes = getIndexSize();
             sizeCache.put(indexLocationStrategy.getIndexRootName(), totalIndexSizeInBytes);
+            inCache = false;
         }else{
             totalIndexSizeInBytes = (long) totalIndexSizeFromCache;
+            inCache = true;
+        }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("After indexLocationStrategy.getIndexRootName() cache key={} inCache={} {} ",
+                indexLocationStrategy.getIndexRootName(),
+                inCache,
+                DebugUtils.getLogMessage());
         }
 
         List<Map<String, Object>> violations = QueryAnalyzer.analyze(parsedQuery, totalEdgeSizeInBytes, totalIndexSizeInBytes, indexFig);
@@ -478,6 +504,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             throw new QueryAnalyzerEnforcementException(violations, parsedQuery.getOriginalQuery());
         }else if (violations.size() > 0){
             logger.warn( QueryAnalyzer.violationsAsString(violations, parsedQuery.getOriginalQuery()) );
+        }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("After QueryAnalyzer violations size={} {} ",
+                violations.size(),
+                inCache,
+                DebugUtils.getLogMessage());
         }
 
         if(analyzeOnly){
@@ -498,8 +531,45 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final Timer.Context timerContext = searchTimer.time();
 
         try {
+            if (logger.isInfoEnabled()) {
+                logger.info("Before Query execute srb = {} {} ",
+                    srb.toString(),
+                    DebugUtils.getLogMessage());
+            }
 
-            searchResponse = srb.execute().actionGet();
+            ListenableActionFuture<SearchResponse> f =  srb.execute();
+            long start = System.nanoTime();
+            searchResponse = f.actionGet();
+            long end = System.nanoTime();
+
+            String stats = "";
+            if (f instanceof PlainListenableActionFuture) {
+                PlainListenableActionFuture p = (PlainListenableActionFuture) f;
+                ThreadPoolStats ts = p.threadPool().stats();
+                for (ThreadPoolStats.Stats s : ts) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(" Thread Pool starts ")
+                        .append(s.getName())
+                        .append(s.getQueue())
+                        .append(s.getActive())
+                        .append(s.getThreads());
+                    stats += sb.toString();
+                }
+            }
+
+            if (logger.isInfoEnabled()) {
+
+                logger.info("ThreadPool stats  {} {} ",
+                    stats,
+                    DebugUtils.getLogMessage());
+
+                logger.info("Waiting for ES Client took {}  class of executor is {} class of future is {} {} ",
+                    TimeUnit.NANOSECONDS.toMillis(end - start),
+                    srb.getClass().getCanonicalName(),
+                    f.getClass().getCanonicalName(),
+                    DebugUtils.getLogMessage());
+            }
+
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with Elasticsearch: {}", t.getMessage() );
@@ -508,6 +578,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
         finally{
             timerContext.stop();
+
+            if (logger.isInfoEnabled()) {
+                logger.info("End Search query={}  {} ",
+                    query,
+                    DebugUtils.getLogMessage());
+            }
+
         }
 
         failureMonitor.success();
