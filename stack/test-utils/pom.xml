@@ -106,7 +106,7 @@
                     <artifactId>lz4</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>netty-all</artifactId>
+                    <artifactId>*</artifactId>
                     <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>

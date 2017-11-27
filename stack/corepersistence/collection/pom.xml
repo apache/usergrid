@@ -41,7 +41,7 @@
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
-                    <artifactId>netty-all</artifactId>
+                    <artifactId>*</artifactId>
                     <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>
