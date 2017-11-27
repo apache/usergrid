@@ -403,7 +403,7 @@ public class Export extends ExportingToolBase {
         JsonFactory jsonFactory = new JsonFactory();
         // or, for data binding,
         // org.codehaus.jackson.mapper.MappingJsonFactory
-        JsonGenerator jg = jsonFactory.createJsonGenerator( file, JsonEncoding.UTF8 );
+        JsonGenerator jg = jsonFactory.createGenerator( file, JsonEncoding.UTF8 );
         // or Stream, Reader
 
         jg.writeStartArray();
