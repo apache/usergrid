@@ -302,7 +302,7 @@
             <artifactId>jclouds-netty</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>netty-all</artifactId>
+                    <artifactId>*</artifactId>
                     <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>
