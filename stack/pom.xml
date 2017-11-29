@@ -1240,7 +1240,18 @@
                 <groupId>com.relayrides</groupId>
                 <artifactId>pushy</artifactId>
                 <!-- The sha in the version is the git commit used in this build.  Check out the pushy source, then this commit to build the library locally -->
-                <version>0.4</version>
+                <version>0.5.2</version>
+                <!-- pushy 0.5.2 uses netty 4.1.0.CR2 where as ES uses 4.1.13 we need to keep major version the same-->
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
