@@ -19,9 +19,9 @@ package org.apache.usergrid.services.assets.data;
 
 import com.google.api.services.storage.StorageScopes;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.HttpTransportOptions;
 import com.google.cloud.TransportOptions;
 import com.google.cloud.WriteChannel;
-import com.google.cloud.http.HttpTransportOptions;
 import com.google.cloud.storage.*;
 
 import org.apache.commons.io.FileUtils;
