@@ -46,7 +46,7 @@ public interface EntityManagerFig extends GuicyFig {
      * Comma-separated list of one or more Amazon regions to use if multiregion
      * is set to true.
      */
-    @Key( "usergrid.queue.regionList" )
+    @Key( "usergrid.cluster.region.list" )
     @Default("us-east-1")
     String getRegionList();
 
