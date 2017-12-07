@@ -1030,7 +1030,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         try {
             app().collection( collectionName ).collection( "_settings" )
-                .post( new Entity().chainPut(REGION_SETTING, "us-moon-1" ) );
+                .post( new Entity().chainPut(REGION_SETTING, "us-moon" ) );
             fail( "post should have failed");
 
         } catch ( BadRequestException expected ) {}
@@ -1038,14 +1038,14 @@ public class CollectionsResourceIT extends AbstractRestIT {
         // set collection region with good region
 
         app().collection( collectionName ).collection( "_settings" )
-            .post( new Entity().chainPut( REGION_SETTING, "us-east-1" ) );
+            .post( new Entity().chainPut( REGION_SETTING, "us-east" ) );
 
         // get collection settings see that we have a region
 
         collection = app().collection( collectionName ).collection( "_settings" ).get();
         settings = (Map<String, Object>)collection.getResponse().getData();
         assertNotNull( settings.get( REGION_SETTING ));
-        assertEquals( "us-east-1", settings.get( REGION_SETTING ));
+        assertEquals( "us-east", settings.get( REGION_SETTING ));
 
         // unset the collection region
 
