@@ -34,6 +34,7 @@ import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.services.assets.BinaryStoreFactory;
 import org.apache.usergrid.services.assets.data.*;
@@ -50,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.security.auth.Subject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.io.InputStream;
@@ -245,7 +247,7 @@ public class ServiceResource extends AbstractContextResource {
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections, false);
+            returnInboundConnections, returnOutboundConnections, false, false);
 
         response.setServiceRequest( r );
 
@@ -299,7 +301,7 @@ public class ServiceResource extends AbstractContextResource {
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections, false);
+            returnInboundConnections, returnOutboundConnections, false, false);
 
         response.setServiceRequest( r );
 
@@ -384,6 +386,11 @@ public class ServiceResource extends AbstractContextResource {
         }
 
         boolean analyzeQueryOnly = Boolean.valueOf(ui.getQueryParameters().getFirst("analyzeOnly"));
+        boolean returnQuery = false;
+        // currently only allow query return if service admin
+        if (SubjectUtils.isServiceAdmin()) {
+            returnQuery = Boolean.valueOf(ui.getQueryParameters().getFirst("returnQuery"));
+        }
 
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
@@ -391,7 +398,7 @@ public class ServiceResource extends AbstractContextResource {
         }
         addQueryParams( getServiceParameters(), ui );
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections, analyzeQueryOnly);
+            returnInboundConnections, returnOutboundConnections, analyzeQueryOnly, returnQuery);
         response.setServiceRequest( r );
         ServiceResults results = r.execute();
         if ( results != null ) {

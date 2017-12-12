@@ -106,7 +106,8 @@ public class ConnectionServiceImpl implements ConnectionService {
         else {
 
             results =
-                pipelineBuilder.searchConnection( search.getConnectionName(), query.get(), search.getEntityType(), search.getAnalyzeOnly() )
+                pipelineBuilder.searchConnection( search.getConnectionName(), query.get(), search.getEntityType(),
+                    search.getAnalyzeOnly(), search.getReturnQuery() )
                                .loadEntities();
         }
 
@@ -135,7 +136,8 @@ public class ConnectionServiceImpl implements ConnectionService {
         }
         else {
             traversedIds =
-                pipelineBuilder.searchConnection( connectionName, query.get(), search.getEntityType(), search.getAnalyzeOnly() ).loadIds();
+                pipelineBuilder.searchConnection( connectionName, query.get(), search.getEntityType(),
+                    search.getAnalyzeOnly(), search.getReturnQuery() ).loadIds();
         }
 
         //create connection refs

@@ -357,13 +357,13 @@ public class ServiceManager {
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters ) throws Exception {
-        return newRequest( action, false, parameters, null, true, true, false);
+        return newRequest( action, false, parameters, null, true, true, false, false);
     }
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters, ServicePayload payload )
             throws Exception {
-        return newRequest( action, false, parameters, payload, true, true, false);
+        return newRequest( action, false, parameters, payload, true, true, false, false);
     }
 
 
@@ -382,7 +382,8 @@ public class ServiceManager {
 
     public ServiceRequest newRequest(ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
                                      ServicePayload payload, boolean returnsInboundConnections,
-                                     boolean returnsOutboundConnections, boolean analyzeQueryOnly) throws Exception {
+                                     boolean returnsOutboundConnections, boolean analyzeQueryOnly,
+                                     boolean returnQuery) throws Exception {
 
         if ( em != null ) {
             if ( action != null ) {
@@ -413,12 +414,12 @@ public class ServiceManager {
 
         String serviceName = pluralize( ServiceParameter.dequeueParameter( parameters ).getName() );
         return new ServiceRequest( this, action, serviceName, parameters, payload, returnsTree,
-            returnsInboundConnections, returnsOutboundConnections, analyzeQueryOnly);
+            returnsInboundConnections, returnsOutboundConnections, analyzeQueryOnly, returnQuery);
     }
 
     public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
                                       ServicePayload payload ) throws Exception {
-        return newRequest( action, returnsTree, parameters, payload, true, true, false);
+        return newRequest( action, returnsTree, parameters, payload, true, true, false, false);
     }
 
     public void notifyExecutionEventListeners( ServiceAction action, ServiceRequest request, ServiceResults results,
