@@ -42,6 +42,7 @@ public class CollectionSearch {
     private final Optional<String> cursor;
     private Level level = Level.ALL;
     private boolean analyzeOnly;
+    private boolean returnQuery;
     private boolean keepStaleEntries;
 
 
@@ -56,6 +57,7 @@ public class CollectionSearch {
         this.query = query;
         this.cursor = cursor;
         this.analyzeOnly = false;
+        this.returnQuery = false;
     }
 
 
@@ -103,6 +105,14 @@ public class CollectionSearch {
 
     public void setAnalyzeOnly(final boolean analyzeOnly){
         this.analyzeOnly = analyzeOnly;
+    }
+
+    public boolean getReturnQuery() {
+        return returnQuery;
+    }
+
+    public void setReturnQuery(final boolean returnQuery) {
+        this.returnQuery = returnQuery;
     }
 
     public boolean getKeepStaleEntries() {
