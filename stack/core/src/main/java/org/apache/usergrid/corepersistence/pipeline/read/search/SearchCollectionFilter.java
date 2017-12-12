@@ -53,8 +53,9 @@ public class SearchCollectionFilter extends AbstractElasticSearchFilter {
                                    @Assisted( "query" ) final String query,
                                    @Assisted( "collectionName" ) final String collectionName,
                                    @Assisted( "entityType" ) final String entityType,
-                                   @Assisted( "analyzeOnly") final boolean analyzeOnly) {
-        super( entityIndexFactory, metricsFactory, indexLocationStrategyFactory, query, analyzeOnly );
+                                   @Assisted( "analyzeOnly") final boolean analyzeOnly,
+                                   @Assisted( "returnQuery" ) final boolean returnQuery) {
+        super( entityIndexFactory, metricsFactory, indexLocationStrategyFactory, query, analyzeOnly, returnQuery);
         this.collectionName = collectionName;
         this.entityType = entityType;
     }

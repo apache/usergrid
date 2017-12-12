@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder.SearchReq
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
 import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerEnforcementException;
+import org.apache.usergrid.persistence.index.exceptions.QueryReturnException;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
@@ -427,6 +428,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit, final int offset, final Map<String, Class> fieldsWithType,
                                     final boolean analyzeOnly ) {
+        return search(searchEdge, searchTypes, query, limit, offset, fieldsWithType, analyzeOnly, false);
+    }
+
+    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                                    final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                                    final boolean analyzeOnly, final boolean returnQuery ) {
 
         IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull(searchTypes, "searchTypes cannot be null");
@@ -449,7 +456,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         for (SortPredicate sortPredicate : parsedQuery.getSortPredicates() ){
             hasGeoSortPredicates = visitor.getGeoSorts().contains(sortPredicate.getPropertyName());
         }
-        
+
         final String cacheKey = applicationScope.getApplication().getUuid().toString()+"_"+searchEdge.getEdgeName();
         final Object totalEdgeSizeFromCache = sizeCache.getIfPresent(cacheKey);
         long totalEdgeSizeInBytes;
@@ -488,6 +495,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
                 this.alias.getReadAlias(), searchEdge.getNodeId(), searchEdge.getEdgeName(),
                 searchTypes.getTypeNames( applicationScope ), srb );
+        }
+
+        if (returnQuery) {
+            throw new QueryReturnException(parsedQuery.getOriginalQuery(), srb.toString(), applicationScope.getApplication().getUuid());
         }
 
         //Added For Graphite Metrics

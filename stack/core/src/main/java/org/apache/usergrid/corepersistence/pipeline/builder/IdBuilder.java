@@ -118,13 +118,15 @@ public class IdBuilder {
      * @param collectionName  The name of the collection
      * @param ql The user's query to execute
      * @param entityType The type of the entity
-     * @param analyzeOnly
+     * @param analyzeOnly Whether only query analysis should be performed
+     * @param returnQuery Whether query should be returned instead of results
      * @return  Candidate results
      */
-    public CandidateBuilder searchCollection(final String collectionName, final String ql, final String entityType, boolean analyzeOnly) {
+    public CandidateBuilder searchCollection(final String collectionName, final String ql, final String entityType,
+                                             final boolean analyzeOnly, final boolean returnQuery) {
 
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
-            ql, collectionName, entityType, analyzeOnly ) );
+            ql, collectionName, entityType, analyzeOnly, returnQuery ) );
 
         return new CandidateBuilder( newFilter, filterFactory , null);
     }
@@ -132,7 +134,7 @@ public class IdBuilder {
     public CandidateBuilder searchCollection(final String collectionName, final String ql, final CollectionSearch search ) {
 
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
-            ql, collectionName, search.getEntityType(), search.getAnalyzeOnly() ) );
+            ql, collectionName, search.getEntityType(), search.getAnalyzeOnly(), search.getReturnQuery() ) );
 
         return new CandidateBuilder( newFilter, filterFactory, search );
     }
@@ -142,14 +144,16 @@ public class IdBuilder {
      * @param connectionName The connection name to search
      * @param ql The query to execute
      * @param entityType The optional type of entity.  If this is absent, all entity types in the connection will be searched
-     * @param analyzeOnly
+     * @param analyzeOnly Whether only query analysis should be performed
+     * @param returnQuery Whether index query should be returned instead of results
      * @return  Candidate results
      */
-    public CandidateBuilder searchConnection(final String connectionName, final String ql, final Optional<String> entityType, boolean analyzeOnly) {
+    public CandidateBuilder searchConnection(final String connectionName, final String ql, final Optional<String> entityType,
+                                             final boolean analyzeOnly, final boolean returnQuery) {
 
 
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchConnectionFilter(
-            ql, connectionName, entityType,analyzeOnly ) );
+            ql, connectionName, entityType, analyzeOnly, returnQuery ) );
 
         return new CandidateBuilder( newFilter, filterFactory );
     }

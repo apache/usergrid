@@ -82,6 +82,7 @@ public class Query {
     private String ql;
     private Collection<SelectFieldMapping> selectFields;
     private boolean analyzeOnly = false;
+    private boolean returnQuery = false;
 
 
     private static ObjectMapper mapper = new ObjectMapper();
@@ -125,7 +126,7 @@ public class Query {
         collection = q.collection;
         level = q.level;
         analyzeOnly = q.analyzeOnly;
-
+        returnQuery = q.returnQuery;
     }
 
 
@@ -504,6 +505,14 @@ public class Query {
 
     public boolean getAnalyzeOnly(){
         return analyzeOnly;
+    }
+
+    public void setReturnQuery(final boolean returnQuery) {
+        this.returnQuery = returnQuery;
+    }
+
+    public boolean getReturnQuery() {
+        return returnQuery;
     }
 
     public boolean isMergeSelectResults() {
