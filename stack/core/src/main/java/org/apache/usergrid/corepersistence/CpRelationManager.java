@@ -634,6 +634,7 @@ public class CpRelationManager implements RelationManager {
         final Optional<String> queryString = query.isGraphSearch()? Optional.<String>absent(): query.getQl();
         final Id ownerId = headEntity.asId();
         final boolean analyzeOnly = query.getAnalyzeOnly();
+        final boolean returnQuery = query.getReturnQuery();
 
 
         if(query.getLevel() == Level.IDS ){
@@ -648,6 +649,7 @@ public class CpRelationManager implements RelationManager {
                             queryString, cursor );
 
                     search.setAnalyzeOnly(analyzeOnly);
+                    search.setReturnQuery(returnQuery);
 
                     return collectionService.searchCollectionIds( search );
                 }
@@ -666,6 +668,7 @@ public class CpRelationManager implements RelationManager {
                         queryString, cursor );
 
                 search.setAnalyzeOnly(analyzeOnly);
+                search.setReturnQuery(returnQuery);
                 IndexConsistency indexConsistency = getIndexConsistencyForType(collectionName);
                 search.setKeepStaleEntries(indexConsistency == IndexConsistency.LATEST);
 
@@ -931,6 +934,7 @@ public class CpRelationManager implements RelationManager {
         headEntity = em.validate( headEntity );
 
         final boolean analyzeOnly = query.getAnalyzeOnly();
+        final boolean returnQuery = query.getReturnQuery();
 
 
         final Query toExecute = adjustQuery( query );
@@ -965,6 +969,7 @@ public class CpRelationManager implements RelationManager {
                         new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
                             queryString, cursor, isConnecting );
                     search.setAnalyzeOnly(analyzeOnly);
+                    search.setReturnQuery(returnQuery);
                     return connectionService.searchConnectionAsRefs( search );
                 }
             }.next();
@@ -981,6 +986,7 @@ public class CpRelationManager implements RelationManager {
                     new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
                         queryString, cursor, isConnecting );
                 search.setAnalyzeOnly(analyzeOnly);
+                search.setReturnQuery(returnQuery);
                 return connectionService.searchConnection( search );
             }
         }.next();

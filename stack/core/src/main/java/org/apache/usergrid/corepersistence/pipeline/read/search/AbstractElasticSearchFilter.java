@@ -57,6 +57,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
     private final String query;
     private final Timer searchTimer;
     private final boolean analyzeOnly;
+    private final boolean returnQuery;
 
 
     /**
@@ -65,12 +66,13 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
     public AbstractElasticSearchFilter(final EntityIndexFactory entityIndexFactory,
                                        final MetricsFactory metricsFactory,
                                        final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                                       final String query, boolean analyzeOnly) {
+                                       final String query, boolean analyzeOnly, boolean returnQuery) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.query = query;
         this.searchTimer = metricsFactory.getTimer( AbstractElasticSearchFilter.class, "query.search" );
         this.analyzeOnly = analyzeOnly;
+        this.returnQuery = returnQuery;
     }
 
 
@@ -127,7 +129,8 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                     try {
                         final CandidateResults candidateResults =
-                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet, propertiesWithType, analyzeOnly );
+                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet,
+                                propertiesWithType, analyzeOnly, returnQuery);
 
 
                         Collection<SelectFieldMapping> fieldMappingCollection = candidateResults.getGetFieldMappings();
