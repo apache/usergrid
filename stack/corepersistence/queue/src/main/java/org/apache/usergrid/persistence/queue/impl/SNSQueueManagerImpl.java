@@ -249,7 +249,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
                     region = Region.getRegion(regions);
                 }
                 catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("INVALID REGION FROM CONFIGURATION " + LegacyQueueFig.USERGRID_CLUSTER_REGION_LIST + ": " + regionName, e);
+                    throw new IllegalArgumentException("INVALID REGION FROM CONFIGURATION " + LegacyQueueFig.USERGRID_QUEUE_REGION_LIST + ": " + regionName, e);
                 }
 
                 AmazonSQSClient sqsClient = createSQSClient( region );
@@ -825,7 +825,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
             return Region.getRegion(regions);
         }
         catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("INVALID PRIMARY REGION FROM CONFIGURATION " + LegacyQueueFig.USERGRID_CLUSTER_REGION_LOCAL + ": " + regionName, e);
+            throw new IllegalArgumentException("INVALID PRIMARY REGION FROM CONFIGURATION " + LegacyQueueFig.USERGRID_QUEUE_REGION_LOCAL + ": " + regionName, e);
         }
     }
 
