@@ -14,14 +14,14 @@ public interface LegacyQueueFig extends GuicyFig {
      * http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html*
      */
 
-    String USERGRID_CLUSTER_REGION_LIST = "usergrid.cluster.region.list";
-    String USERGRID_CLUSTER_REGION_LOCAL = "usergrid.cluster.region.local";
+    String USERGRID_QUEUE_REGION_LIST = "usergrid.queue.regionList";
+    String USERGRID_QUEUE_REGION_LOCAL = "usergrid.queue.region";
 
 
     /**
      * Primary region to use for Amazon queues.
      */
-    @Key( USERGRID_CLUSTER_REGION_LOCAL )
+    @Key(USERGRID_QUEUE_REGION_LOCAL)
     @Default("us-east-1")
     String getPrimaryRegion();
 
@@ -37,7 +37,7 @@ public interface LegacyQueueFig extends GuicyFig {
      * Comma-separated list of one or more Amazon regions to use if multiregion
      * is set to true.
      */
-    @Key( USERGRID_CLUSTER_REGION_LIST )
+    @Key(USERGRID_QUEUE_REGION_LIST)
     @Default("us-east-1")
     String getRegionList();
 
