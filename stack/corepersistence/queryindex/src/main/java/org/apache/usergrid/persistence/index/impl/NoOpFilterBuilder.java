@@ -20,22 +20,11 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.io.IOException;
-
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.BaseFilterBuilder;
-
-
 /**
  * Marker interface that does nothing
  */
-public class NoOpFilterBuilder extends BaseFilterBuilder {
+public class NoOpFilterBuilder extends NoOpQueryBuilder {
 
     public static final NoOpFilterBuilder INSTANCE = new NoOpFilterBuilder();
 
-
-    @Override
-    protected void doXContent( final XContentBuilder builder, final Params params ) throws IOException {
-        //no op
-    }
 }

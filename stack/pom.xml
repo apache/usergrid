@@ -108,7 +108,7 @@
         <hector-test-version>1.1-4</hector-test-version>
         <jacoco.version>0.7.5.201505241946</jacoco.version>
         <jackson-version>1.9.9</jackson-version>
-        <jackson-2-version>2.3.3</jackson-2-version>
+        <jackson-2-version>2.8.6</jackson-2-version>
         <jclouds.version>1.9.0</jclouds.version>
         <jersey-version>2.21</jersey-version>
         <junit-version>4.12</junit-version>
@@ -352,7 +352,7 @@
 
                 <exclusions>
                     <exclusion>
-                        <artifactId>netty-all</artifactId>
+                        <artifactId>*</artifactId>
                         <groupId>io.netty</groupId>
                     </exclusion>
                     <exclusion>
@@ -1240,7 +1240,18 @@
                 <groupId>com.relayrides</groupId>
                 <artifactId>pushy</artifactId>
                 <!-- The sha in the version is the git commit used in this build.  Check out the pushy source, then this commit to build the library locally -->
-                <version>0.4</version>
+                <version>0.5.2</version>
+                <!-- pushy 0.5.2 uses netty 4.1.0.CR2 where as ES uses 4.1.13 we need to keep major version the same-->
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>

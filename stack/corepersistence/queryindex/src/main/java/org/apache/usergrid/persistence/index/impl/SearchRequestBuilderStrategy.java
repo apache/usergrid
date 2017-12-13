@@ -23,11 +23,10 @@ package org.apache.usergrid.persistence.index.impl;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.index.query.BoolFilterBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermFilterBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -145,6 +144,7 @@ public class SearchRequestBuilderStrategy {
         //sort by the entity id if our times are equal
         //srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
 
+
         return;
     }
 
@@ -205,7 +205,7 @@ public class SearchRequestBuilderStrategy {
      * Create our filter builder.  We need to restrict our results on edge search, as well as on types, and any filters
      * that came from the grammar.
      */
-    private FilterBuilder createFilterBuilder( final SearchEdge searchEdge, final QueryVisitor visitor,
+    private QueryBuilder createFilterBuilder( final SearchEdge searchEdge, final QueryVisitor visitor,
                                                final SearchTypes searchTypes ) {
         String context = createContextName( applicationScope, searchEdge );
 
@@ -218,10 +218,10 @@ public class SearchRequestBuilderStrategy {
         // Do we need to put the context term first for performance?
 
         //make sure we have entity in the context
-        BoolFilterBuilder boolQueryFilter = FilterBuilders.boolFilter();
+        BoolQueryBuilder boolQueryFilter = QueryBuilders.boolQuery();
 
         //add our edge search
-        boolQueryFilter.must( FilterBuilders.termFilter( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
+        boolQueryFilter.must( QueryBuilders.termQuery( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
 
 
         /**
@@ -231,19 +231,23 @@ public class SearchRequestBuilderStrategy {
 
 
         if ( sourceTypes.length > 0 ) {
-            final FilterBuilder[] typeTerms = new FilterBuilder[sourceTypes.length];
+            final QueryBuilder[] typeTerms = new QueryBuilder[sourceTypes.length];
 
+
+            BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
             for ( int i = 0; i < sourceTypes.length; i++ ) {
-                typeTerms[i] = FilterBuilders.termFilter( IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes[i] );
+                typeTerms[i] = QueryBuilders.termQuery( IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes[i] );
+                boolQuery.filter(typeTerms[i]);
             }
 
             //add all our types, 1 type must match per query
-            boolQueryFilter.must( FilterBuilders.orFilter( typeTerms ) );
+            //boolQueryFilter.must( QueryBuilders.orFilter( typeTerms ) );
+            boolQueryFilter.must( boolQuery );
         }
 
         //if we have a filter from our visitor, add it
 
-        Optional<FilterBuilder> queryBuilder = visitor.getFilterBuilder();
+        Optional<QueryBuilder> queryBuilder = visitor.getFilterBuilder();
 
         if ( queryBuilder.isPresent() ) {
             boolQueryFilter.must( queryBuilder.get() );
@@ -263,9 +267,12 @@ public class SearchRequestBuilderStrategy {
     private FieldSortBuilder createSort( final SortOrder sortOrder, final String fieldName,
                                          final String propertyName ) {
 
-        final TermFilterBuilder propertyFilter = sortPropertyTermFilter( propertyName );
+        final TermQueryBuilder propertyFilter = sortPropertyTermFilter(propertyName);
+        FieldSortBuilder fieldSortBuilder =  SortBuilders.fieldSort( fieldName )
+            .order( sortOrder )
+            .setNestedFilter( propertyFilter )
+            .setNestedPath(IndexingUtils.ENTITY_FIELDS );
 
-
-        return SortBuilders.fieldSort( fieldName ).order( sortOrder ).setNestedFilter( propertyFilter );
+        return fieldSortBuilder;
     }
 }

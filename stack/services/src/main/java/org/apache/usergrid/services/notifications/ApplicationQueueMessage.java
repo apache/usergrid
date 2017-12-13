@@ -17,12 +17,10 @@
 package org.apache.usergrid.services.notifications;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import org.apache.usergrid.mq.Message;
 
 import java.util.UUID;
-import org.elasticsearch.common.primitives.Longs;
+import com.google.common.primitives.Longs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +51,8 @@ public class ApplicationQueueMessage implements Serializable {
     public static UUID bytesToUuid( byte[] sixteenBytes ) {
         byte[] msBytes = Arrays.copyOfRange( sixteenBytes, 0, 8 );
         byte[] lsBytes = Arrays.copyOfRange( sixteenBytes, 8, 16 );
-        long msb = Longs.fromByteArray( msBytes ); 
-        long lsb = Longs.fromByteArray( lsBytes ); 
+        long msb = Longs.fromByteArray( msBytes );
+        long lsb = Longs.fromByteArray( lsBytes );
         return new UUID( msb, lsb );
     }
 

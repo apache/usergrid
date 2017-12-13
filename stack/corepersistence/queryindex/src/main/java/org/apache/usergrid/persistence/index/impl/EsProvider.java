@@ -24,11 +24,10 @@ import java.net.UnknownHostException;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +122,8 @@ public class EsProvider {
         final String clusterName = indexFig.getClusterName();
         final int port = indexFig.getPort();
 
-        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put( "cluster.name", clusterName )
+        Settings.Builder settings = Settings.builder()
+            .put( "cluster.name", clusterName )
             .put( "client.transport.sniff", true );
 
         String nodeName = indexFig.getNodeName();
@@ -142,11 +142,15 @@ public class EsProvider {
         settings.put( "node.name", nodeName );
 
 
-        TransportClient transportClient = new TransportClient( settings.build() );
+        TransportClient transportClient =  new PreBuiltTransportClient(settings.build());
 
         // we will connect to ES on all configured hosts
         for ( String host : indexFig.getHosts().split( "," ) ) {
-            transportClient.addTransportAddress( new InetSocketTransportAddress( host, port ) );
+            try {
+                transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
+            } catch (UnknownHostException uhe) {
+                logger.error( "Couldn't resolve hostname {} to use as ES node ", host );
+            }
         }
 
         return transportClient;
@@ -181,7 +185,7 @@ public class EsProvider {
         final String hostString = hosts.toString();
 
 
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.builder()
 
             .put( "cluster.name", clusterName )
 
@@ -200,7 +204,7 @@ public class EsProvider {
             logger.trace("Creating ElasticSearch client with settings: {}", settings.getAsMap());
         }
 
-        Node node = NodeBuilder.nodeBuilder().settings( settings ).client( true ).data( false ).node();
+        Node node = new Node( settings );
 
         return node.client();
     }

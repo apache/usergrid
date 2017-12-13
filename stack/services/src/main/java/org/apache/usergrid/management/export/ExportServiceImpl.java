@@ -527,8 +527,7 @@ public class ExportServiceImpl implements ExportService {
 
     protected JsonGenerator getJsonGenerator( File ephermal ) throws IOException {
         //TODO:shouldn't the below be UTF-16?
-
-        JsonGenerator jg = jsonFactory.createJsonGenerator( ephermal, JsonEncoding.UTF8 );
+        JsonGenerator jg = jsonFactory.createGenerator( ephermal, JsonEncoding.UTF8 );
         jg.setPrettyPrinter( new DefaultPrettyPrinter(  ) );
         jg.setCodec( new ObjectMapper() );
         return jg;

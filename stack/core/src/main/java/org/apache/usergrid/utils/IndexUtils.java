@@ -30,14 +30,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.apache.lucene.analysis.standard.ClassicAnalyzer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.util.Version;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -53,7 +52,7 @@ public class IndexUtils {
 
     private static final Logger logger = LoggerFactory.getLogger( IndexUtils.class );
 
-    static Analyzer analyzer = new StandardAnalyzer( Version.LUCENE_30 );
+    static Analyzer analyzer = new ClassicAnalyzer();
 
 
     private static void buildKeyValueSet( Object node, Map<String, List<Object>> keyValues, String path,
