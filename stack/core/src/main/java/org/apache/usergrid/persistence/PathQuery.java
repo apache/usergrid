@@ -23,9 +23,13 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.utils.InflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class PathQuery<E> {
+
+    private static final Logger logger = LoggerFactory.getLogger( PathQuery.class );
 
     private PathQuery source;
     private Query query;
@@ -122,10 +126,30 @@ public class PathQuery<E> {
 
         EntityRef ref = new SimpleEntityRef(type,uuid);
 
-        // if it's a single name identifier, just directly fetch that
-        if ( !query.getQl().isPresent() && query.getSingleNameOrEmailIdentifier() != null){
+        if ( !query.getQl().isPresent() && query.getSingleUuidIdentifier() != null) {
 
+            // fetch entity by UUID directly
+            UUID entityUUID = query.getSingleUuidIdentifier();
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("getHeadResults(): identified path uuid: appid={}, collection={}, entityUUID={}",
+                    uuid.toString(), query.getCollection(), entityUUID.toString());
+            }
+
+            String entityType = InflectionUtils.singularize(query.getCollection());
+
+            return em.getEntities(Collections.singletonList(entityUUID), entityType);
+
+        } else if ( !query.getQl().isPresent() && query.getSingleNameOrEmailIdentifier() != null){
+
+            // if it's a single name identifier, just directly fetch that
             String name = query.getSingleNameOrEmailIdentifier();
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("getHeadResults(): identified path name/email: appid={}, collection={}, name={}",
+                    uuid.toString(), query.getCollection(), name);
+            }
+
             String entityType = InflectionUtils.singularize(query.getCollection());
 
             // don't use unique index repair on read only logic
@@ -138,6 +162,12 @@ public class PathQuery<E> {
 
 
             return em.getEntities(Collections.singletonList(entityId), entityType);
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("getHeadResults(): sending query to ES: appid={}, collection={}, query=[{}]",
+                uuid.toString(), query.getCollection(),
+                query.getQl().isPresent() ? query.getQl().get() : "NONE");
         }
 
         return ( query.getCollection() != null ) ?
