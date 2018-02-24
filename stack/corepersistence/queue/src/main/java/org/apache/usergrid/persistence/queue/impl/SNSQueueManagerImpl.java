@@ -682,7 +682,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
     @Override
     public <T extends Serializable> void sendMessageToLocalRegion(final T body, Boolean async) throws IOException {
-        boolean sendAsync = async.booleanValue();
+        boolean sendAsync = async == null || async.booleanValue();
         if (sendAsync) {
             sendMessageToLocalRegionAsync(body);
         } else {
