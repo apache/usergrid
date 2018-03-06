@@ -317,7 +317,20 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             final UUID entityVersion = entity.getVersion();
             final Id entityId = entity.getId();
 
-            //entity is newer than ES version, could be a missed or slow index event
+            // The entity is marked as deleted
+            if (!entity.getEntity().isPresent() || entity.getStatus() == MvccEntity.Status.DELETED ) {
+
+                // when updating entities, we don't delete all previous versions from ES so this action is expected
+                if(logger.isDebugEnabled()){
+                    logger.debug( "Deindexing deleted entity on edge {} for entityId {} and version {}",
+                        searchEdge, entityId, entityVersion);
+                }
+
+                batch.deindex( searchEdge, entityId, candidateVersion );
+                return;
+            }
+
+            // entity exists and is newer than ES version, could be a missed or slow index event
             if ( UUIDComparator.staticCompare(entityVersion, candidateVersion) > 0 ) {
 
                Date candidateTimeStamp = UUIDTimeStampToDate(candidateVersion);
@@ -342,20 +355,6 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                     batch.deindex(searchEdge, entityId, candidateVersion);
                     return;
                 }
-            }
-
-
-            // The entity is marked as deleted
-            if (!entity.getEntity().isPresent() || entity.getStatus() == MvccEntity.Status.DELETED ) {
-
-                // when updating entities, we don't delete previous versions from ES so this action is expected
-                if(logger.isDebugEnabled()){
-                    logger.debug( "Deindexing deleted entity on edge {} for entityId {} and version {}",
-                        searchEdge, entityId, entityVersion);
-                }
-
-                batch.deindex( searchEdge, entityId, candidateVersion );
-                return;
             }
 
             //ES is newer than cass, it means we haven't repaired the record in Cass, we don't want to
