@@ -638,7 +638,9 @@ public class CpEntityManager implements EntityManager {
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
-        if ( !skipIndexingForType( entityId.getType() ) ) {
+        // may still want to delete index entries even if indexing is turned off for new updates
+        if ( entityManagerFig.deindexDeletedWhenCollectionIndexingOff() ||
+            !skipIndexingForType( entityId.getType() ) ) {
             indexService.queueEntityDelete( applicationScope, entityId );
         }
 

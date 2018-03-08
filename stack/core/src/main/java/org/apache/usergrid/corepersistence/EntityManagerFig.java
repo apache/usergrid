@@ -42,6 +42,10 @@ public interface EntityManagerFig extends GuicyFig {
     @Default( "false" )
     boolean getDeindexOnUpdate();
 
+    @Key( "usergrid.entityManager.deindex_deleted_when_collection_indexing_off")
+    @Default( "true" )
+    boolean deindexDeletedWhenCollectionIndexingOff();
+
     /**
      * Comma-separated list of one or more Amazon regions to use if multiregion
      * is set to true.

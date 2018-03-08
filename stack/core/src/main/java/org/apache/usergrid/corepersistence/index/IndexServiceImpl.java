@@ -199,6 +199,11 @@ public class IndexServiceImpl implements IndexService {
 
             Object fields = jsonMapData.get("fields");
 
+            // if "fields" field doesn't exist, should treat like fields=all
+            if ( fields == null ) {
+                return Optional.absent();
+            }
+
             if ( fields != null && fields instanceof String && "all".equalsIgnoreCase(fields.toString())) {
                 return Optional.absent();
             }
