@@ -301,14 +301,14 @@ public class EventBuilderImpl implements EventBuilder {
 
 
         return indexService.deIndexOldVersions( applicationScope, entityId,
-            getVersionsOlderThanOrEqualToMarked(ecm, entityId, markedVersion));
+            getVersionsOlderThanMarked(ecm, entityId, markedVersion));
 
 
     }
 
 
-    private List<UUID> getVersionsOlderThanOrEqualToMarked(final EntityCollectionManager ecm,
-                                                           final Id entityId, final UUID markedVersion ){
+    private List<UUID> getVersionsOlderThanMarked(final EntityCollectionManager ecm, final Id entityId,
+                                                  final UUID markedVersion ){
 
         final List<UUID> versions = new ArrayList<>();
 
@@ -317,7 +317,7 @@ public class EventBuilderImpl implements EventBuilder {
         ecm.getVersionsFromMaxToMin( entityId, markedVersion)
             .take(100)
             .forEach( mvccLogEntry -> {
-                if ( mvccLogEntry.getVersion().timestamp() <= markedVersion.timestamp() ) {
+                if ( mvccLogEntry.getVersion().timestamp() < markedVersion.timestamp() ) {
                     versions.add(mvccLogEntry.getVersion());
                 }
 
