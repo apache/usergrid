@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import java.util.*;
+import java.util.logging.Filter;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
@@ -234,6 +235,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         private final List<FilterResult<Candidate>> candidateResults;
         private final IndexProducer indexProducer;
         private final EntitySet entitySet;
+        private List<FilterResult<Candidate>> dedupedCandidateResults = new ArrayList<>();
 
 
         public EntityVerifier( final EntityIndexBatch batch, final EntitySet entitySet,
@@ -252,7 +254,9 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
          */
         public void merge(boolean keepStaleEntries, String query) {
 
-            for ( final FilterResult<Candidate> candidateResult : candidateResults ) {
+            filterDuplicateCandidates(query);
+
+            for ( final FilterResult<Candidate> candidateResult : dedupedCandidateResults ) {
                 validate( candidateResult , keepStaleEntries, query);
             }
 
@@ -287,6 +291,69 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         }
 
 
+        // don't need to worry about whether we are keeping stale entries -- this will remove candidates that are
+        // older than others in the result set
+        private void filterDuplicateCandidates(String query) {
+
+            Map<Id, UUID> latestEntityVersions = new HashMap<>();
+
+            // walk through candidates and find latest version for each entityID
+            for ( final FilterResult<Candidate> filterResult : candidateResults ) {
+                final Candidate candidate = filterResult.getValue();
+                final CandidateResult candidateResult = candidate.getCandidateResult();
+                final Id candidateId = candidateResult.getId();
+                final UUID candidateVersion = candidateResult.getVersion();
+
+                UUID previousCandidateVersion = latestEntityVersions.get(candidateId);
+                if (previousCandidateVersion != null) {
+                    // replace if newer
+                    if (UUIDComparator.staticCompare(candidateVersion, previousCandidateVersion) > 0) {
+                        latestEntityVersions.put(candidateId, candidateVersion);
+                    }
+                } else {
+                    latestEntityVersions.put(candidateId, candidateVersion);
+                }
+            }
+
+            // walk through candidates again, saving newest results and deindexing older
+            for ( final FilterResult<Candidate> filterResult : candidateResults ) {
+                final Candidate candidate = filterResult.getValue();
+                final CandidateResult candidateResult = candidate.getCandidateResult();
+                final Id candidateId = candidateResult.getId();
+                final UUID candidateVersion = candidateResult.getVersion();
+
+                final UUID latestCandidateVersion = latestEntityVersions.get(candidateId);
+
+                if (candidateVersion.equals(latestCandidateVersion)) {
+                    // save candidate
+                    dedupedCandidateResults.add(filterResult);
+                } else {
+                    // deindex if not the current version in database
+                    final MvccEntity entity = entitySet.getEntity( candidateId );
+                    final UUID databaseVersion = entity.getVersion();
+
+                    if (!candidateVersion.equals(databaseVersion)) {
+                        Date candidateTimeStamp = UUIDTimeStampToDate(candidateVersion);
+                        Date entityTimeStamp = UUIDTimeStampToDate(databaseVersion);
+
+                        logger.warn( "Found old stale entity on edge {} for entityId {} Entity version {} ({}).  Candidate version {} ({}). Will not be returned in result set. Query = [{}]",
+                            candidate.getSearchEdge(),
+                            entity.getId().getUuid(),
+                            databaseVersion,
+                            DateUtils.instance.formatIso8601Date(entityTimeStamp),
+                            candidateVersion,
+                            DateUtils.instance.formatIso8601Date(candidateTimeStamp),
+                            query
+                        );
+
+                        final SearchEdge searchEdge = candidate.getSearchEdge();
+                        batch.deindex(searchEdge, entity.getId(), candidateVersion);
+                    }
+                }
+            }
+        }
+
+
         private void validate( final FilterResult<Candidate> filterResult, boolean keepStaleEntries, String query ) {
 
             final Candidate candidate = filterResult.getValue();
@@ -314,7 +381,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             }
 
 
-            final UUID entityVersion = entity.getVersion();
+            final UUID databaseVersion = entity.getVersion();
             final Id entityId = entity.getId();
 
             // The entity is marked as deleted
@@ -323,7 +390,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                 // when updating entities, we don't delete all previous versions from ES so this action is expected
                 if(logger.isDebugEnabled()){
                     logger.debug( "Deindexing deleted entity on edge {} for entityId {} and version {}",
-                        searchEdge, entityId, entityVersion);
+                        searchEdge, entityId, databaseVersion);
                 }
 
                 batch.deindex( searchEdge, entityId, candidateVersion );
@@ -331,25 +398,21 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             }
 
             // entity exists and is newer than ES version, could be a missed or slow index event
-            if ( UUIDComparator.staticCompare(entityVersion, candidateVersion) > 0 ) {
+            if ( UUIDComparator.staticCompare(databaseVersion, candidateVersion) > 0 ) {
 
                Date candidateTimeStamp = UUIDTimeStampToDate(candidateVersion);
-               Date entityTimeStamp = UUIDTimeStampToDate(entityVersion);
+               Date entityTimeStamp = UUIDTimeStampToDate(databaseVersion);
 
-               Map<String,String> fields = new HashMap<>();
-               for  (Field field : entity.getEntity().get().getFields()) {
-                   fields.put(field.getName(),String.valueOf(field.getValue()));
-               }
-
-               logger.warn( "Found stale entity on edge {} for entityId {} Entity version date = {}.  Candidate version date = {}. Will be returned in result set = {} Query = [{}] Entity fields = {}",
-                   searchEdge,
-                   entityId.getUuid(),
-                   DateUtils.instance.formatIso8601Date(entityTimeStamp),
-                   DateUtils.instance.formatIso8601Date(candidateTimeStamp),
-                   keepStaleEntries,
-                   query,
-                   fields
-               );
+                logger.warn( "Found stale entity on edge {} for entityId {} Entity version {} ({}).  Candidate version {} ({}). Will be returned in result set = {} Query = [{}]",
+                    candidate.getSearchEdge(),
+                    entity.getId().getUuid(),
+                    databaseVersion,
+                    DateUtils.instance.formatIso8601Date(entityTimeStamp),
+                    candidateVersion,
+                    DateUtils.instance.formatIso8601Date(candidateTimeStamp),
+                    keepStaleEntries,
+                    query
+                );
 
                 if (!keepStaleEntries) {
                     batch.deindex(searchEdge, entityId, candidateVersion);
@@ -359,18 +422,18 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
             //ES is newer than cass, it means we haven't repaired the record in Cass, we don't want to
             //remove the ES record, since the read in cass should cause a read repair, just ignore
-            if ( UUIDComparator.staticCompare( candidateVersion, entityVersion ) > 0 ) {
+            if ( UUIDComparator.staticCompare( candidateVersion, databaseVersion ) > 0 ) {
 
                 logger.warn(
                     "Found a newer version in ES over cassandra for edge {} for entityId {} and version {}.  Repair should be run",
-                        searchEdge, entityId, entityVersion);
+                        searchEdge, entityId, databaseVersion);
 
                   //TODO trigger an audit after a fail count where we explicitly try to repair from other regions
 
                 return;
             }
 
-            //they're the same add it
+            // add the result
 
             final Entity returnEntity = entity.getEntity().get();
             if(isGeo){

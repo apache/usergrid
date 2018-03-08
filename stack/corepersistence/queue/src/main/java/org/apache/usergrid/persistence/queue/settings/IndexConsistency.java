@@ -51,7 +51,7 @@ public enum IndexConsistency {
     public static IndexConsistency get(String name) {
         IndexConsistency queueIndexingStrategy =  NAME_MAP.get(name);
         if (queueIndexingStrategy == null) {
-            return LATEST;
+            return STRICT;
         }
         return queueIndexingStrategy;
     }
