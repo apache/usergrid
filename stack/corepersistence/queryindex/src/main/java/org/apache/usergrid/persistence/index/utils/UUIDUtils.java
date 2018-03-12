@@ -303,8 +303,11 @@ public class UUIDUtils {
         if ( uuid == null ) {
             return 0;
         }
-        long t = uuid.timestamp();
-        return ( t - KCLOCK_OFFSET ) / KCLOCK_MULTIPLIER_L;
+        return getUnixTimestampInMillisFromUUIDTimestamp(uuid.timestamp());
+    }
+
+    public static long getUnixTimestampInMillisFromUUIDTimestamp( long uuidTimestamp ) {
+        return ( uuidTimestamp - KCLOCK_OFFSET ) / KCLOCK_MULTIPLIER_L;
     }
 
 

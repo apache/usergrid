@@ -105,10 +105,28 @@ public abstract class ToolBase {
 
         if ( line.hasOption( "host" ) ) {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
+        }
+
+        if ( line.hasOption( "eshost" ) ) {
             System.setProperty( "elasticsearch.hosts", line.getOptionValue( "eshost" ) );
+        }
+
+        if ( line.hasOption( "escluster" ) ) {
             System.setProperty( "elasticsearch.cluster_name", line.getOptionValue( "escluster" ) );
+        }
+
+        if ( line.hasOption( "ugcluster" ) ) {
             System.setProperty( "usergrid.cluster_name", line.getOptionValue( "ugcluster" )  );
         }
+
+        if ( line.hasOption( "appkeyspace" ) ) {
+            System.setProperty( "cassandra.keyspace.application", line.getOptionValue( "appkeyspace" ) );
+        }
+
+        if ( line.hasOption( "lockskeyspace" ) ) {
+            System.setProperty( "cassandra.lock.keyspace", line.getOptionValue( "lockskeyspace" ) );
+        }
+
 
         try {
             runTool( line );
@@ -153,6 +171,12 @@ public abstract class ToolBase {
         Option remoteOption = OptionBuilder
             .withDescription( "Use remote Cassandra instance" ).create( "remote" );
 
+        Option ugAppKeyspace = OptionBuilder.withArgName( "appkeyspace" ).hasArg()
+            .withDescription( "Usergrid Application keyspace" ).create( "appkeyspace" );
+
+        Option ugLocksKeyspace = OptionBuilder.withArgName( "lockskeyspace" ).hasArg()
+            .withDescription( "Usergrid Locks keyspace" ).create( "lockskeyspace" );
+
         Option verbose = OptionBuilder
             .withDescription( "Print on the console an echo of the content written to the file" )
             .create( VERBOSE );
@@ -163,6 +187,8 @@ public abstract class ToolBase {
         options.addOption( esClusterOption );
         options.addOption( ugClusterOption );
         options.addOption( remoteOption );
+        options.addOption( ugAppKeyspace );
+        options.addOption( ugLocksKeyspace );
         options.addOption( verbose );
 
         return options;
