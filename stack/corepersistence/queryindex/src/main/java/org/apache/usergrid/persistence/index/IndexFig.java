@@ -72,6 +72,8 @@ public interface IndexFig extends GuicyFig {
 
     String USERGRID_QUERYANALYZER_ENFORCE = "usergrid.queryanalyzer.enforce";
 
+    String DIRECT_QUERY_MAX_ITEMS = "direct.query.max.items";
+
 
 
 
@@ -238,4 +240,8 @@ public interface IndexFig extends GuicyFig {
     @Default("false")
     @Key( USERGRID_QUERYANALYZER_ENFORCE )
     boolean enforceQueryBreaker();
+
+    @Default("1000")
+    @Key( DIRECT_QUERY_MAX_ITEMS )
+    int directQueryMaxItems();
 }

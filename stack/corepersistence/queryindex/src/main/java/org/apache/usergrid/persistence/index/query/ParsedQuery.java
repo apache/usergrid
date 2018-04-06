@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.apache.usergrid.persistence.index.SelectFieldMapping;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.query.tree.DirectOperand;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
 
 
@@ -205,5 +206,9 @@ public class ParsedQuery {
 
     public boolean isGeoQuery(){
         return getOriginalQuery().contains("location") && getOriginalQuery().contains("within");
+    }
+
+    public boolean isDirectQuery() {
+        return rootOperand instanceof DirectOperand;
     }
 }

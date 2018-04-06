@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
@@ -137,6 +138,25 @@ public interface EntityIndex extends CPManager {
      * @return
      */
     CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                            final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                            final boolean analyzeOnly, final boolean returnQuery);
+
+    /**
+     * Search on every document in the specified search edge.  Also search by the types if specified
+     *
+     * @param searchEdge        The edge to search on
+     * @param searchTypes       The search types to search
+     * @param parsedQuery       The parsed query to execute
+     * @param limit             The limit of values to return
+     * @param offset            The offset to query on
+     * @param fieldsWithType    An optional param that allows the caller to provide schema related info which might
+     *                          relate to data in the query, such as sort predicate types
+     * @param analyzeOnly       This optional param will instruct the query processing to only analyze the query and
+     *                          provide info but not actually execute the query.
+     * @param returnQuery       This optional param will cause the index query to be returned instead of run.
+     * @return
+     */
+    CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final ParsedQuery parsedQuery,
                             final int limit, final int offset, final Map<String, Class> fieldsWithType,
                             final boolean analyzeOnly, final boolean returnQuery);
 
