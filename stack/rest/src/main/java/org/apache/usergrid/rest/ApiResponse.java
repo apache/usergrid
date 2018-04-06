@@ -613,9 +613,16 @@ public class ApiResponse {
 
 
     public void setParams( Map<String, List<String>> params ) {
+        setParams(params, null);
+    }
+
+
+    // provide an ignore list to block custom params
+    public void setParams( Map<String, List<String>> params, List<String> ignoreList ) {
         Map<String, List<String>> q = new LinkedHashMap<>();
         for ( String k : params.keySet() ) {
             if (IGNORE_QP.contains(k.toLowerCase())) continue;
+            if (ignoreList != null && ignoreList.contains(k.toLowerCase())) continue;
             List<String> v = params.get( k );
             if ( v != null ) {
                 q.put( k, new ArrayList<>( v ) );

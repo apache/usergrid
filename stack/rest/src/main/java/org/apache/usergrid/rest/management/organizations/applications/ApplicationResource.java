@@ -23,6 +23,7 @@ import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.corepersistence.service.ApplicationRestorePasswordService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -73,6 +75,7 @@ public class ApplicationResource extends AbstractContextResource {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationResource.class);
 
     public static final String CONFIRM_APPLICATION_IDENTIFIER = "confirm_application_identifier";
+    public static final String RESTORE_PASSWORD = "restore_password";
 
     //@Autowired
     //protected ExportService exportService;
@@ -465,7 +468,22 @@ public class ApplicationResource extends AbstractContextResource {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
 
+        ApplicationRestorePasswordService restorePasswordService = getApplicationRestorePasswordService();
+        if (!SubjectUtils.isServiceAdmin()) {
+            // require password if it exists
+            String storedRestorePassword = restorePasswordService.getApplicationRestorePassword(applicationId);
+            if (StringUtils.isNotEmpty(storedRestorePassword)) {
+                // must have matching password as query parameter
+                String suppliedRestorePassword = ui.getQueryParameters().getFirst(RESTORE_PASSWORD);
+                if (!storedRestorePassword.equals(suppliedRestorePassword)) {
+                    throw new IllegalArgumentException("Application cannot be restored without application password");
+                }
+            }
+        }
+
         management.restoreApplication( applicationId );
+
+        // not deleting password -- will be changed upon successful soft delete
 
         ApiResponse response = createApiResponse();
         response.setAction( "restore" );
@@ -505,7 +523,22 @@ public class ApplicationResource extends AbstractContextResource {
                 "Cannot delete application without supplying correct application name");
         }
 
+        String restorePassword = null;
+        ApplicationRestorePasswordService restorePasswordService = getApplicationRestorePasswordService();
+        if (SubjectUtils.isServiceAdmin()) {
+            restorePassword = ui.getQueryParameters().getFirst(RESTORE_PASSWORD);
+            if (StringUtils.isNotEmpty(restorePassword)) {
+                // save password, required for future undelete if not sysadmin
+                restorePasswordService.setApplicationRestorePassword(applicationId, restorePassword);
+            }
+        }
+
         management.deleteApplication( applicationId );
+
+        if (restorePassword == null) {
+            // clear restore password
+            restorePasswordService.removeApplicationRestorePassword(applicationId);
+        }
 
         if (logger.isTraceEnabled()) {
             logger.trace("ApplicationResource.delete() deleted appId = {}", applicationId);
@@ -521,6 +554,10 @@ public class ApplicationResource extends AbstractContextResource {
         }
 
         return response;
+    }
+
+    private ApplicationRestorePasswordService getApplicationRestorePasswordService() {
+        return injector.getInstance(ApplicationRestorePasswordService.class);
     }
 
 }

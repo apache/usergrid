@@ -134,9 +134,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse getAllApplications2( @Context UriInfo ui,
-                                                @QueryParam("callback") @DefaultValue("callback") String callback )
+                                            @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
+                                            @QueryParam("callback") @DefaultValue("callback") String callback )
             throws URISyntaxException {
-        return getAllApplications( ui, false, callback );
+        return getAllApplications( ui, deleted, callback );
     }
 
 
