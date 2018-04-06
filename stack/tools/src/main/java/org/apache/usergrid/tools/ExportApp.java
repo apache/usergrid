@@ -293,8 +293,8 @@ public class ExportApp extends ExportingToolBase {
                         try {
 
                             ExportConnection connection = new ExportConnection(
-                                    applicationName,
                                     organizationName,
+                                    applicationName,
                                     connectionType,
                                     exportEntity.getEntity().getUuid(),
                                     connectedEntity.getUuid());
