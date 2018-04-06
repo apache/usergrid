@@ -19,19 +19,16 @@
 package org.apache.usergrid.persistence.index.query.tree;
 
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.impl.GeoSortFields;
-import org.apache.usergrid.persistence.index.query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.Identifier;
 
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 
 import com.google.common.base.Optional;
 
@@ -103,6 +100,12 @@ public interface QueryVisitor {
      */
     void visit( GreaterThanEqual op ) throws NoIndexException;
 
+    /**
+     * @param op
+     * @throws NoIndexException
+     */
+    void visit( DirectOperand op );
+
 
     /**
      * Return any filters created during parsing
@@ -126,4 +129,9 @@ public interface QueryVisitor {
      * @return The GeoSortFields  null safe
      */
     GeoSortFields getGeoSorts();
+
+    /**
+     * Return list of identifiers for direct query
+     */
+    List<Identifier> getDirectIdentifiers();
 }

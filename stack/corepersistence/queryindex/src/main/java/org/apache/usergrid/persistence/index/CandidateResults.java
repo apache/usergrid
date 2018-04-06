@@ -38,11 +38,19 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
     private final List<CandidateResult> candidates;
     private final Collection<SelectFieldMapping> getFieldMappings;
+    private final boolean isDirectQuery;
 
     public CandidateResults( List<CandidateResult> candidates, final Collection<SelectFieldMapping> getFieldMappings) {
+        this(candidates, getFieldMappings, false);
+    }
+
+    public CandidateResults(List<CandidateResult> candidates,
+                            final Collection<SelectFieldMapping> getFieldMappings,
+                            final boolean isDirectQuery) {
         this.candidates = candidates;
         this.getFieldMappings = getFieldMappings;
         offset = Optional.absent();
+        this.isDirectQuery = isDirectQuery;
     }
 
 
@@ -80,6 +88,10 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
     public Collection<SelectFieldMapping> getGetFieldMappings() {
         return getFieldMappings;
+    }
+
+    public boolean isDirectQuery() {
+        return this.isDirectQuery;
     }
 
 

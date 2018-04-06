@@ -19,9 +19,10 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.Stack;
-import java.util.UUID;
+import java.util.*;
 
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.tree.*;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolFilterBuilder;
@@ -44,17 +45,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
-import org.apache.usergrid.persistence.index.query.tree.AndOperand;
-import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.index.query.tree.Equal;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.LessThan;
-import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.NotOperand;
-import org.apache.usergrid.persistence.index.query.tree.OrOperand;
-import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
-import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 
 import com.google.common.base.Optional;
 
@@ -78,6 +68,13 @@ public class EsQueryVistor implements QueryVisitor {
     private final Stack<FilterBuilder> filterBuilders = new Stack<>();
 
     private final GeoSortFields geoSortFields = new GeoSortFields();
+
+    /**
+     * Query direct to C* bypassing ES
+     */
+    private final List<Identifier> directIdList = new ArrayList<>();
+
+
 
 
     @Override
@@ -323,6 +320,35 @@ public class EsQueryVistor implements QueryVisitor {
 
 
     @Override
+    public void visit( DirectOperand op ) {
+        List<Literal> idList = op.getDirectIds();
+
+        Set<Identifier> idSet = new HashSet<>();
+
+        for (Literal literal : idList) {
+
+            Identifier identifier = null;
+            if (literal instanceof IdLiteral) {
+                String name = ((IdLiteral)literal).getValue();
+                identifier = Identifier.fromName(name);
+            } else if (literal instanceof UUIDLiteral) {
+                UUID uuid = ((UUIDLiteral)literal).getValue();
+                identifier = Identifier.fromUUID(uuid);
+            }
+            // should only allow IdLiteral or UUIDLiteral, ignore if other
+
+            if (identifier != null) {
+                // ignore if already seen
+                if (!idSet.contains(identifier)) {
+                    directIdList.add(identifier);
+                    idSet.add(identifier);
+                }
+            }
+        }
+    }
+
+
+    @Override
     public void visit( LessThan op ) throws NoIndexException {
         final String name = op.getProperty().getValue().toLowerCase();
         final Object value = op.getLiteral().getValue();
@@ -469,6 +495,12 @@ public class EsQueryVistor implements QueryVisitor {
     @Override
     public GeoSortFields getGeoSorts() {
         return geoSortFields;
+    }
+
+
+    @Override
+    public List<Identifier> getDirectIdentifiers() {
+        return directIdList;
     }
 
 

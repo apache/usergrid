@@ -36,11 +36,9 @@ import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder.SearchRequestBuilderStrategyV2;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
-import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
-import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerEnforcementException;
-import org.apache.usergrid.persistence.index.exceptions.QueryReturnException;
+import org.apache.usergrid.persistence.index.exceptions.*;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
 import org.apache.usergrid.persistence.index.query.SortPredicate;
@@ -437,22 +435,37 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit, final int offset, final Map<String, Class> fieldsWithType,
                                     final boolean analyzeOnly, final boolean returnQuery ) {
+        Preconditions.checkNotNull( query, "query cannot be null" );
+        final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
+
+        return search(searchEdge, searchTypes, parsedQuery, limit, offset, fieldsWithType, analyzeOnly, returnQuery);
+    }
+
+    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final ParsedQuery parsedQuery,
+                                    final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                                    final boolean analyzeOnly, final boolean returnQuery ) {
 
         IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull(searchTypes, "searchTypes cannot be null");
-        Preconditions.checkNotNull( query, "query cannot be null" );
         Preconditions.checkArgument( limit > 0, "limit must be > 0" );
 
 
         SearchResponse searchResponse;
-
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
 
         if ( parsedQuery == null ){
             throw new IllegalArgumentException("a null query string cannot be parsed");
         }
 
         final QueryVisitor visitor = visitParsedQuery(parsedQuery);
+
+        List<Identifier> directIdentifiers = visitor.getDirectIdentifiers();
+        if (directIdentifiers != null && directIdentifiers.size() > 0) {
+            // this is a direct query
+            if (directIdentifiers.size() > indexFig.directQueryMaxItems()) {
+                throw new TooManyDirectEntitiesException(directIdentifiers.size(), indexFig.directQueryMaxItems());
+            }
+            return buildCandidateResultsForDirectQuery(directIdentifiers, parsedQuery, searchTypes);
+        }
 
         boolean hasGeoSortPredicates = false;
 
@@ -644,7 +657,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
     /**
-     * Parse the results and return the canddiate results
+     * Parse the results and return the candidate results
      */
     private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
                                            final int limit, final int from, boolean hasGeoSortPredicates ) {
@@ -676,6 +689,33 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         return candidateResults;
     }
+
+
+    /**
+     * Build CandidateResults from direct query
+     */
+    private CandidateResults buildCandidateResultsForDirectQuery(final List<Identifier> directIdentifiers,
+                                                                 final ParsedQuery query,
+                                                                 final SearchTypes searchTypes) {
+        Preconditions.checkArgument(searchTypes.getTypes().length > 0, "Search type required");
+        String entityType = searchTypes.getTypes()[0];
+
+        List<CandidateResult> candidates = new ArrayList<>(directIdentifiers.size());
+
+        for (Identifier id : directIdentifiers) {
+            CandidateResult candidateResult = null;
+            if (id.isUUID()) {
+                candidateResult = new CandidateResult(entityType, id.getUUID());
+            } else if (id.isName()) {
+                candidateResult = new CandidateResult(entityType, id.getName());
+            }
+            candidates.add(candidateResult);
+        }
+
+        return new CandidateResults(candidates, query.getSelectFieldMappings(), true);
+    }
+
+
 
     private List<CandidateResult> aggregateScrollResults(List<CandidateResult> candidates,
                                                          final SearchResponse searchResponse, final UUID markedVersion){

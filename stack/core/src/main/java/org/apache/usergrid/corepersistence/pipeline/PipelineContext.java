@@ -28,6 +28,10 @@ import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.index.query.ParsedQuery;
+import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
+
+import static org.apache.usergrid.persistence.Query.MAX_LIMIT;
 
 
 /**
@@ -43,16 +47,24 @@ public class PipelineContext {
     // it can happen if ES was not updated or has yet to be updated.
     private final boolean keepStaleEntries;
     private String query;
+    private ParsedQuery parsedQuery;
 
 
     public PipelineContext( final ApplicationScope applicationScope, final RequestCursor requestCursor, final int limit, final int id, boolean keepStaleEntries, String query ) {
 
         this.applicationScope = applicationScope;
-        this.requestCursor = requestCursor;
-        this.limit = limit;
         this.id = id;
         this.keepStaleEntries = keepStaleEntries;
         this.query = query;
+        this.parsedQuery = ParsedQueryBuilder.build(query);
+        if (parsedQuery != null && parsedQuery.isDirectQuery()) {
+            // for direct query, use no limit or cursor
+            this.limit = MAX_LIMIT + 1;
+            this.requestCursor = new RequestCursor(Optional.absent());
+        } else {
+            this.limit = limit;
+            this.requestCursor = requestCursor;
+        }
     }
 
 
@@ -96,6 +108,10 @@ public class PipelineContext {
      */
     public String getQuery() {
         return query;
+    }
+
+    public ParsedQuery getParsedQuery() {
+        return parsedQuery;
     }
 
 }

@@ -129,7 +129,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                     try {
                         final CandidateResults candidateResults =
-                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet,
+                            applicationEntityIndex.search( searchEdge, searchTypes, pipelineContext.getParsedQuery(), limit, currentOffSet,
                                 propertiesWithType, analyzeOnly, returnQuery);
 
 

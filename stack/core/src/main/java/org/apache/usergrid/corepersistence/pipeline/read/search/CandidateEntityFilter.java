@@ -24,11 +24,14 @@ import java.util.*;
 import java.util.logging.Filter;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.DistanceField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.utils.DateUtils;
 import org.slf4j.Logger;
@@ -100,6 +103,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
         boolean keepStaleEntries = pipelineContext.getKeepStaleEntries();
         String query = pipelineContext.getQuery();
+        boolean isDirectQuery = pipelineContext.getParsedQuery().isDirectQuery();
 
         //buffer them to get a page size we can make 1 network hop
         final Observable<FilterResult<Entity>> searchIdSetObservable =
@@ -108,7 +112,12 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             //load them
             .flatMap( candidateResults -> {
 
-                //flatten toa list of ids to load
+                if (isDirectQuery) {
+                    // add ids for direct query
+                    updateDirectQueryCandidateResults(entityCollectionManager, candidateResults);
+                }
+
+                //flatten to a list of ids to load
                 final Observable<List<Candidate>> candidates =
                     Observable.from(candidateResults)
                         .map(filterResultCandidate -> filterResultCandidate.getValue()).toList();
@@ -119,12 +128,13 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                         Observable<EntitySet> entitySets = Observable.from(candidatesList)
                             .map(candidateEntry -> candidateEntry.getCandidateResult().getId()).toList()
                             .flatMap(idList -> entityCollectionManager.load(idList));
-                        //now we have a collection, validate our canidate set is correct.
+                        //now we have a collection, validate our candidate set is correct.
                         return entitySets.map(
                             entitySet -> new EntityVerifier(
                                 applicationIndex.createBatch(), entitySet, candidateResults,indexProducer)
                         )
-                            .doOnNext(entityCollector -> entityCollector.merge(keepStaleEntries, query))
+                            .doOnNext(entityCollector -> entityCollector.merge(keepStaleEntries, query,
+                                isDirectQuery))
                             .flatMap(entityCollector -> Observable.from(entityCollector.getResults()))
                             .map(entityFilterResult -> {
                                 final Entity entity = entityFilterResult.getValue();
@@ -223,6 +233,28 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
 
     /**
+     * Update direct query candidates to add IDs.
+     */
+    private void updateDirectQueryCandidateResults(
+        EntityCollectionManager entityCollectionManager, List<FilterResult<Candidate>> candidatesList) {
+        for (FilterResult<Candidate> filterCandidate : candidatesList) {
+            Candidate candidate = filterCandidate.getValue();
+            CandidateResult candidateResult = candidate.getCandidateResult();
+            String entityType = candidateResult.getDirectEntityType();
+            Id entityId = null;
+            if (candidateResult.isDirectQueryName()) {
+                entityId = entityCollectionManager.getIdField( entityType,
+                    new StringField( Schema.PROPERTY_NAME, candidateResult.getDirectEntityName() ) )
+                    .toBlocking() .lastOrDefault( null );
+            } else if (candidateResult.isDirectQueryUUID()) {
+                entityId = new SimpleId(candidateResult.getDirectEntityUUID(), entityType);
+            }
+            filterCandidate.getValue().getCandidateResult().setId(entityId);
+        }
+    }
+
+
+    /**
      * Our collector to collect entities.  Not quite a true collector, but works within our operational
      * flow as this state is mutable and difficult to represent functionally
      */
@@ -252,16 +284,30 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         /**
          * Merge our candidates and our entity set into results
          */
-        public void merge(boolean keepStaleEntries, String query) {
+        public void merge(boolean keepStaleEntries, String query, boolean isDirectQuery) {
 
-            filterDuplicateCandidates(query);
-
-            for ( final FilterResult<Candidate> candidateResult : dedupedCandidateResults ) {
-                validate( candidateResult , keepStaleEntries, query);
+            if (!isDirectQuery) {
+                filterDuplicateCandidates(query);
+            } else {
+                // remove direct query duplicates
+                Set<UUID> foundUUIDs = new HashSet<>();
+                for (FilterResult<Candidate> candidateFilterResult : candidateResults) {
+                    UUID uuid = candidateFilterResult.getValue().getCandidateResult().getId().getUuid();
+                    if (!foundUUIDs.contains(uuid)) {
+                        dedupedCandidateResults.add(candidateFilterResult);
+                        foundUUIDs.add(uuid);
+                    }
+                }
             }
 
-            indexProducer.put(batch.build()).toBlocking().lastOrDefault(null); // want to rethrow if batch fails
+            for (final FilterResult<Candidate> candidateResult : dedupedCandidateResults) {
+                validate(candidateResult, keepStaleEntries, query, isDirectQuery);
+            }
 
+            // no index requests made for direct query, so no need to modify index
+            if (!isDirectQuery) {
+                indexProducer.put(batch.build()).toBlocking().lastOrDefault(null); // want to rethrow if batch fails
+            }
         }
 
 
@@ -354,14 +400,15 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
         }
 
 
-        private void validate( final FilterResult<Candidate> filterResult, boolean keepStaleEntries, String query ) {
+        private void validate( final FilterResult<Candidate> filterResult, boolean keepStaleEntries, String query,
+                               boolean isDirectQuery) {
 
             final Candidate candidate = filterResult.getValue();
             final CandidateResult candidateResult = candidate.getCandidateResult();
             final boolean isGeo = candidateResult instanceof GeoCandidateResult;
             final SearchEdge searchEdge = candidate.getSearchEdge();
             final Id candidateId = candidateResult.getId();
-            final UUID candidateVersion = candidateResult.getVersion();
+            UUID candidateVersion = candidateResult.getVersion();
 
 
             final MvccEntity entity = entitySet.getEntity( candidateId );
@@ -369,9 +416,14 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
             //doesn't exist warn and drop
             if ( entity == null ) {
-                logger.warn(
-                    "Searched and received candidate with entityId {} and version {}, yet was not found in cassandra.  Ignoring since this could be a region sync issue",
-                    candidateId, candidateVersion );
+                if (!isDirectQuery) {
+                    logger.warn(
+                        "Searched and received candidate with entityId {} and version {}, yet was not found in cassandra.  Ignoring since this could be a region sync issue",
+                        candidateId, candidateVersion);
+                } else {
+                    logger.warn(
+                        "Direct query for entityId {} was not found in cassandra, query=[{}]", candidateId, query);
+                }
 
 
                 //TODO trigger an audit after a fail count where we explicitly try to repair from other regions
@@ -382,6 +434,10 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
 
             final UUID databaseVersion = entity.getVersion();
+            if (isDirectQuery) {
+                // use returned (latest) version for direct query
+                candidateVersion = databaseVersion;
+            }
             final Id entityId = entity.getId();
 
             // The entity is marked as deleted

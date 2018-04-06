@@ -112,7 +112,7 @@ EQ  : '=' | 'eq';
 
 GT  : '>' | 'gt';
 
-GTE : '>=' |  'gte';  
+GTE : '>=' |  'gte';
 
 
 //keywords before var ids
@@ -134,11 +134,14 @@ WITHIN : ('W'|'w')('I'|'i')('T'|'t')('H'|'h')('I'|'i')('N'|'n');
 
 OF : ('O'|'o')('F'|'f');
 
-UUID :  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
-  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
-  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
-  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
+DIRECT : ('D'|'d')('I'|'i')('R'|'r')('E'|'e')('C'|'c')('T'|'t');
+
+UUID :
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-'
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-'
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-'
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-'
   HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
   HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
   HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
@@ -156,18 +159,18 @@ FLOAT
     |   '.' ('0'..'9')+ EXPONENT?
     |   ('0'..'9')+ EXPONENT)
     ;
-    
+
 STRING
     :  '\'' ( ESC_SEQ | ~('\\'|'\'') )* '\''
     ;
 
 
-    
+
 WS : (' ' | '\t' | '\n' | '\r' | '\f')+  {$channel=HIDDEN;};
 
 
 
-    
+
 
 
 
@@ -208,12 +211,19 @@ UNICODE_ESC
 
 
 
-property :	ID<Property>;
+property :
+  ID<Property>
+  | ASC<Property>
+  | DESC<Property>
+  | CONTAINS<Property>
+  | WITHIN<Property>
+  | DIRECT<Property>
+  ;
 
 containsproperty : ID<ContainsProperty>;
 
 withinproperty : ID<WithinProperty>;
-	
+
 booleanliteral: BOOLEAN<BooleanLiteral>;
 
 
@@ -225,68 +235,94 @@ uuidliteral :
 
 stringliteral :
   STRING<StringLiteral>;
-  
+
 floatliteral :
   FLOAT<FloatLiteral> ;
 
-//We delegate to each sub class literal so we can get each type	
-value : 
+idliteral :
+  ID<IdLiteral> ;
+
+directnameliteral :
+  ID<IdLiteral> ;
+
+directuuidliteral :
+  UUID<UUIDLiteral>;
+
+//We delegate to each sub class literal so we can get each type
+value :
   booleanliteral
   | longliteral
   | uuidliteral
   | stringliteral
   | floatliteral
   ;
-  
 
+directidliteral :
+  directnameliteral
+  | directuuidliteral
+  ;
 
 //Every operand returns with the name of 'op'.  This is used because all subtrees require operands,
-//this allows us to link the java code easily by using the same name as a converntion
+//this allows us to link the java code easily by using the same name as a convention
 
 //begin search expressions
-  
-//mathmatical equality operations
+
+//mathematical equality operations
 equalityop :
   property LT<LessThan>^ value
   |property LTE<LessThanEqual>^ value
   |property EQ<Equal>^ value
   |property GT<GreaterThan>^ value
   |property GTE<GreaterThanEqual>^ value
-  ; 
+  ;
 
 //geo location search
 locationop :
   withinproperty WITHIN<WithinOperand>^ (floatliteral|longliteral) OF! (floatliteral|longliteral) ','! (floatliteral|longliteral);
-  
+
 //string search
 containsop :
   containsproperty CONTAINS<ContainsOperand>^ stringliteral;
 
+directidlist :
+  directidliteral (','! directidliteral)*;
+
 //
 operation :
- '('! expression ')'!
-   | equalityop 
-   | locationop 
-   | containsop 
+ '('! orexp ')'!
+   | equalityop
+   | locationop
+   | containsop
    ;
 
 //negations of expressions
 notexp :
 //only link if we have the not
- NOT<NotOperand>^ operation  
- |operation 
+ NOT<NotOperand>^ operation
+ |operation
  ;
 
 //and expressions contain operands.  These should always be closer to the leaves of a tree, it allows
 //for faster result intersection sooner in the query execution
 andexp :
  notexp (AND<AndOperand>^ notexp )*;
- 
- 
+
+
 //or expression should always be after AND expressions.  This will give us a smaller result set to union when evaluating trees
 //also a root level expression
-expression :
+orexp :
  andexp (OR<OrOperand>^ andexp )*;
+
+
+directexp :
+ DIRECT<DirectOperand>^ directidlist  ;
+
+
+// can use DIRECT {UUID|ID}+ at the root
+expression :
+  directexp
+  | orexp
+  ;
 
 
 
@@ -300,14 +336,14 @@ direction  : (ASC | DESC);
 //order clause
 order
   : (property direction?){
-		String property = $property.text; 
+		String property = $property.text;
 		String direction = $direction.text;
 		parsedQuery.addSort(new SortPredicate(property, direction));
-    
+
   };
 
 //end order clauses
-  
+
 //Begin select clauses
 
 select_subject
@@ -317,7 +353,7 @@ select_subject
 
 };
 
- 
+
 
 select_assign
   : target=ID ':' source=ID {
@@ -326,9 +362,9 @@ select_assign
 
 };
 
-select_expr 
-  : ('*' | select_subject (',' select_subject) * | '{' select_assign (',' select_assign) * '}');  
-   
+select_expr
+  : ('*' | select_subject (',' select_subject) * | '{' select_assign (',' select_assign) * '}');
+
 //end select clauses
 
 ql returns [ParsedQuery parsedQuery]
@@ -337,7 +373,7 @@ ql returns [ParsedQuery parsedQuery]
   if($expression.tree instanceof Operand){
     parsedQuery.setRootOperand((Operand)$expression.tree);
   }
-  
+
   retval.parsedQuery = parsedQuery;
 
 
