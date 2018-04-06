@@ -934,6 +934,36 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    // reverse doCreateAdmin + creation of user entity
+    @Override
+    public boolean deleteAdminUser( UUID userId ) throws Exception {
+
+        // make sure user is not attached to any orgs
+        BiMap<UUID, String> orgMap = getOrganizationsForAdminUser(userId);
+        if (!orgMap.isEmpty()) {
+            // cannot delete admin user that is attached to orgs
+            logger.info("Cannot delete admin user {} -- admin user is attached to {} orgs", userId, orgMap.size());
+            return false;
+        }
+
+        EntityRef userRef = new SimpleEntityRef(User.ENTITY_TYPE, userId);
+
+        // delete mongo password
+        deleteUserMongoPassword(smf.getManagementAppId(), userRef);
+
+        // delete user password
+        deleteUserPassword(smf.getManagementAppId(), userRef);
+
+        // delete user token
+        deleteUserToken(smf.getManagementAppId(), userRef);
+
+        // delete user entity
+        emf.getEntityManager(smf.getManagementAppId()).delete(userRef);
+
+        return true;
+    }
+
+
     @Override
     public UserInfo createAdminFromPrexistingPassword( UUID organizationId, User user, CredentialsInfo ci )
         throws Exception {
@@ -3283,6 +3313,12 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    /** Delete the user's password credentials info */
+    protected void deleteUserPassword( UUID appId, EntityRef owner ) throws Exception {
+        deleteCreds( appId, owner, USER_PASSWORD );
+    }
+
+
     /** read the user password credential's info */
     protected CredentialsInfo readUserPasswordCredentials( UUID appId, UUID ownerId, String ownerType )
         throws Exception {
@@ -3302,9 +3338,20 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    /** Delete the user's token */
+    protected void deleteUserToken( UUID appId, EntityRef owner ) throws Exception {
+        deleteCreds( appId, owner, USER_TOKEN );
+    }
+
+
     /** Write the mongo password */
     protected void writeUserMongoPassword( UUID appId, EntityRef owner, CredentialsInfo password ) throws Exception {
         writeCreds( appId, owner, password, USER_MONGO_PASSWORD );
+    }
+
+    /** Delete the mongo password */
+    private void deleteUserMongoPassword( UUID appId, EntityRef owner) throws Exception {
+        deleteCreds( appId, owner, USER_MONGO_PASSWORD );
     }
 
 
@@ -3336,6 +3383,12 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( appId );
         Entity owner = em.get( ownerId );
         return ( CredentialsInfo ) em.getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, key );
+    }
+
+
+    private void deleteCreds( UUID appId, EntityRef owner, String key ) throws Exception {
+        EntityManager em = emf.getEntityManager( appId );
+        em.removeFromDictionary(owner, DICTIONARY_CREDENTIALS, key);
     }
 
 

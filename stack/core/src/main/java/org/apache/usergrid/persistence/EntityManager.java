@@ -276,6 +276,10 @@ public interface EntityManager {
     public Map<Object, Object> getDictionaryAsMap( EntityRef entityRef, String dictionaryName )
             throws Exception;
 
+    public Map<Object, Object> getDictionaryAsMap( EntityRef entityRef, String dictionaryName,
+                                                   boolean forceVerification )
+            throws Exception;
+
     public Object getDictionaryElementValue( EntityRef entityRef, String dictionaryName,
             String elementName ) throws Exception;
 

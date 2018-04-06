@@ -1246,8 +1246,15 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Map<Object, Object> getDictionaryAsMap( EntityRef entity, String dictionaryName ) throws Exception {
+        return getDictionaryAsMap(entity, dictionaryName, true);
+    }
 
-        entity = validate( entity );
+
+    @Override
+    public Map<Object, Object> getDictionaryAsMap( EntityRef entity, String dictionaryName,
+                                                   boolean forceVerification) throws Exception {
+
+        entity = validate( entity, forceVerification);
 
         Map<Object, Object> dictionary = new LinkedHashMap<Object, Object>();
 

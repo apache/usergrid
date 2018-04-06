@@ -110,6 +110,8 @@ public interface ManagementService {
 
 	UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception;
 
+	boolean deleteAdminUser( UUID userId ) throws Exception;
+
 	void deleteOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 
 	void disableAdminUser( UUID userId ) throws Exception;
