@@ -289,13 +289,16 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             if (!isDirectQuery) {
                 filterDuplicateCandidates(query);
             } else {
-                // remove direct query duplicates
+                // remove direct query duplicates or missing entities (names that don't exist will have null ids)
                 Set<UUID> foundUUIDs = new HashSet<>();
                 for (FilterResult<Candidate> candidateFilterResult : candidateResults) {
-                    UUID uuid = candidateFilterResult.getValue().getCandidateResult().getId().getUuid();
-                    if (!foundUUIDs.contains(uuid)) {
-                        dedupedCandidateResults.add(candidateFilterResult);
-                        foundUUIDs.add(uuid);
+                    Id id = candidateFilterResult.getValue().getCandidateResult().getId();
+                    if (id != null) {
+                        UUID uuid = id.getUuid();
+                        if (!foundUUIDs.contains(uuid)) {
+                            dedupedCandidateResults.add(candidateFilterResult);
+                            foundUUIDs.add(uuid);
+                        }
                     }
                 }
             }
