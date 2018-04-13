@@ -211,4 +211,13 @@ public class ParsedQuery {
     public boolean isDirectQuery() {
         return rootOperand instanceof DirectOperand;
     }
+
+    public int getDirectQueryItemCount() {
+        int count = 0;
+        if (rootOperand instanceof DirectOperand) {
+            DirectOperand root = (DirectOperand)rootOperand;
+            count = root.getChildCount();
+        }
+        return count;
+    }
 }

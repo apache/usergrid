@@ -456,14 +456,15 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             throw new IllegalArgumentException("a null query string cannot be parsed");
         }
 
+        if (parsedQuery.isDirectQuery() && parsedQuery.getDirectQueryItemCount() > indexFig.directQueryMaxItems()) {
+            throw new TooManyDirectEntitiesException(parsedQuery.getDirectQueryItemCount(), indexFig.directQueryMaxItems());
+        }
+
         final QueryVisitor visitor = visitParsedQuery(parsedQuery);
 
         List<Identifier> directIdentifiers = visitor.getDirectIdentifiers();
         if (directIdentifiers != null && directIdentifiers.size() > 0) {
             // this is a direct query
-            if (directIdentifiers.size() > indexFig.directQueryMaxItems()) {
-                throw new TooManyDirectEntitiesException(directIdentifiers.size(), indexFig.directQueryMaxItems());
-            }
             return buildCandidateResultsForDirectQuery(directIdentifiers, parsedQuery, searchTypes);
         }
 
