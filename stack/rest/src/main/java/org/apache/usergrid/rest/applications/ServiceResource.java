@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.applications;
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+import com.google.cloud.storage.StorageException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationConfigProps;
@@ -32,13 +33,11 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.*;
-import org.apache.usergrid.services.assets.data.AssetUtils;
-import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
-import org.apache.usergrid.services.assets.data.BinaryStore;
-import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
+import org.apache.usergrid.services.assets.BinaryStoreFactory;
+import org.apache.usergrid.services.assets.data.*;
 import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.glassfish.jersey.media.multipart.BodyPart;
@@ -47,10 +46,12 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanInfoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.security.auth.Subject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.io.InputStream;
@@ -71,15 +72,10 @@ public class ServiceResource extends AbstractContextResource {
     protected static final Logger logger = LoggerFactory.getLogger( ServiceResource.class );
     private static final String FILE_FIELD_NAME = "file";
 
-
-   // @Autowired
     private BinaryStore binaryStore;
 
     @Autowired
-    private LocalFileBinaryStore localFileBinaryStore;
-
-    @Autowired
-    private AwsSdkS3BinaryStore awsSdkS3BinaryStore;
+    private BinaryStoreFactory binaryStoreFactory;
 
     protected ServiceManager services;
 
@@ -89,17 +85,6 @@ public class ServiceResource extends AbstractContextResource {
     public ServiceResource() {
     }
 
-
-    public void setBinaryStore(String binaryStoreType){
-
-        //TODO:GREY change this to be a property held elsewhere
-        if(binaryStoreType.equals("local")){
-            this.binaryStore = localFileBinaryStore;
-        }
-        else{
-            this.binaryStore = awsSdkS3BinaryStore;
-        }
-    }
 
 
     @Override
@@ -262,7 +247,7 @@ public class ServiceResource extends AbstractContextResource {
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections );
+            returnInboundConnections, returnOutboundConnections, false, false);
 
         response.setServiceRequest( r );
 
@@ -316,7 +301,7 @@ public class ServiceResource extends AbstractContextResource {
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections );
+            returnInboundConnections, returnOutboundConnections, false, false);
 
         response.setServiceRequest( r );
 
@@ -400,13 +385,20 @@ public class ServiceResource extends AbstractContextResource {
            }
         }
 
+        boolean analyzeQueryOnly = Boolean.valueOf(ui.getQueryParameters().getFirst("analyzeOnly"));
+        boolean returnQuery = false;
+        // currently only allow query return if service admin
+        if (SubjectUtils.isServiceAdmin()) {
+            returnQuery = Boolean.valueOf(ui.getQueryParameters().getFirst("returnQuery"));
+        }
+
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
             collectionGet = getServiceParameters().size() == 1;
         }
         addQueryParams( getServiceParameters(), ui );
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections );
+            returnInboundConnections, returnOutboundConnections, analyzeQueryOnly, returnQuery);
         response.setServiceRequest( r );
         ServiceResults results = r.execute();
         if ( results != null ) {
@@ -748,14 +740,8 @@ public class ServiceResource extends AbstractContextResource {
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     private ApiResponse executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
                                               ServiceAction serviceAction ) throws Exception {
-
-        //needed for testing
-        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
-            this.binaryStore = localFileBinaryStore;
-        }
-        else{
-            this.binaryStore = awsSdkS3BinaryStore;
-        }
+        // needed for testing
+        this.binaryStore = binaryStoreFactory.getBinaryStore( properties.getProperty(PROPERTIES_USERGRID_BINARY_UPLOADER) );
 
         // collect form data values
         List<BodyPart> bodyParts = multiPart.getBodyParts();
@@ -830,12 +816,8 @@ public class ServiceResource extends AbstractContextResource {
     public Response uploadDataStream( @Context UriInfo ui, InputStream uploadedInputStream ) throws Exception {
 
         //needed for testing
-        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
-            this.binaryStore = localFileBinaryStore;
-        }
-        else{
-            this.binaryStore = awsSdkS3BinaryStore;
-        }
+        this.binaryStore = binaryStoreFactory.getBinaryStore( properties.getProperty(PROPERTIES_USERGRID_BINARY_UPLOADER) );
+
 
         ApiResponse response = createApiResponse();
         response.setAction( "get" );
@@ -870,13 +852,8 @@ public class ServiceResource extends AbstractContextResource {
             logger.trace( "ServiceResource.executeStreamGet" );
         }
 
-        //Needed for testing
-        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
-            this.binaryStore = localFileBinaryStore;
-        }
-        else{
-            this.binaryStore = awsSdkS3BinaryStore;
-        }
+        // needed for testing
+        this.binaryStore = binaryStoreFactory.getBinaryStore( properties.getProperty(PROPERTIES_USERGRID_BINARY_UPLOADER) );
 
         ApiResponse response = createApiResponse();
         response.setAction( "get" );
@@ -944,13 +921,20 @@ public class ServiceResource extends AbstractContextResource {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
             catch(AmazonServiceException ase){
-
                 if( ase.getStatusCode() > 499 ){
                     logger.error(ase.getMessage());
                 }else if(logger.isDebugEnabled()){
                     logger.debug(ase.getMessage());
                 }
                 return Response.status(ase.getStatusCode()).build();
+            }
+            catch (StorageException se){
+                if( se.getCode() > 499 ){
+                    logger.error(se.getMessage());
+                }else if(logger.isDebugEnabled()){
+                    logger.debug(se.getMessage());
+                }
+                return Response.status(se.getCode()).build();
             }
             catch(RuntimeException re){
                 logger.error(re.getMessage());

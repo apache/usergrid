@@ -22,10 +22,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.impl.DefaultPrettyPrinter;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.utils.ConversionUtils;
@@ -171,7 +171,7 @@ public abstract class ExportingToolBase extends ToolBase {
     }
 
 
-    protected JsonGenerator getJsonGenerator( String outFile ) throws IOException {
+    protected JsonGenerator getJsonGenerator(String outFile ) throws IOException {
         return getJsonGenerator( new File( outputDir, outFile ) );
     }
 

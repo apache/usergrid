@@ -41,6 +41,9 @@ public class CollectionSearch {
     private final Optional<String> query;
     private final Optional<String> cursor;
     private Level level = Level.ALL;
+    private boolean analyzeOnly;
+    private boolean returnQuery;
+    private boolean keepStaleEntries;
 
 
     public CollectionSearch( final ApplicationScope applicationScope, final Id collectionOwnerId, final String
@@ -53,6 +56,8 @@ public class CollectionSearch {
         this.limit = limit;
         this.query = query;
         this.cursor = cursor;
+        this.analyzeOnly = false;
+        this.returnQuery = false;
     }
 
 
@@ -93,4 +98,28 @@ public class CollectionSearch {
     public void setResultsLevel(Level level){ this.level = level; }
 
     public Level getResultsLevel(){ return level; }
+
+    public boolean getAnalyzeOnly() {
+        return analyzeOnly;
+    }
+
+    public void setAnalyzeOnly(final boolean analyzeOnly){
+        this.analyzeOnly = analyzeOnly;
+    }
+
+    public boolean getReturnQuery() {
+        return returnQuery;
+    }
+
+    public void setReturnQuery(final boolean returnQuery) {
+        this.returnQuery = returnQuery;
+    }
+
+    public boolean getKeepStaleEntries() {
+        return keepStaleEntries;
+    }
+
+    public void setKeepStaleEntries(final boolean keepStaleEntries){
+        this.keepStaleEntries = keepStaleEntries;
+    }
 }

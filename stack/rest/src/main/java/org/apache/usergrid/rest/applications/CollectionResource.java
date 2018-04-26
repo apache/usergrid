@@ -18,52 +18,40 @@
 package org.apache.usergrid.rest.applications;
 
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.base.Preconditions;
+import org.apache.usergrid.corepersistence.index.CollectionDeleteRequestBuilder;
+import org.apache.usergrid.corepersistence.index.CollectionDeleteRequestBuilderImpl;
+import org.apache.usergrid.corepersistence.index.CollectionDeleteService;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
+import org.apache.usergrid.persistence.index.utils.ConversionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
-import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
-import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.rest.exceptions.RequiredPropertyNotFoundExceptionMapper;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.rest.system.IndexResource;
-import org.apache.usergrid.services.AbstractCollectionService;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.services.ServicePayload;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 
 /**
@@ -78,9 +66,40 @@ import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 })
 public class CollectionResource extends ServiceResource {
 
+    private static final Logger logger = LoggerFactory.getLogger( CollectionResource.class );
+    private static final String UPDATED_BEFORE_FIELD = "updatedBefore";
+
     public CollectionResource() {
     }
 
+
+    /*
+     *  Combine the passed settings with the settings already in the collection
+     */
+    private void combineSettings(ServicePayload newSettings, UriInfo ui) throws Exception {
+
+
+        //  Get the existing collection settings.
+        ApiResponse response = createApiResponse();
+        response.setAction( "get" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        executeServiceGetRequestForSettings( ui,response,ServiceAction.GET,null );
+
+        // now add the old settings to the new if they are not alreday in the new.
+        Object oldSettings = response.getData();
+        if (oldSettings instanceof Map) {
+            Map<String,Object> oldProps = (Map) oldSettings;
+            Map<String,Object> newProps =  newSettings.getProperties();
+            for (String key : oldProps.keySet()) {
+                if (CpCollectionUtils.getValidSettings().contains(key) && !newProps.containsKey(key)) {
+                    Object value = oldProps.get(key);
+                    newSettings.setProperty(key, value);
+                }
+            }
+        }
+    }
 
     /**
      * POST settings for a collection.
@@ -98,7 +117,9 @@ public class CollectionResource extends ServiceResource {
         @Context UriInfo ui,
         @PathParam("itemName") PathSegment itemName,
         String body,
-        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+        @QueryParam("callback") @DefaultValue("callback") String callback,
+        @QueryParam("replace_all") @DefaultValue("true") String replace_all
+        ) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "CollectionResource.executePostOnSettingsWithCollectionName" );
@@ -120,6 +141,10 @@ public class CollectionResource extends ServiceResource {
         response.setParams( ui.getQueryParameters() );
 
         ServicePayload payload = getPayload( json );
+
+        if ("false".equals(replace_all)) {
+            combineSettings(payload, ui);
+        }
 
         executeServicePostRequestForSettings( ui,response, ServiceAction.POST, payload );
 
@@ -207,6 +232,61 @@ public class CollectionResource extends ServiceResource {
     }
 
 
+    @POST
+    @Path("{itemName}/_clear")
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse clearCollectionPut(
+        final Map<String, Object> payload,
+        @PathParam("itemName") final String collectionName,
+        @QueryParam("callback") @DefaultValue("callback") String callback
+    ) throws Exception {
+
+        logger.info("Clearing collection {} for application {}", collectionName, getApplicationId().toString());
+
+        final CollectionDeleteRequestBuilder request = createRequest()
+            .withApplicationId(getApplicationId())
+            .withCollection(collectionName);
+
+        return executeResumeAndCreateResponse(payload, request, callback);
+
+    }
+
+
+    @GET
+    @Path( "{itemName}/_clear/{jobId}")
+    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse clearCollectionJobGet(
+        @Context UriInfo ui,
+        @PathParam("itemName") PathSegment itemName,
+        @PathParam("jobId") String jobId,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "CollectionResource.clearCollectionJobGet" );
+        }
+
+        Preconditions
+            .checkNotNull(jobId, "path param jobId must not be null" );
+
+        CollectionDeleteService.CollectionDeleteStatus status = getCollectionDeleteService().getStatus(jobId);
+
+        final ApiResponse response = createApiResponse();
+
+        response.setAction( "clear collection" );
+        response.setProperty( "jobId", status.getJobId() );
+        response.setProperty( "status", status.getStatus() );
+        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
+        response.setProperty( "numberCheckedForDeletion", status.getNumberProcessed() );
+        response.setSuccess();
+
+        return response;
+    }
+
+
     // TODO: this can't be controlled and until it can be controlled we shouldn' allow muggles to do this.
     // So system access only.
     // TODO: use scheduler here to get around people sending a reindex call 30 times.
@@ -225,6 +305,59 @@ public class CollectionResource extends ServiceResource {
         IndexResource indexResource = new IndexResource(injector);
         return indexResource.rebuildIndexesPost(
             services.getApplicationId().toString(),itemName.getPath(),false,callback );
+    }
+
+
+    private CollectionDeleteService getCollectionDeleteService() {
+        return injector.getInstance( CollectionDeleteService.class );
+    }
+
+
+    private CollectionDeleteRequestBuilder createRequest() {
+        return new CollectionDeleteRequestBuilderImpl();
+    }
+
+
+    private ApiResponse executeResumeAndCreateResponse( final Map<String, Object> payload,
+                                                        final CollectionDeleteRequestBuilder request,
+                                                        final String callback ) {
+
+        Map<String,Object> newPayload = payload;
+        if(newPayload == null ||  !payload.containsKey( UPDATED_BEFORE_FIELD )){
+            newPayload = new HashMap<>(1);
+            newPayload.put(UPDATED_BEFORE_FIELD,Long.MAX_VALUE);
+        }
+
+        Preconditions.checkArgument(newPayload.get(UPDATED_BEFORE_FIELD) instanceof Number,
+            "The field \"updatedBefore\" in the payload must be a timestamp" );
+
+        //add our updated timestamp to the request
+        if ( newPayload.containsKey( UPDATED_BEFORE_FIELD ) ) {
+            final long timestamp = ConversionUtils.getLong(newPayload.get(UPDATED_BEFORE_FIELD));
+            request.withEndTimestamp( timestamp );
+        }
+
+        return executeAndCreateResponse( request, callback );
+    }
+
+    /**
+     * Execute the request and return the response.
+     */
+    private ApiResponse executeAndCreateResponse(final CollectionDeleteRequestBuilder request, final String callback ) {
+
+
+        final CollectionDeleteService.CollectionDeleteStatus status = getCollectionDeleteService().deleteCollection( request );
+
+        final ApiResponse response = createApiResponse();
+
+        response.setAction( "clear collection" );
+        response.setProperty( "jobId", status.getJobId() );
+        response.setProperty( "status", status.getStatus() );
+        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
+        response.setProperty( "numberQueued", status.getNumberProcessed() );
+        response.setSuccess();
+
+        return response;
     }
 
 }

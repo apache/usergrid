@@ -25,7 +25,13 @@ import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.codec.Base64;
+import org.apache.usergrid.corepersistence.export.ExportRequestBuilder;
+import org.apache.usergrid.corepersistence.export.ExportRequestBuilderImpl;
+import org.apache.usergrid.corepersistence.export.ExportService;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.DisabledAppUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
@@ -37,6 +43,7 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
@@ -58,6 +65,8 @@ import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
@@ -612,6 +621,10 @@ public class ApplicationResource extends CollectionResource {
     public Object getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
+        if (!management.isAPMEnabled()) {
+            // no need to check app for setting
+            throw new EntityNotFoundException("apigeeMobileConfig not enabled.");
+        }
         EntityManager em = emf.getEntityManager( applicationId );
         Object value = em.getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                 APIGEE_MOBILE_APM_CONFIG_JSON_KEY );
@@ -674,6 +687,47 @@ public class ApplicationResource extends CollectionResource {
         return apmConfig;
 
     }
+
+
+    private ExportService getExportService() {
+        return injector.getInstance( ExportService.class );
+    }
+
+
+    @GET
+    @Path("export")
+    @RequireApplicationAccess
+    @Produces({"application/zip"})
+    public Response getExport( @Context UriInfo ui,
+                                @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("ApplicationResource.getExport");
+        }
+
+        if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) ) {
+            throw new UnauthorizedException();
+        }
+
+        ApplicationInfo appInfo = management.getApplicationInfo(applicationId);
+
+        final ExportRequestBuilder request = new ExportRequestBuilderImpl().withApplicationId( applicationId );
+        StreamingOutput stream = new StreamingOutput() {
+            @Override
+            public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+                getExportService().export(request,outputStream);
+            }
+        };
+        return Response
+            .ok(stream)
+            .header("Content-Disposition", "attachment; filename=\""+appInfo.getName().replace("/","_")+"_"+System.currentTimeMillis()+".zip\"")
+            .build();
+    }
+
+
+
+
 
 
 }

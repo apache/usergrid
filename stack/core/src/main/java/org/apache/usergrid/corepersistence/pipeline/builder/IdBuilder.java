@@ -31,6 +31,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefRe
 import org.apache.usergrid.corepersistence.pipeline.read.collect.IdResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
+import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -117,29 +118,42 @@ public class IdBuilder {
      * @param collectionName  The name of the collection
      * @param ql The user's query to execute
      * @param entityType The type of the entity
+     * @param analyzeOnly Whether only query analysis should be performed
+     * @param returnQuery Whether query should be returned instead of results
      * @return  Candidate results
      */
-    public CandidateBuilder searchCollection( final String collectionName, final String ql, final String entityType  ) {
+    public CandidateBuilder searchCollection(final String collectionName, final String ql, final String entityType,
+                                             final boolean analyzeOnly, final boolean returnQuery) {
 
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
-            ql, collectionName, entityType ) );
+            ql, collectionName, entityType, analyzeOnly, returnQuery ) );
 
-        return new CandidateBuilder( newFilter, filterFactory );
+        return new CandidateBuilder( newFilter, filterFactory , null);
     }
 
+    public CandidateBuilder searchCollection(final String collectionName, final String ql, final CollectionSearch search ) {
+
+        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
+            ql, collectionName, search.getEntityType(), search.getAnalyzeOnly(), search.getReturnQuery() ) );
+
+        return new CandidateBuilder( newFilter, filterFactory, search );
+    }
 
     /**
      * Search all connections from our input Id and search their connections
      * @param connectionName The connection name to search
      * @param ql The query to execute
      * @param entityType The optional type of entity.  If this is absent, all entity types in the connection will be searched
+     * @param analyzeOnly Whether only query analysis should be performed
+     * @param returnQuery Whether index query should be returned instead of results
      * @return  Candidate results
      */
-    public CandidateBuilder searchConnection( final String connectionName, final String ql ,  final Optional<String> entityType) {
+    public CandidateBuilder searchConnection(final String connectionName, final String ql, final Optional<String> entityType,
+                                             final boolean analyzeOnly, final boolean returnQuery) {
 
 
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchConnectionFilter(
-            ql, connectionName, entityType ) );
+            ql, connectionName, entityType, analyzeOnly, returnQuery ) );
 
         return new CandidateBuilder( newFilter, filterFactory );
     }

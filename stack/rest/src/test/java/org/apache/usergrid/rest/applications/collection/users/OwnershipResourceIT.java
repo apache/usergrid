@@ -17,18 +17,14 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
-
-import org.apache.usergrid.utils.MapUtils;
 
 import javax.ws.rs.ClientErrorException;
 
@@ -65,7 +61,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         user1 = new User(this.usersResource.post(user1));
         user2 = new User(this.usersResource.post(user2));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
     }
 
 
@@ -95,7 +91,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         //Revoke the user1 token
         usersResource.entity(user1).connection("revoketokens").post(new Entity().chainPut("token", token.getAccessToken()));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //See if we can still access the me entity after revoking its token
         try {
@@ -127,7 +123,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         // create device 1 on user1 devices
         usersResource.entity("me").collection("devices")
                .post(new Entity( ).chainPut("name", "device1").chainPut("number", "5551112222"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Clear the current user token
         this.app().token().clearToken();
@@ -137,7 +133,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         usersResource.entity("me").collection("devices")
                 .post(new Entity( ).chainPut("name", "device2").chainPut("number", "5552223333"));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Check that we can get back device1 on user1
         token = this.app().token().post(new Token(user1.getUsername(),"password"));
@@ -236,13 +232,13 @@ public class OwnershipResourceIT extends AbstractRestIT {
         // create a 4peaks restaurant
         Entity data = this.app().collection("restaurants").post(new Entity().chainPut("name", "4peaks"));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Create a restaurant and link it to user1/me
         Entity fourPeaksData = usersResource.entity("me")
                 .connection("likes").collection( "restaurants" ).entity( "4peaks" ).post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // anonymous user
         this.app().token().clearToken();
@@ -252,11 +248,11 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         data = this.app().collection("restaurants")
                       .post(new Entity().chainPut("name", "arrogantbutcher"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         data = usersResource.entity("me").connection( "likes" ).collection( "restaurants" )
                       .entity( "arrogantbutcher" ).post();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         String arrogantButcherId = data.getUuid().toString();
 
@@ -390,7 +386,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         //Sets up the cities collection with the city tempe
         Entity city = this.app().collection("cities").post(new Entity().chainPut("name", "tempe"));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create a 4peaks restaurant that is connected by a like to tempe.
         Entity data = this.app().collection("cities").entity( "tempe" ).connection( "likes" )
@@ -410,7 +406,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         CollectionEndpoint likeRestaurants =
                 this.app().collection("cities").entity( "tempe" ).connection( "likes" );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // check we can get the resturant entities back via uuid without a collection name
         data = likeRestaurants.entity( peaksId ).get();

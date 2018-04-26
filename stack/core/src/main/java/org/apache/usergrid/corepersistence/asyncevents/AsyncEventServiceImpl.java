@@ -30,10 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
-import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.ReplicatedIndexLocationStrategy;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.corepersistence.util.ObjectJsonSerializer;
@@ -59,6 +56,8 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
+import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -73,8 +72,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 
 /**
@@ -103,10 +100,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public int MAX_TAKE = 10;
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
     public static final String QUEUE_NAME_UTILITY = "utility"; //keep this short as AWS limits queue name size to 80 chars
+    public static final String QUEUE_NAME_DELETE = "delete";
 
 
-    private final LegacyQueueManager queue;
+    private final LegacyQueueManager indexQueue;
     private final LegacyQueueManager utilityQueue;
+    private final LegacyQueueManager deleteQueue;
+    private final LegacyQueueManager indexQueueDead;
+    private final LegacyQueueManager utilityQueueDead;
+    private final LegacyQueueManager deleteQueueDead;
     private final IndexProcessorFig indexProcessorFig;
     private final LegacyQueueFig queueFig;
     private final IndexProducer indexProducer;
@@ -128,6 +130,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     private final Counter indexErrorCounter;
     private final AtomicLong counter = new AtomicLong();
     private final AtomicLong counterUtility = new AtomicLong();
+    private final AtomicLong counterDelete = new AtomicLong();
+    private final AtomicLong counterIndexDead = new AtomicLong();
+    private final AtomicLong counterUtilityDead = new AtomicLong();
+    private final AtomicLong counterDeleteDead = new AtomicLong();
     private final AtomicLong inFlight = new AtomicLong();
     private final Histogram messageCycle;
     private final MapManager esMapPersistence;
@@ -162,14 +168,30 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         this.rxTaskScheduler = rxTaskScheduler;
 
-        LegacyQueueScope queueScope =
+        LegacyQueueScope indexQueueScope =
             new LegacyQueueScopeImpl(QUEUE_NAME, LegacyQueueScope.RegionImplementation.ALL);
 
         LegacyQueueScope utilityQueueScope =
             new LegacyQueueScopeImpl(QUEUE_NAME_UTILITY, LegacyQueueScope.RegionImplementation.ALL);
 
-        this.queue = queueManagerFactory.getQueueManager(queueScope);
+        LegacyQueueScope deleteQueueScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME_DELETE, LegacyQueueScope.RegionImplementation.ALL);
+
+        LegacyQueueScope indexQueueDeadScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME, LegacyQueueScope.RegionImplementation.ALL, true);
+
+        LegacyQueueScope utilityQueueDeadScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME_UTILITY, LegacyQueueScope.RegionImplementation.ALL, true);
+
+        LegacyQueueScope deleteQueueDeadScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME_DELETE, LegacyQueueScope.RegionImplementation.ALL, true);
+
+        this.indexQueue = queueManagerFactory.getQueueManager(indexQueueScope);
         this.utilityQueue = queueManagerFactory.getQueueManager(utilityQueueScope);
+        this.deleteQueue = queueManagerFactory.getQueueManager(deleteQueueScope);
+        this.indexQueueDead = queueManagerFactory.getQueueManager(indexQueueDeadScope);
+        this.utilityQueueDead = queueManagerFactory.getQueueManager(utilityQueueDeadScope);
+        this.deleteQueueDead = queueManagerFactory.getQueueManager(deleteQueueDeadScope);
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueFig = queueFig;
@@ -192,34 +214,107 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         start();
     }
 
+    protected Histogram getMessageCycle() {
+        return messageCycle;
+    }
+
+    private String getQueueName(AsyncEventQueueType queueType) {
+        switch (queueType) {
+            case REGULAR:
+                return QUEUE_NAME;
+
+            case UTILITY:
+                return QUEUE_NAME_UTILITY;
+
+            case DELETE:
+                return QUEUE_NAME_DELETE;
+
+            default:
+                throw new IllegalArgumentException("Invalid queue type: " + queueType.toString());
+        }
+    }
+
+    private LegacyQueueManager getQueue(AsyncEventQueueType queueType) {
+        return getQueue(queueType, false);
+    }
+
+    private LegacyQueueManager getQueue(AsyncEventQueueType queueType, boolean isDeadQueue) {
+        switch (queueType) {
+            case REGULAR:
+                return isDeadQueue ? indexQueueDead : indexQueue;
+
+            case UTILITY:
+                return isDeadQueue ? utilityQueueDead : utilityQueue;
+
+            case DELETE:
+                return isDeadQueue ? deleteQueueDead : deleteQueue;
+
+            default:
+                throw new IllegalArgumentException("Invalid queue type: " + queueType.toString());
+        }
+    }
+
+    private AtomicLong getCounter(AsyncEventQueueType queueType, boolean isDeadQueue) {
+        switch (queueType) {
+            case REGULAR:
+                return isDeadQueue ? counterIndexDead : counter;
+
+            case UTILITY:
+                return isDeadQueue ? counterUtilityDead : counterUtility;
+
+            case DELETE:
+                return isDeadQueue ? counterDeleteDead : counterDelete;
+
+            default:
+                throw new IllegalArgumentException("Invalid queue type: " + queueType.toString());
+        }
+    }
+
+
+
+
 
     /**
      * Offer the EntityIdScope to SQS
      */
-    private void offer(final Serializable operation) {
+    protected void offer(final Serializable operation) {
+        offer(operation, AsyncEventQueueType.REGULAR, QueueIndexingStrategy.DIRECT);
+    }
+
+    /**
+     * Offer the EntityIdScope to SQS
+     */
+    protected void offer(final Serializable operation, QueueIndexingStrategy queueIndexingStrategy) {
+        offer(operation, AsyncEventQueueType.REGULAR, queueIndexingStrategy);
+    }
+
+     /**
+      * Offer the EntityIdScope to SQS
+      */
+    private void offer(final Serializable operation, AsyncEventQueueType queueType, QueueIndexingStrategy queueIndexingStrategy) {
         final Timer.Context timer = this.writeTimer.time();
 
         try {
             //signal to SQS
-            this.queue.sendMessageToLocalRegion( operation );
+            Boolean async = (queueIndexingStrategy == QueueIndexingStrategy.ASYNC);
+            getQueue(queueType).sendMessageToLocalRegion(operation, async);
+
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
             timer.stop();
         }
+
     }
 
 
-    private void offerTopic(final Serializable operation, boolean forUtilityQueue) {
+    private void offerTopic(final Serializable operation, AsyncEventQueueType queueType) {
         final Timer.Context timer = this.writeTimer.time();
 
         try {
             //signal to SQS
-            if (forUtilityQueue) {
-                this.utilityQueue.sendMessageToAllRegions(operation);
-            } else {
-                this.queue.sendMessageToAllRegions(operation);
-            }
+            getQueue(queueType).sendMessageToAllRegions(operation,null);
+
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Unable to queue message", e );
@@ -230,15 +325,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     }
 
 
-    private void offerBatch(final List operations, boolean forUtilityQueue){
+    private void offerBatch(final List operations, AsyncEventQueueType queueType){
         final Timer.Context timer = this.writeTimer.time();
         try {
             //signal to SQS
-            if( forUtilityQueue ){
-                this.utilityQueue.sendMessages(operations);
-            }else{
-                this.queue.sendMessages(operations);
-            }
+            getQueue(queueType).sendMessages(operations);
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
@@ -246,25 +337,16 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
     }
 
-    private void offerBatchToUtilityQueue(final List operations){
-        try {
-            //signal to SQS
-            this.utilityQueue.sendMessages(operations);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to queue message", e);
-        }
-    }
-
 
     /**
      * Take message
      */
-    private List<LegacyQueueMessage> take() {
+    private List<LegacyQueueMessage> take(AsyncEventQueueType queueType, boolean isDeadQueue) {
 
         final Timer.Context timer = this.readTimer.time();
 
         try {
-            return queue.getMessages(MAX_TAKE, AsyncEvent.class);
+            return getQueue(queueType, isDeadQueue).getMessages(MAX_TAKE, AsyncEvent.class);
         }
         finally {
             //stop our timer
@@ -272,20 +354,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
     }
 
-    /**
-     * Take message from SQS utility queue
-     */
-    private List<LegacyQueueMessage> takeFromUtilityQueue() {
-
-        final Timer.Context timer = this.readTimer.time();
-
-        try {
-            return utilityQueue.getMessages(MAX_TAKE, AsyncEvent.class);
-        }
-        finally {
-            //stop our timer
-            timer.stop();
-        }
+    private List<LegacyQueueMessage> take(AsyncEventQueueType queueType) {
+        return take(queueType, false);
     }
 
 
@@ -300,7 +370,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
             for ( LegacyQueueMessage legacyQueueMessage : messages ) {
                 try {
-                    queue.commitMessage( legacyQueueMessage );
+                    indexQueue.commitMessage( legacyQueueMessage );
                     inFlight.decrementAndGet();
 
                 } catch ( Throwable t ) {
@@ -316,16 +386,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
     }
 
-
-    /**
-     * calls the event handlers and returns a result with information on whether
-     * it needs to be ack'd and whether it needs to be indexed
-     * Ack message in SQS
-     */
-    public void ackUtilityQueue(final List<LegacyQueueMessage> messages) {
-        try{
-            utilityQueue.commitMessages( messages );
-        }catch(Exception e){
+    public void ack(final List<LegacyQueueMessage> messages, AsyncEventQueueType queueType, boolean isDeadQueue) {
+        if (queueType == AsyncEventQueueType.REGULAR && !isDeadQueue) {
+            // different functionality
+            ack(messages);
+        }
+        try {
+            getQueue(queueType, isDeadQueue).commitMessages( messages );
+        }
+        catch (Exception e) {
             throw new RuntimeException("Unable to ack messages", e);
         }
     }
@@ -336,7 +405,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * @param messages
      * @return
      */
-    private List<IndexEventResult> callEventHandlers(final List<LegacyQueueMessage> messages) {
+    protected List<IndexEventResult> callEventHandlers(final List<LegacyQueueMessage> messages) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("callEventHandlers with {} message(s)", messages.size());
@@ -420,8 +489,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 if( !(event instanceof ElasticsearchIndexEvent)
                     && !(event instanceof InitializeApplicationIndexEvent)
                       && single.isEmpty() ){
-                        logger.warn("No index operation messages came back from event processing for msg: {} ",
-                            message.getStringBody().trim());
+                        logger.warn("No index operation messages came back from event processing for eventType: {}, msgId: {}, msgBody: {}",
+                            event.getClass().getSimpleName(), message.getMessageId(), message.getStringBody());
                 }
 
 
@@ -464,36 +533,37 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             applicationScope);
 
 
-        logger.trace("Offering InitializeApplicationIndexEvent for {}:{}",
-            applicationScope.getApplication().getUuid(), applicationScope.getApplication().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering InitializeApplicationIndexEvent for {}:{}",
+                applicationScope.getApplication().getUuid(), applicationScope.getApplication().getType());
+        }
 
         offerTopic( new InitializeApplicationIndexEvent( queueFig.getPrimaryRegion(),
-            new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ), false);
+            new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ), AsyncEventQueueType.REGULAR);
     }
 
 
     @Override
     public void queueEntityIndexUpdate(final ApplicationScope applicationScope,
-                                       final Entity entity, long updatedAfter) {
+                                       final Entity entity, long updatedAfter, QueueIndexingStrategy queueIndexingStrategy) {
 
 
-        logger.trace("Offering EntityIndexEvent for {}:{}",
-            entity.getId().getUuid(), entity.getId().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EntityIndexEvent for {}:{}",
+                entity.getId().getUuid(), entity.getId().getType());
+        }
 
-        offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),
-            new EntityIdScope(applicationScope, entity.getId()), 0));
 
-        final EntityIndexOperation entityIndexOperation =
-            new EntityIndexOperation( applicationScope, entity.getId(), updatedAfter);
+        EntityIndexEvent event = new EntityIndexEvent(queueFig.getPrimaryRegion(),
+            new EntityIdScope(applicationScope, entity.getId()),
+            updatedAfter);
 
-        final IndexOperationMessage indexMessage =
-            eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null);
-
-        queueIndexOperationMessage( indexMessage, false);
+        offer(event, queueIndexingStrategy);
 
     }
 
     private IndexOperationMessage handleEntityIndexUpdate(final LegacyQueueMessage message) {
+
 
         Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEntityIndexUpdate" );
 
@@ -524,13 +594,16 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     @Override
     public void queueNewEdge(final ApplicationScope applicationScope,
-                             final Entity entity,
-                             final Edge newEdge) {
+                             final Id entityId,
+                             final Edge newEdge,
+                             QueueIndexingStrategy queueIndexingStrategy) {
 
-        logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
-            newEdge.getType(), entity.getId().getUuid(), entity.getId().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
+                newEdge.getType(), entityId.getUuid(), entityId.getType());
+        }
 
-        offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge ));
+        offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entityId, newEdge ), queueIndexingStrategy);
 
     }
 
@@ -562,11 +635,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public void queueDeleteEdge(final ApplicationScope applicationScope,
                                 final Edge edge) {
 
-        logger.trace("Offering EdgeDeleteEvent for type {} to target {}:{}",
-            edge.getType(), edge.getTargetNode().getUuid(), edge.getTargetNode().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EdgeDeleteEvent for type {} to target {}:{}",
+                edge.getType(), edge.getTargetNode().getUuid(), edge.getTargetNode().getType());
+        }
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
-        offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ) );
+        offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ), AsyncEventQueueType.DELETE , null);
     }
 
     private IndexOperationMessage  handleEdgeDelete(final LegacyQueueMessage message) {
@@ -590,8 +665,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
 
         // default this observable's return to empty index operation message if nothing is emitted
-        return eventBuilder.buildDeleteEdge(applicationScope, edge)
-            .toBlocking().lastOrDefault(new IndexOperationMessage());
+        return eventBuilder.buildDeleteEdge(applicationScope, edge);
 
     }
 
@@ -600,9 +674,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     /**
      * Queue up an indexOperationMessage for multi region execution
      * @param indexOperationMessage
-     * @param forUtilityQueue
+     * @param queueType
      */
-    public void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage, boolean forUtilityQueue) {
+    public void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage, AsyncEventQueueType queueType) {
 
         // don't try to produce something with nothing
         if(indexOperationMessage == null || indexOperationMessage.isEmpty()){
@@ -626,12 +700,31 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         //send to the topic so all regions index the batch
 
-        logger.trace("Offering ElasticsearchIndexEvent for message {}", newMessageId );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering ElasticsearchIndexEvent for message {}", newMessageId);
+        }
 
-        offerTopic( elasticsearchIndexEvent, forUtilityQueue );
+        offerTopic( elasticsearchIndexEvent, queueType );
     }
 
-    private void handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent)
+    protected ElasticsearchIndexEvent getESIndexEvent(final IndexOperationMessage indexOperationMessage) {
+
+        final String jsonValue = ObjectJsonSerializer.INSTANCE.toString( indexOperationMessage );
+
+        final UUID newMessageId = UUIDGenerator.newTimeUUID();
+
+        final int expirationTimeInSeconds =
+            ( int ) TimeUnit.MILLISECONDS.toSeconds( indexProcessorFig.getIndexMessageTtl() );
+
+        //write to the map in ES
+        esMapPersistence.putString( newMessageId.toString(), jsonValue, expirationTimeInSeconds );
+
+        return new ElasticsearchIndexEvent(queueFig.getPrimaryRegion(), newMessageId );
+
+    }
+
+
+    protected void handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent)
         throws IndexDocNotFoundException {
 
         Preconditions.checkNotNull( elasticsearchIndexEvent, "elasticsearchIndexEvent cannot be null" );
@@ -664,10 +757,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                indexOperationMessage =
                    ObjectJsonSerializer.INSTANCE.fromString(highConsistency, IndexOperationMessage.class);
 
+           } else if (System.currentTimeMillis() > elasticsearchIndexEvent.getCreationTime() + queueFig.getMapMessageTimeout()) {
+                // if esMapPersistence message hasn't been received yet, log and return (will be acked)
+                logger.error("ES map message never received, removing message from queue. indexBatchId={}", messageId);
+                return;
            } else {
-
-               throw new IndexDocNotFoundException(elasticsearchIndexEvent.getIndexBatchId());
-
+                logger.warn("ES map message not received yet. indexBatchId={} elapsedTimeMsec={}", messageId, System.currentTimeMillis() - elasticsearchIndexEvent.getCreationTime());
+                throw new IndexDocNotFoundException(elasticsearchIndexEvent.getIndexBatchId());
            }
 
         } else {
@@ -697,11 +793,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         // queue the de-index of old versions to the topic so cleanup happens in all regions
 
-        logger.trace("Offering DeIndexOldVersionsEvent for app {} {}:{}",
-            applicationScope.getApplication().getUuid(), entityId.getUuid(), entityId.getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering DeIndexOldVersionsEvent for app {} {}:{}",
+                applicationScope.getApplication().getUuid(), entityId.getUuid(), entityId.getType());
+        }
 
         offerTopic( new DeIndexOldVersionsEvent( queueFig.getPrimaryRegion(),
-            new EntityIdScope( applicationScope, entityId), markedVersion), false);
+            new EntityIdScope( applicationScope, entityId), markedVersion), AsyncEventQueueType.DELETE );
 
     }
 
@@ -752,16 +850,19 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     @Override
     public long getQueueDepth() {
-        return queue.getQueueDepth();
+        return indexQueue.getQueueDepth();
     }
 
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
 
-        logger.trace("Offering EntityDeleteEvent for {}:{}", entityId.getUuid(), entityId.getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EntityDeleteEvent for {}:{}", entityId.getUuid(), entityId.getType());
+        }
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
-        offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
+        offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ),
+            AsyncEventQueueType.DELETE , null);
     }
 
     private IndexOperationMessage handleEntityDelete(final LegacyQueueMessage message) {
@@ -777,21 +878,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final EntityDeleteEvent entityDeleteEvent = ( EntityDeleteEvent ) event;
         final ApplicationScope applicationScope = entityDeleteEvent.getEntityIdScope().getApplicationScope();
         final Id entityId = entityDeleteEvent.getEntityIdScope().getId();
+        final boolean isCollectionDelete = entityDeleteEvent.isCollectionDelete();
+        final long updatedBefore = entityDeleteEvent.getUpdatedBefore();
 
-        if (logger.isDebugEnabled())
-            logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Deleting entity id from index in app scope {} with entityId {}, isCollectionDelete {}, updatedBefore {}",
+                applicationScope, entityId, isCollectionDelete, updatedBefore);
+        }
 
-        final EventBuilderImpl.EntityDeleteResults
-            entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
-
-
-        // Delete the entities and remove from graph separately
-        entityDeleteResults.getEntitiesDeleted().toBlocking().lastOrDefault(null);
-
-        entityDeleteResults.getCompactedNode().toBlocking().lastOrDefault(null);
-
-        // default this observable's return to empty index operation message if nothing is emitted
-        return entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(new IndexOperationMessage());
+        return eventBuilder.buildEntityDelete( applicationScope, entityId, isCollectionDelete, updatedBefore );
 
     }
 
@@ -814,15 +909,42 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Loop through and start the workers
      */
     public void start() {
-        final int count = indexProcessorFig.getWorkerCount();
+        final int indexCount = indexProcessorFig.getWorkerCount();
         final int utilityCount = indexProcessorFig.getWorkerCountUtility();
+        final int deleteCount = indexProcessorFig.getWorkerCountDelete();
+        final int indexDeadCount = indexProcessorFig.getWorkerCountDeadLetter();
+        final int utilityDeadCount = indexProcessorFig.getWorkerCountUtilityDeadLetter();
+        final int deleteDeadCount = indexProcessorFig.getWorkerCountDeleteDeadLetter();
+        logger.info("Starting queue workers for indexing: index={} indexDLQ={} utility={} utilityDLQ={} delete={} deleteDLQ={}",
+            indexCount, indexDeadCount, utilityCount, utilityDeadCount, deleteCount, deleteDeadCount);
 
-        for (int i = 0; i < count; i++) {
-            startWorker(QUEUE_NAME);
+        for (int i = 0; i < indexCount; i++) {
+            startWorker(AsyncEventQueueType.REGULAR);
         }
 
         for (int i = 0; i < utilityCount; i++) {
-            startWorker(QUEUE_NAME_UTILITY);
+            startWorker(AsyncEventQueueType.UTILITY);
+        }
+
+        for (int i = 0; i < deleteCount; i++) {
+            startWorker(AsyncEventQueueType.DELETE);
+        }
+
+        if( indexQueue instanceof SNSQueueManagerImpl) {
+            logger.info("Queue manager implementation supports dead letters, start dead letter queue workers.");
+            for (int i = 0; i < indexDeadCount; i++) {
+                startDeadQueueWorker(AsyncEventQueueType.REGULAR);
+            }
+
+            for (int i = 0; i < utilityDeadCount; i++) {
+                startDeadQueueWorker(AsyncEventQueueType.UTILITY);
+            }
+
+            for (int i = 0; i < deleteDeadCount; i++) {
+                startDeadQueueWorker(AsyncEventQueueType.DELETE);
+            }
+        }else{
+            logger.info("Queue manager implementation does NOT support dead letters, NOT starting dead letter queue workers.");
         }
     }
 
@@ -841,116 +963,221 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     }
 
 
-    private void startWorker(final String type) {
-        Preconditions.checkNotNull(type, "Worker type required");
+    private void startWorker(final AsyncEventQueueType queueType) {
         synchronized (mutex) {
 
-            boolean isUtilityQueue = isNotEmpty(type) && type.toLowerCase().contains(QUEUE_NAME_UTILITY.toLowerCase());
+            String type = getQueueName(queueType);
 
             Observable<List<LegacyQueueMessage>> consumer =
-                    Observable.create( new Observable.OnSubscribe<List<LegacyQueueMessage>>() {
-                        @Override
-                        public void call( final Subscriber<? super List<LegacyQueueMessage>> subscriber ) {
+                Observable.create( new Observable.OnSubscribe<List<LegacyQueueMessage>>() {
+                    @Override
+                    public void call( final Subscriber<? super List<LegacyQueueMessage>> subscriber ) {
 
-                            //name our thread so it's easy to see
-                            long threadNum = isUtilityQueue ?
-                                counterUtility.incrementAndGet() : counter.incrementAndGet();
-                            Thread.currentThread().setName( "QueueConsumer_" + type+ "_" + threadNum );
+                        //name our thread so it's easy to see
+                        long threadNum = getCounter(queueType, false).incrementAndGet();
+                        Thread.currentThread().setName( "QueueConsumer_" + type + "_" + threadNum );
 
-                            List<LegacyQueueMessage> drainList = null;
+                        List<LegacyQueueMessage> drainList = null;
 
-                            do {
-                                try {
-                                    if ( isUtilityQueue ){
-                                        drainList = takeFromUtilityQueue();
-                                    }else{
-                                        drainList = take();
+                        do {
+                            try {
+                                drainList = take(queueType);
 
-                                    }
-                                    //emit our list in it's entity to hand off to a worker pool
-                                        subscriber.onNext(drainList);
+                                //emit our list in it's entity to hand off to a worker pool
+                                subscriber.onNext(drainList);
 
-                                    //take since  we're in flight
-                                    inFlight.addAndGet( drainList.size() );
+                                //take since  we're in flight
+                                inFlight.addAndGet( drainList.size() );
 
-                                } catch ( Throwable t ) {
+                            } catch ( Throwable t ) {
 
-                                    final long sleepTime = indexProcessorFig.getFailureRetryTime();
+                                final long sleepTime = indexProcessorFig.getFailureRetryTime();
 
-                                    // there might be an error here during tests, just clean the cache
-                                    queue.clearQueueNameCache();
+                                // there might be an error here during tests, just clean the cache
+                                indexQueue.clearQueueNameCache();
 
-                                    if ( t instanceof InvalidQueryException ) {
+                                if ( t instanceof InvalidQueryException ) {
 
-                                        // don't fill up log with exceptions when keyspace and column
-                                        // families are not ready during bootstrap/setup
-                                        logger.warn( "Failed to dequeue due to '{}'. Sleeping for {} ms",
-                                            t.getMessage(), sleepTime );
+                                    // don't fill up log with exceptions when keyspace and column
+                                    // families are not ready during bootstrap/setup
+                                    logger.warn( "Failed to dequeue due to '{}'. Sleeping for {} ms",
+                                        t.getMessage(), sleepTime );
 
-                                    } else {
-                                        logger.error( "Failed to dequeue. Sleeping for {} ms", sleepTime, t);
-                                    }
-
-                                    if ( drainList != null ) {
-                                        inFlight.addAndGet( -1 * drainList.size() );
-                                    }
-
-                                    try { Thread.sleep( sleepTime ); } catch ( InterruptedException ie ) {}
-
-                                    indexErrorCounter.inc();
+                                } else {
+                                    logger.error( "Failed to dequeue. Sleeping for {} ms", sleepTime, t);
                                 }
+
+                                if ( drainList != null ) {
+                                    inFlight.addAndGet( -1 * drainList.size() );
+                                }
+
+                                try { Thread.sleep( sleepTime ); } catch ( InterruptedException ie ) {}
+
+                                indexErrorCounter.inc();
                             }
-                            while ( true );
                         }
-                    } )        //this won't block our read loop, just reads and proceeds
-                        .flatMap( sqsMessages -> {
+                        while ( true );
+                    }
+                } )        //this won't block our read loop, just reads and proceeds
+                    .flatMap( sqsMessages -> {
 
-                            //do this on a different schedule, and introduce concurrency
-                            // with flatmap for faster processing
-                            return Observable.just( sqsMessages )
+                        //do this on a different schedule, and introduce concurrency
+                        // with flatmap for faster processing
+                        return Observable.just( sqsMessages )
 
-                                             .map( messages -> {
-                                                 if ( messages == null || messages.size() == 0 ) {
-                                                     // no messages came from the queue, move on
-                                                     return null;
-                                                 }
+                            .map( messages -> {
+                                if ( messages == null || messages.size() == 0 ) {
+                                    // no messages came from the queue, move on
+                                    return null;
+                                }
 
-                                                 try {
-                                                     // process the messages
-                                                     List<IndexEventResult> indexEventResults =
-                                                         callEventHandlers( messages );
+                                try {
+                                    // process the messages
+                                    List<IndexEventResult> indexEventResults =
+                                        callEventHandlers( messages );
 
-                                                     // submit the processed messages to index producer
-                                                     List<LegacyQueueMessage> messagesToAck =
-                                                         submitToIndex( indexEventResults, isUtilityQueue );
+                                    // submit the processed messages to index producer
+                                    List<LegacyQueueMessage> messagesToAck =
+                                        submitToIndex( indexEventResults, queueType );
 
-                                                     if ( messagesToAck.size() < messages.size() ) {
-                                                         logger.warn(
-                                                             "Missing {} message(s) from index processing",
-                                                            messages.size() - messagesToAck.size() );
-                                                     }
+                                    if ( messagesToAck.size() < messages.size() ) {
+                                        logger.warn(
+                                            "Missing {} message(s) from index processing",
+                                            messages.size() - messagesToAck.size() );
+                                    }
 
-                                                     // ack each message if making it to this point
-                                                     if( messagesToAck.size() > 0 ){
+                                    // ack each message if making it to this point
+                                    if( messagesToAck.size() > 0 ){
+                                        ack(messagesToAck, queueType, false);
+                                    }
 
-                                                         if ( isUtilityQueue ){
-                                                             ackUtilityQueue( messagesToAck );
-                                                         }else{
-                                                             ack( messagesToAck );
-                                                         }
-                                                     }
+                                    return messagesToAck;
+                                }
+                                catch ( Exception e ) {
+                                    logger.error( "Failed to ack messages", e );
+                                    return null;
+                                    //do not rethrow so we can process all of them
+                                }
+                            } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
 
-                                                     return messagesToAck;
-                                                 }
-                                                 catch ( Exception e ) {
-                                                     logger.error( "Failed to ack messages", e );
-                                                     return null;
-                                                     //do not rethrow so we can process all of them
-                                                 }
-                                             } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+                        //end flatMap
+                    }, indexProcessorFig.getEventConcurrencyFactor() );
 
-                            //end flatMap
-                        }, indexProcessorFig.getEventConcurrencyFactor() );
+            //start in the background
+
+            final Subscription subscription = consumer.subscribeOn(Schedulers.newThread()).subscribe();
+
+            subscriptions.add(subscription);
+        }
+    }
+
+
+    private void startDeadQueueWorker(final AsyncEventQueueType queueType) {
+        String type = getQueueName(queueType);
+        synchronized (mutex) {
+
+            Observable<List<LegacyQueueMessage>> consumer =
+                Observable.create( new Observable.OnSubscribe<List<LegacyQueueMessage>>() {
+                    @Override
+                    public void call( final Subscriber<? super List<LegacyQueueMessage>> subscriber ) {
+
+                        //name our thread so it's easy to see
+                        long threadNum = getCounter(queueType, true).incrementAndGet();
+                        Thread.currentThread().setName( "QueueDeadLetterConsumer_" + type + "_" + threadNum );
+
+                        List<LegacyQueueMessage> drainList = null;
+
+                        do {
+                            try {
+                                drainList = take(queueType, true);
+
+                                //emit our list in it's entity to hand off to a worker pool
+                                subscriber.onNext(drainList);
+
+                                //take since  we're in flight
+                                inFlight.addAndGet( drainList.size() );
+
+                            } catch ( Throwable t ) {
+
+                                final long sleepTime = indexProcessorFig.getDeadLetterFailureRetryTime();
+
+                                // there might be an error here during tests, just clean the cache
+                                indexQueueDead.clearQueueNameCache();
+
+                                if ( t instanceof InvalidQueryException ) {
+
+                                    // don't fill up log with exceptions when keyspace and column
+                                    // families are not ready during bootstrap/setup
+                                    logger.warn( "Failed to dequeue dead letters due to '{}'. Sleeping for {} ms",
+                                        t.getMessage(), sleepTime );
+
+                                } else {
+                                    logger.error( "Failed to dequeue dead letters. Sleeping for {} ms", sleepTime, t);
+                                }
+
+                                if ( drainList != null ) {
+                                    inFlight.addAndGet( -1 * drainList.size() );
+                                }
+
+                                try { Thread.sleep( sleepTime ); } catch ( InterruptedException ie ) {}
+                            }
+                        }
+                        while ( true );
+                    }
+                } )        //this won't block our read loop, just reads and proceeds
+                    .flatMap( sqsMessages -> {
+
+                        //do this on a different schedule, and introduce concurrency
+                        // with flatmap for faster processing
+                        return Observable.just( sqsMessages )
+
+                            .map( messages -> {
+                                if ( messages == null || messages.size() == 0 ) {
+                                    // no messages came from the queue, move on
+                                    return null;
+                                }
+
+                                try {
+                                    // put the dead letter messages back in the appropriate queue
+                                    LegacyQueueManager returnQueue = getQueue(queueType, false);
+
+                                    List<LegacyQueueMessage> successMessages = returnQueue.sendQueueMessages(messages);
+                                    for (LegacyQueueMessage msg : successMessages) {
+                                        logger.warn("Returning message to {} queue: type:{}, messageId:{} body: {}", queueType.toString(), msg.getType(), msg.getMessageId(), msg.getStringBody());
+                                    }
+                                    int unsuccessfulMessagesSize = messages.size() - successMessages.size();
+                                    if (unsuccessfulMessagesSize > 0) {
+                                        // some messages couldn't be sent to originating queue, log
+                                        Set<String> successMessageIds = new HashSet<>();
+                                        for (LegacyQueueMessage msg : successMessages) {
+                                            String messageId = msg.getMessageId();
+                                            if (successMessageIds.contains(messageId)) {
+                                                logger.warn("Found duplicate messageId in returned messages: {}", messageId);
+                                            } else {
+                                                successMessageIds.add(messageId);
+                                            }
+                                        }
+                                        for (LegacyQueueMessage msg : messages) {
+                                            String messageId = msg.getMessageId();
+                                            if (!successMessageIds.contains(messageId)) {
+                                                logger.warn("Failed to return message to {} queue: type:{} messageId:{} body: {}", queueType.toString(), msg.getType(), messageId, msg.getStringBody());
+                                            }
+                                        }
+                                    }
+
+                                    ack(successMessages, queueType, true);
+
+                                    return messages;
+                                }
+                                catch ( Exception e ) {
+                                    logger.error( "Failed to ack messages", e );
+                                    return null;
+                                    //do not rethrow so we can process all of them
+                                }
+                            } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+
+                        //end flatMap
+                    }, indexProcessorFig.getEventConcurrencyFactor() );
 
             //start in the background
 
@@ -964,7 +1191,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Submit results to index and return the queue messages to be ack'd
      *
      */
-    private List<LegacyQueueMessage> submitToIndex(List<IndexEventResult> indexEventResults, boolean forUtilityQueue) {
+    private List<LegacyQueueMessage> submitToIndex(List<IndexEventResult> indexEventResults, AsyncEventQueueType queueType) {
 
         // if nothing came back then return empty list
         if(indexEventResults==null){
@@ -991,7 +1218,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             // collect into a list of QueueMessages that can be ack'd later
             .collect(Collectors.toList());
 
-       queueIndexOperationMessage(combined, forUtilityQueue);
+        queueIndexOperationMessage(combined, queueType);
 
         return queueMessages;
     }
@@ -1002,10 +1229,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             new EntityIndexOperation( applicationScope, id, updatedSince);
 
         queueIndexOperationMessage(
-            eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null), false);
+            eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null), AsyncEventQueueType.REGULAR );
     }
 
-    public void indexBatch(final List<EdgeScope> edges, final long updatedSince, boolean forUtilityQueue) {
+    public void indexBatch(final List<EdgeScope> edges, final long updatedSince, AsyncEventQueueType queueType) {
 
         final List<EntityIndexEvent> batch = new ArrayList<>();
         edges.forEach(e -> {
@@ -1016,9 +1243,25 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         });
 
-        logger.trace("Offering batch of EntityIndexEvent of size {}", batch.size());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering batch of EntityIndexEvent of size {}", batch.size());
+        }
 
-        offerBatch( batch, forUtilityQueue );
+        offerBatch( batch, queueType );
+    }
+
+    public void deleteBatch(final List<EdgeScope> edges, final long updatedBefore, AsyncEventQueueType queueType) {
+
+        final List<EntityDeleteEvent> batch = new ArrayList<>();
+        edges.forEach(e -> {
+
+            //change to id scope to avoid serialization issues
+            batch.add(new EntityDeleteEvent(queueFig.getPrimaryRegion(),
+                new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), true, updatedBefore));
+
+        });
+
+        offerBatch(batch, queueType);
     }
 
 
@@ -1050,7 +1293,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     public String getQueueManagerClass() {
 
-        return queue.getClass().getSimpleName();
+        return indexQueue.getClass().getSimpleName();
 
     }
 

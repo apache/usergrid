@@ -21,7 +21,10 @@ package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerEnforcementException;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +41,8 @@ import com.google.common.base.Optional;
 import rx.Observable;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -51,19 +56,23 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final String query;
     private final Timer searchTimer;
+    private final boolean analyzeOnly;
+    private final boolean returnQuery;
 
 
     /**
      * Create a new instance of our command
      */
-    public AbstractElasticSearchFilter( final EntityIndexFactory entityIndexFactory,
-                                        final MetricsFactory metricsFactory,
-                                        final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                                        final String query ) {
+    public AbstractElasticSearchFilter(final EntityIndexFactory entityIndexFactory,
+                                       final MetricsFactory metricsFactory,
+                                       final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                       final String query, boolean analyzeOnly, boolean returnQuery) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.query = query;
         this.searchTimer = metricsFactory.getTimer( AbstractElasticSearchFilter.class, "query.search" );
+        this.analyzeOnly = analyzeOnly;
+        this.returnQuery = returnQuery;
     }
 
 
@@ -80,6 +89,21 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
         final SearchTypes searchTypes = getSearchTypes();
 
+        // pull out the basic Usergrid entity info to get known properties and their associated types
+        final Map<String, Class> propertiesWithType = new HashMap<>();
+        for (String type : searchTypes.getTypes()) {
+            try {
+                if ( Schema.getDefaultSchema().getEntityInfo(type) != null ){
+                    Schema.getDefaultSchema().getEntityInfo(type).getProperties().forEach((propName, propValue) ->
+                        propertiesWithType.put(propName, propValue.getType())
+                    );
+                }
+            }catch (Exception e){
+                // do nothing here, clear the potentially partially filled map and fall back to original behavior
+                propertiesWithType.clear();
+                logger.warn("Unable to obtain the default entity type fields with type. Sort may have degraded performance.");
+            }
+        }
 
         //return all ids that are emitted from this edge
         return observable.flatMap( idFilterResult -> {
@@ -105,7 +129,8 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                     try {
                         final CandidateResults candidateResults =
-                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet );
+                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet,
+                                propertiesWithType, analyzeOnly, returnQuery);
 
 
                         Collection<SelectFieldMapping> fieldMappingCollection = candidateResults.getGetFieldMappings();
@@ -138,8 +163,11 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                     }
                     catch ( Throwable t ) {
-
-                        logger.error( "Unable to search candidates", t );
+                        // query analyzer exceptions are short circuits initiated by an exception, but is not really an error
+                        // still rethrow because it's mapped later
+                        if (!(t instanceof QueryAnalyzerException || t instanceof QueryAnalyzerEnforcementException) ){
+                            logger.error( "Unable to search candidates", t );
+                        }
                         subscriber.onError( t );
                     }
                 }

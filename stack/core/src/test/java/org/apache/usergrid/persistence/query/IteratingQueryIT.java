@@ -298,7 +298,7 @@ public class IteratingQueryIT {
             //we have to sleep, or we kill embedded cassandra
 
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         Thread.sleep(1000);
         long stop = System.currentTimeMillis();
 
@@ -367,7 +367,7 @@ public class IteratingQueryIT {
                 expected.add( name );
             }
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -438,7 +438,7 @@ public class IteratingQueryIT {
             }
         }
 
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
         long stop = System.currentTimeMillis();
 
         logger.info( "Writes took {} ms", stop - start );
@@ -551,7 +551,7 @@ public class IteratingQueryIT {
                 expectedResults.add( name );
             }
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -623,7 +623,7 @@ public class IteratingQueryIT {
             }
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         long stop = System.currentTimeMillis();
 
         logger.info( "Writes took {} ms", stop - start );
@@ -689,7 +689,7 @@ public class IteratingQueryIT {
             }
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         long stop = System.currentTimeMillis();
 
         logger.info( "Writes took {} ms", stop - start );
@@ -742,7 +742,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -803,7 +803,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -865,7 +865,7 @@ public class IteratingQueryIT {
             expected.add( name );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         long stop = System.currentTimeMillis();
 
         logger.info( "Writes took {} ms", stop - start );
@@ -924,7 +924,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Thread.sleep(500);
         long stop = System.currentTimeMillis();
@@ -987,7 +987,7 @@ public class IteratingQueryIT {
             expected.add( name );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         long stop = System.currentTimeMillis();
 
         logger.info( "Writes took {} ms", stop - start );
@@ -1050,7 +1050,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
             expected.add( name );
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -1110,7 +1110,7 @@ public class IteratingQueryIT {
             io.writeEntity( entity );
         }
 
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         long stop = System.currentTimeMillis();
 
@@ -1216,7 +1216,7 @@ public class IteratingQueryIT {
 
         logger.info( "Writes took {} ms", stop - start );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1322,7 +1322,7 @@ public class IteratingQueryIT {
 
         logger.info( "Writes took {} ms", stop - start );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query =
             Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
@@ -1384,7 +1384,7 @@ public class IteratingQueryIT {
 
             io.writeEntity( entity );
         }
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         long stop = System.currentTimeMillis();
 

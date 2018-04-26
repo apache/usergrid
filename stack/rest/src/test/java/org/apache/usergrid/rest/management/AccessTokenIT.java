@@ -153,7 +153,7 @@ public class AccessTokenIT extends AbstractRestIT {
         assertNotNull( token.getAccessToken() );
         management().token().setToken( token );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( management().me().get( Token.class ) );
 
@@ -177,7 +177,7 @@ public class AccessTokenIT extends AbstractRestIT {
         assertNotNull( adminToken );
         assertNotNull( adminToken.getAccessToken() );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( management().me().get( Token.class ) );
 
@@ -237,7 +237,7 @@ public class AccessTokenIT extends AbstractRestIT {
         management().token().setToken( clientSetup.getSuperuserToken() );
         management().users().user( clientSetup.getUsername() ).revokeTokens().post(true , ApiResponse.class, null,null);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         //test that token 1 doesn't work
@@ -278,7 +278,7 @@ public class AccessTokenIT extends AbstractRestIT {
         management().token().setToken( clientSetup.getSuperuserToken() );
         management().users().user( clientSetup.getUsername() ).revokeToken().post( false, ApiResponse.class,null,queryParameters );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         //test that token 1 doesn't work

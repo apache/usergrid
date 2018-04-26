@@ -28,6 +28,8 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.services.AbstractServiceIT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -37,6 +39,9 @@ import static org.junit.Assert.fail;
 public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
     private NotificationsService ns;
 
+    private static final Logger logger = LoggerFactory
+        .getLogger(AbstractServiceNotificationIT.class);
+
     protected NotificationsService getNotificationService(){
         ns = (NotificationsService) app.getSm().getService("notifications");
         return ns;
@@ -44,16 +49,17 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
 
     protected Notification notificationWaitForComplete(Notification notification)
             throws Exception {
-        long timeout = System.currentTimeMillis() + 60000;
-        while (System.currentTimeMillis() < timeout) {
-            Thread.sleep(200);
-            app.refreshIndex();
+
+        int retry = 18;  // 3 mins  18 * 10 seconds
+        while (-- retry > 0) {
+            logger.info("notificationWaitForComplete {} retry {}", notification.getUuid(), retry);
+            app.waitForQueueDrainAndRefreshIndex(10000);
             notification = app.getEntityManager().get(notification.getUuid(), Notification.class);
             if (notification.getFinished() != null) {
                 return notification;
             }
         }
-        fail("Notification failed to complete");
+        fail("Notification failed to complete error message " + notification.getErrorMessage());
         return null;
     }
 
@@ -77,7 +83,7 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
         return list;
     }
 
-    protected void checkReceipts(Notification notification, int expected)
+    protected void  checkReceipts(Notification notification, int expected)
             throws Exception {
         List<EntityRef> receipts = getNotificationReceipts(notification);
         long timeout = System.currentTimeMillis() + 10000;
@@ -88,8 +94,15 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
                 break;
             }
         }
+
+
         assertEquals(expected, receipts.size());
+
+
         for (EntityRef receipt : receipts) {
+
+            logger.info("checkReceipts - receipt uuid: {}, notification uuid: {}", receipt.getUuid(), notification.getUuid());
+
             Receipt r = app.getEntityManager().get(receipt, Receipt.class);
             assertNotNull(r.getSent());
             assertNotNull(r.getPayload());

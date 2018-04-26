@@ -20,9 +20,7 @@ package org.apache.usergrid.corepersistence;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
@@ -31,6 +29,7 @@ import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionSearch;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
@@ -48,6 +47,8 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.settings.IndexConsistency;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.MapUtils;
@@ -60,7 +61,6 @@ import java.util.*;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.*;
 import static org.apache.usergrid.persistence.Schema.*;
-import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
 
@@ -349,6 +349,7 @@ public class CpRelationManager implements RelationManager {
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load( entityId );
 
+        Id memberEntityId = memberEntity.getId();
 
         // don't fetch entity if we've already got one
         final Entity itemEntity;
@@ -364,7 +365,7 @@ public class CpRelationManager implements RelationManager {
         }
 
 
-        if ( memberEntity == null ) {
+        if ( memberEntityId == null ) {
             throw new RuntimeException(
                 "Unable to load entity uuid=" + itemRef.getUuid() + " type=" + itemRef.getType() );
         }
@@ -376,7 +377,7 @@ public class CpRelationManager implements RelationManager {
 
 
         // create graph edge connection from head entity to member entity
-        final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntity.getId() );
+        final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collectionName, memberEntityId );
         final String linkedCollection = collection.getLinkedCollection();
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
@@ -387,21 +388,24 @@ public class CpRelationManager implements RelationManager {
             }
         } ).filter( writtenEdge -> linkedCollection != null ).flatMap( writtenEdge -> {
             final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
-            final Edge reverseEdge = createCollectionEdge( memberEntity.getId(), pluralType, cpHeadEntity.getId() );
+            final Edge reverseEdge = createCollectionEdge( memberEntityId, pluralType, cpHeadEntity.getId() );
 
             //reverse
             return gm.writeEdge( reverseEdge ).doOnNext( reverseEdgeWritten -> {
 
-                if ( !skipIndexingForType( cpHeadEntity.getId().getType() ) ) {
-
-                    indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+                String entityType = cpHeadEntity.getId().getType();
+                if ( !skipIndexingForType( entityType) ) {
+                    QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity.getId(), reverseEdge, queueIndexingStrategy);
                 }
 
             } );
         } ).doOnCompleted( () -> {
 
-            if ( !skipIndexingForType( memberEntity.getId().getType() ) ) {
-                indexService.queueNewEdge(applicationScope, memberEntity, edge);
+            String entityType = memberEntity.getId().getType();
+            if ( !skipIndexingForType( entityType ) ) {
+                QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
+                indexService.queueNewEdge(applicationScope, memberEntityId, edge, queueIndexingStrategy);
             }
 
 
@@ -629,6 +633,8 @@ public class CpRelationManager implements RelationManager {
         final Query toExecute = adjustQuery( query );
         final Optional<String> queryString = query.isGraphSearch()? Optional.<String>absent(): query.getQl();
         final Id ownerId = headEntity.asId();
+        final boolean analyzeOnly = query.getAnalyzeOnly();
+        final boolean returnQuery = query.getReturnQuery();
 
 
         if(query.getLevel() == Level.IDS ){
@@ -641,6 +647,9 @@ public class CpRelationManager implements RelationManager {
                     final CollectionSearch search =
                         new CollectionSearch( applicationScope, ownerId, collectionName, collection.getType(), toExecute.getLimit(),
                             queryString, cursor );
+
+                    search.setAnalyzeOnly(analyzeOnly);
+                    search.setReturnQuery(returnQuery);
 
                     return collectionService.searchCollectionIds( search );
                 }
@@ -657,6 +666,11 @@ public class CpRelationManager implements RelationManager {
                 final CollectionSearch search =
                     new CollectionSearch( applicationScope, ownerId, collectionName, collection.getType(), toExecute.getLimit(),
                         queryString, cursor );
+
+                search.setAnalyzeOnly(analyzeOnly);
+                search.setReturnQuery(returnQuery);
+                IndexConsistency indexConsistency = getIndexConsistencyForType(collectionName);
+                search.setKeepStaleEntries(indexConsistency == IndexConsistency.LATEST);
 
                 return collectionService.searchCollection( search );
             }
@@ -704,7 +718,6 @@ public class CpRelationManager implements RelationManager {
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
-
         if ( logger.isTraceEnabled() ) {
             logger.trace( "createConnection(): Indexing connection type '{}'\n   from source {}:{}]\n   to target {}:{}\n   app {}",
                 connectionType, headEntity.getType(), headEntity.getUuid(), connectedEntityRef.getType(),
@@ -726,9 +739,10 @@ public class CpRelationManager implements RelationManager {
         gm.writeEdge(edge).toBlocking().lastOrDefault(null); //throw an exception if this fails
 
 
-        if ( !skipIndexingForType( targetEntity.getId().getType() ) ) {
-
-            indexService.queueNewEdge(applicationScope, targetEntity, edge);
+        String entityType = targetEntity.getId().getType();
+        if ( !skipIndexingForType( entityType ) ) {
+            QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
+            indexService.queueNewEdge(applicationScope, targetEntity.getId(), edge, queueIndexingStrategy);
         }
 
         // remove any duplicate edges (keeps the duplicate edge with same timestamp)
@@ -832,15 +846,17 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Set<String> getConnectionTypes( boolean filterConnection ) throws Exception {
-        Set<String> connections = cast( em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
 
-        if ( connections == null ) {
-            return null;
-        }
-        if ( filterConnection && ( connections.size() > 0 ) ) {
-            connections.remove( "connection" );
-        }
-        return connections;
+        final GraphManager gm = managerCache.getGraphManager( applicationScope );
+
+        Observable<String> edges =
+            gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) );
+
+        return edges.collect( () -> new HashSet<String>(), ( edgeSet, edge ) -> {
+            edgeSet.add( CpNamingUtils.getNameFromEdgeType( edge ) );
+
+        } ).toBlocking().last();
+
     }
 
 
@@ -917,6 +933,9 @@ public class CpRelationManager implements RelationManager {
 
         headEntity = em.validate( headEntity );
 
+        final boolean analyzeOnly = query.getAnalyzeOnly();
+        final boolean returnQuery = query.getReturnQuery();
+
 
         final Query toExecute = adjustQuery( query );
 
@@ -949,6 +968,8 @@ public class CpRelationManager implements RelationManager {
                     final ConnectionSearch search =
                         new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
                             queryString, cursor, isConnecting );
+                    search.setAnalyzeOnly(analyzeOnly);
+                    search.setReturnQuery(returnQuery);
                     return connectionService.searchConnectionAsRefs( search );
                 }
             }.next();
@@ -964,6 +985,8 @@ public class CpRelationManager implements RelationManager {
                 final ConnectionSearch search =
                     new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
                         queryString, cursor, isConnecting );
+                search.setAnalyzeOnly(analyzeOnly);
+                search.setReturnQuery(returnQuery);
                 return connectionService.searchConnection( search );
             }
         }.next();
@@ -1083,27 +1106,17 @@ public class CpRelationManager implements RelationManager {
 
     }
 
+    private IndexConsistency getIndexConsistencyForType(String type ) {
+        return CpCollectionUtils.getIndexConsistencyForType(collectionSettingsFactory, applicationId, type);
+    }
+
+    private QueueIndexingStrategy getIndexingStrategyForType(String type ) {
+        return CpCollectionUtils.getIndexingStrategyForType(collectionSettingsFactory, applicationId, type);
+
+    }
+
     private boolean skipIndexingForType( String type ) {
-
-        boolean skipIndexing = false;
-
-        String collectionName = Schema.defaultCollectionName( type );
-
-        CollectionSettings collectionSettings =
-            collectionSettingsFactory.
-                getInstance( new CollectionSettingsScopeImpl(new SimpleId( applicationId, TYPE_APPLICATION ), collectionName ) );
-        Optional<Map<String, Object>> collectionIndexingSchema =
-            collectionSettings.getCollectionSettings( collectionName );
-
-        if ( collectionIndexingSchema.isPresent()) {
-            Map jsonMapData = collectionIndexingSchema.get();
-            final Object fields = jsonMapData.get( "fields" );
-            if ( fields != null && fields instanceof String && "none".equalsIgnoreCase( fields.toString())) {
-                skipIndexing = true;
-            }
-        }
-
-        return skipIndexing;
+        return CpCollectionUtils.skipIndexingForType(collectionSettingsFactory, applicationId, type);
     }
 
     /**

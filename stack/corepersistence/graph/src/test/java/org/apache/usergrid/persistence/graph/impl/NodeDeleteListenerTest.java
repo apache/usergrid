@@ -135,7 +135,7 @@ public class NodeDeleteListenerTest {
         UUID eventTime = UUIDGenerator.newTimeUUID();
 
 
-        int count = deleteListener.receive( scope, sourceNode, eventTime ).toBlocking().last();
+        int count = deleteListener.receive( scope, sourceNode, eventTime ).count().toBlocking().last();
 
         assertEquals( "Mark was not set, no delete should be executed", 0, count );
 
@@ -171,7 +171,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, sourceNode, timestamp ).execute();
 
-        int count = deleteListener.receive( scope, sourceNode, deleteEventTimestamp ).toBlocking().last();
+        int count = deleteListener.receive( scope, sourceNode, deleteEventTimestamp ).count().toBlocking().last();
 
         assertEquals( 1, count );
 
@@ -256,7 +256,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, targetNode, deleteBefore ).execute();
 
-        int count = deleteListener.receive( scope, targetNode, UUIDGenerator.newTimeUUID() ).toBlocking().last();
+        int count = deleteListener.receive( scope, targetNode, UUIDGenerator.newTimeUUID() ).count().toBlocking().last();
 
         assertEquals( 1, count );
 
@@ -366,7 +366,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, toDelete, deleteVersion ).execute();
 
-        int count = deleteListener.receive( scope, toDelete, UUIDGenerator.newTimeUUID() ).toBlocking().last();
+        int count = deleteListener.receive( scope, toDelete, UUIDGenerator.newTimeUUID() ).count().toBlocking().last();
 
         assertEquals( edgeCount, count );
 

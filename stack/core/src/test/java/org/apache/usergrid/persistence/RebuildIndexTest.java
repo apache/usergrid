@@ -51,7 +51,7 @@ import static org.junit.Assert.fail;
 
 @NotThreadSafe
 public class RebuildIndexTest extends AbstractCoreIT {
-    private static final Logger logger = LoggerFactory.getLogger( RebuildIndexTest.class );
+    private static final Logger logger = LoggerFactory.getLogger(RebuildIndexTest.class);
 
     private static final MetricRegistry registry = new MetricRegistry();
 
@@ -70,182 +70,184 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
     @After
     public void printReport() {
-        logger.debug( "Printing metrics report" );
+        logger.debug("Printing metrics report");
     }
 
 
-    @Test( timeout = 120000 )
+    @Test(timeout = 240000)
     public void rebuildOneCollectionIndex() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info("Started rebuildOneCollectionIndex()");
 
-        String rand = RandomStringUtils.randomAlphanumeric( 5 );
-        final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        final UUID appId = setup.createApplication("org_" + rand, "app_" + rand);
 
-        final EntityManager em = setup.getEmf().getEntityManager( appId );
+        final EntityManager em = setup.getEmf().getEntityManager(appId);
 
-        final ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+        final ReIndexService reIndexService = setup.getInjector().getInstance(ReIndexService.class);
 
         // ----------------- create a bunch of entities
 
         Map<String, Object> entityMap = new HashMap<String, Object>() {{
-            put( "key1", 1000 );
-            put( "key2", 2000 );
-            put( "key3", "Some value" );
+            put("key1", 1000);
+            put("key2", 2000);
+            put("key3", "Some value");
         }};
 
 
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
         int herderCount = 0;
         int shepardCount = 0;
-        for ( int i = 0; i < ENTITIES_TO_INDEX; i++ ) {
+        for (int i = 0; i < ENTITIES_TO_INDEX; i++) {
 
             final Entity entity;
 
             try {
-                entityMap.put( "key", i );
+                entityMap.put("key", i);
 
-                if ( i % 2 == 0 ) {
-                    entity = em.create( "catherder", entityMap );
+                if (i % 2 == 0) {
+                    entity = em.create("catherder", entityMap);
                     herderCount++;
-                }
-                else {
-                    entity = em.create( "catshepard", entityMap );
+                } else {
+                    entity = em.create("catshepard", entityMap);
                     shepardCount++;
                 }
-            }
-            catch ( Exception ex ) {
-                throw new RuntimeException( "Error creating entity", ex );
+            } catch (Exception ex) {
+                throw new RuntimeException("Error creating entity", ex);
             }
 
-            entityRefs.add( new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
-            if ( i % 10 == 0 ) {
-                logger.info( "Created {} entities", i );
+            entityRefs.add(new SimpleEntityRef(entity.getType(), entity.getUuid()));
+            if (i % 10 == 0) {
+                logger.info("Created {} entities", i);
             }
         }
 
-        logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.refreshIndex();
+        logger.info("Created {} entities", ENTITIES_TO_INDEX);
+        app.waitForQueueDrainAndRefreshIndex(1000);
 
         // ----------------- test that we can read them, should work fine
 
-        logger.debug( "Read the data" );
-        readData( em, "catherders", herderCount, 0 );
-        readData( em, "catshepards", shepardCount, 0 );
+        logger.debug("Read the data");
+        retryReadData(em, "catherders", herderCount, 0, 10);
+        retryReadData(em, "catshepards", shepardCount, 0, 10);
 
         // ----------------- delete the system and application indexes
 
-        logger.debug( "Deleting apps" );
-        deleteIndex( em.getApplicationId() );
+        logger.debug("Deleting apps");
+        deleteIndex(em.getApplicationId());
 
         // ----------------- test that we can read them, should fail
 
-        logger.debug( "Reading data, should fail this time " );
+        logger.debug("Reading data, should fail this time ");
 
         //should be no data
-        readData( em, "testTypes", 0, 0 );
+        readData(em, "testTypes", 0, 0);
 
 
         //        ----------------- rebuild index for catherders only
 
-        logger.debug( "Preparing to rebuild all indexes" );
+        logger.debug("Preparing to rebuild all indexes");
 
 
         final ReIndexRequestBuilder builder =
-            reIndexService.getBuilder().withApplicationId( em.getApplicationId() ).withCollection( "catherders" );
+            reIndexService.getBuilder().withApplicationId(em.getApplicationId()).withCollection("catherders");
 
-        ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );
+        ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
 
-        assertNotNull( status.getJobId(), "JobId is present" );
+        assertNotNull(status.getJobId(), "JobId is present");
 
-        logger.info( "Rebuilt index" );
+        logger.info("Rebuilt index");
 
 
-        waitForRebuild( status, reIndexService );
+        waitForRebuild(status, reIndexService);
 
+        //app.waitForQueueDrainAndRefreshIndex(15000);
 
         // ----------------- test that we can read the catherder collection and not the catshepard
 
-        readData( em, "catherders", herderCount, 0 );
-        readData( em, "catshepards", 0, 0 );
+        retryReadData(em, "catherders", herderCount, 0, 30);
+        retryReadData(em, "catshepards", 0, 0, 30);
     }
 
 
-    @Test( timeout = 120000 )
+    @Test(timeout = 240000)
     public void rebuildIndex() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info("Started rebuildIndex()");
 
-        String rand = RandomStringUtils.randomAlphanumeric( 5 );
-        final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        final UUID appId = setup.createApplication("org_" + rand, "app_" + rand);
 
-        final EntityManager em = setup.getEmf().getEntityManager( appId );
+        final EntityManager em = setup.getEmf().getEntityManager(appId);
 
-        final ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+        final ReIndexService reIndexService = setup.getInjector().getInstance(ReIndexService.class);
 
         // ----------------- create a bunch of entities
 
         Map<String, Object> entityMap = new HashMap<String, Object>() {{
-            put( "key1", 1000 );
-            put( "key2", 2000 );
-            put( "key3", "Some value" );
+            put("key1", 1000);
+            put("key2", 2000);
+            put("key3", "Some value");
         }};
         Map<String, Object> cat1map = new HashMap<String, Object>() {{
-            put( "name", "enzo" );
-            put( "color", "orange" );
+            put("name", "enzo");
+            put("color", "orange");
         }};
         Map<String, Object> cat2map = new HashMap<String, Object>() {{
-            put( "name", "marquee" );
-            put( "color", "grey" );
+            put("name", "marquee");
+            put("color", "grey");
         }};
         Map<String, Object> cat3map = new HashMap<String, Object>() {{
-            put( "name", "bertha" );
-            put( "color", "tabby" );
+            put("name", "bertha");
+            put("color", "tabby");
         }};
 
-        Entity cat1 = em.create( "cat", cat1map );
-        Entity cat2 = em.create( "cat", cat2map );
-        Entity cat3 = em.create( "cat", cat3map );
+        Entity cat1 = em.create("cat", cat1map);
+        Entity cat2 = em.create("cat", cat2map);
+        Entity cat3 = em.create("cat", cat3map);
 
         List<EntityRef> entityRefs = new ArrayList<>();
 
-        for ( int i = 0; i < ENTITIES_TO_INDEX; i++ ) {
+        for (int i = 0; i < ENTITIES_TO_INDEX; i++) {
 
             final Entity entity;
 
             try {
-                entityMap.put( "key", i );
-                entity = em.create( "testType", entityMap );
+                entityMap.put("key", i);
+                entity = em.create("testType", entityMap);
 
-
-                em.createConnection( entity, "herds", cat1 );
-                em.createConnection( entity, "herds", cat2 );
-                em.createConnection( entity, "herds", cat3 );
-            }
-            catch ( Exception ex ) {
-                throw new RuntimeException( "Error creating entity", ex );
+                em.createConnection(entity, "herds", cat1);
+                em.createConnection(entity, "herds", cat2);
+                em.createConnection(entity, "herds", cat3);
+            } catch (Exception ex) {
+                throw new RuntimeException("Error creating entity", ex);
             }
 
-            entityRefs.add( new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
-            if ( i % 10 == 0 ) {
-                logger.info( "Created {} entities", i );
+            entityRefs.add(new SimpleEntityRef(entity.getType(), entity.getUuid()));
+            if (i % 10 == 0) {
+                logger.info("Created {} entities", i);
             }
         }
 
-        logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.refreshIndex();
+        logger.info("Created {} entities", ENTITIES_TO_INDEX);
+        //app.waitForQueueDrainAndRefreshIndex(30000);
 
         // ----------------- test that we can read them, should work fine
 
-        logger.debug( "Read the data" );
+        logger.debug("Read the data");
         final String collectionName = "testtypes";
-        readData( em, collectionName, ENTITIES_TO_INDEX, 3 );
+
+        retryReadData(em, collectionName, ENTITIES_TO_INDEX, 3, 20);
+
+        readData(em, collectionName, ENTITIES_TO_INDEX, 3);
 
         // ----------------- delete the system and application indexes
 
-        logger.debug( "Deleting app index" );
+        logger.debug("Deleting app index");
 
-        deleteIndex( em.getApplicationId() );
+        deleteIndex(em.getApplicationId());
+
+        app.waitForQueueDrainAndRefreshIndex();
 
         // ----------------- test that we can read them, should fail
 
@@ -254,65 +256,62 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them, should fail
 
-        logger.debug( "Reading data, should fail this time " );
+        logger.debug("Reading data, should fail this time ");
 
-        readData( em, collectionName, 0, 0 );
-
+        readData(em, collectionName, 0, 0);
 
 
         // ----------------- rebuild index
 
-        logger.debug( "Preparing to rebuild all indexes" );
+        logger.debug("Preparing to rebuild all indexes");
         ;
 
 
         try {
 
             final ReIndexRequestBuilder builder =
-                reIndexService.getBuilder().withApplicationId( em.getApplicationId() );
+                reIndexService.getBuilder().withApplicationId(em.getApplicationId());
 
-            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );
+            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
 
-            assertNotNull( status.getJobId(), "JobId is present" );
+            assertNotNull(status.getJobId(), "JobId is present");
 
-            logger.info( "Rebuilt index" );
-
-
-            waitForRebuild( status, reIndexService );
+            logger.info("Rebuilt index, jobID={}", status.getJobId());
 
 
-            logger.info( "Rebuilt index" );
+            waitForRebuild(status, reIndexService);
 
-            app.refreshIndex();
-        }
-        catch ( Exception ex ) {
-            logger.error( "Error rebuilding index", ex );
+
+            logger.info("Rebuilt index");
+
+        } catch (Exception ex) {
+            logger.error("Error rebuilding index", ex);
             fail();
         }
 
         // ----------------- test that we can read them
 
-        Thread.sleep( 2000 );
-        readData( em, collectionName, ENTITIES_TO_INDEX, 3 );
+        app.waitForQueueDrainAndRefreshIndex(15000);
+        readData(em, collectionName, ENTITIES_TO_INDEX, 3);
     }
 
-    @Test( timeout = 120000 )
+    @Test(timeout = 120000)
     public void rebuildIndexGeo() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info("Started rebuildIndexGeo()");
 
-        String rand = RandomStringUtils.randomAlphanumeric( 5 );
-        final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        final UUID appId = setup.createApplication("org_" + rand, "app_" + rand);
 
-        final EntityManager em = setup.getEmf().getEntityManager( appId );
+        final EntityManager em = setup.getEmf().getEntityManager(appId);
 
-        final ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+        final ReIndexService reIndexService = setup.getInjector().getInstance(ReIndexService.class);
 
         // ----------------- create a bunch of entities
 
         Map<String, Object> cat1map = new HashMap<String, Object>() {{
-            put( "name", "enzo" );
-            put( "color", "grey" );
+            put("name", "enzo");
+            put("color", "grey");
             put("location", new LinkedHashMap<String, Object>() {{
                 put("latitude", -35.746369);
                 put("longitude", 150.952183);
@@ -321,44 +320,44 @@ public class RebuildIndexTest extends AbstractCoreIT {
         final double lat = -34.746369;
         final double lon = 152.952183;
         Map<String, Object> cat2map = new HashMap<String, Object>() {{
-            put( "name", "marquee" );
-            put( "color", "grey" );
+            put("name", "marquee");
+            put("color", "grey");
             put("location", new LinkedHashMap<String, Object>() {{
                 put("latitude", lat);
                 put("longitude", lon);
             }});
         }};
         Map<String, Object> cat3map = new HashMap<String, Object>() {{
-            put( "name", "bertha" );
-            put( "color", "grey" );
+            put("name", "bertha");
+            put("color", "grey");
             put("location", new LinkedHashMap<String, Object>() {{
                 put("latitude", -33.746369);
                 put("longitude", 150.952183);
             }});
         }};
 
-        Entity cat1 = em.create( "cat", cat1map );
-        Entity cat2 = em.create( "cat", cat2map );
-        Entity cat3 = em.create( "cat", cat3map );
+        Entity cat1 = em.create("cat", cat1map);
+        Entity cat2 = em.create("cat", cat2map);
+        Entity cat3 = em.create("cat", cat3map);
 
 
-        logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.refreshIndex();
+        logger.info("Created {} entities", ENTITIES_TO_INDEX);
+        app.waitForQueueDrainAndRefreshIndex(5000);
 
         // ----------------- test that we can read them, should work fine
 
-        logger.debug( "Read the data" );
+        logger.debug("Read the data");
         final String collectionName = "cats";
-        Query q = Query.fromQL( "select * where color='grey'" ).withLimit( 1000 );
-        Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 3 );
-        assertEquals(3,results.size());
+        Query q = Query.fromQL("select * where color='grey'").withLimit(1000);
+        Results results = em.searchCollectionConsistent(em.getApplicationRef(), collectionName, q, 3);
+        assertEquals(3, results.size());
 
 
         // ----------------- delete the system and application indexes
 
-        logger.debug( "Deleting app index" );
+        logger.debug("Deleting app index");
 
-        deleteIndex( em.getApplicationId() );
+        deleteIndex(em.getApplicationId());
 
         // ----------------- test that we can read them, should fail
 
@@ -367,88 +366,86 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them, should fail
 
-        logger.debug( "Reading data, should fail this time " );
+        logger.debug("Reading data, should fail this time ");
 
-        results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 0 );
-        assertEquals(results.size(),0);
+        results = em.searchCollectionConsistent(em.getApplicationRef(), collectionName, q, 0);
+        assertEquals(results.size(), 0);
 
         // ----------------- rebuild index
 
-        logger.debug( "Preparing to rebuild all indexes" );
+        logger.debug("Preparing to rebuild all indexes");
 
 
         try {
 
             final ReIndexRequestBuilder builder =
-                reIndexService.getBuilder().withApplicationId( em.getApplicationId() );
+                reIndexService.getBuilder().withApplicationId(em.getApplicationId());
 
-            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );
+            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
 
-            assertNotNull( status.getJobId(), "JobId is present" );
+            assertNotNull(status.getJobId(), "JobId is present");
 
-            logger.info( "Rebuilt index" );
+            logger.info("Rebuilt index");
 
-            waitForRebuild( status, reIndexService );
+            waitForRebuild(status, reIndexService);
 
-            logger.info( "Rebuilt index" );
+            logger.info("Rebuilt index");
 
-            app.refreshIndex();
-        }
-        catch ( Exception ex ) {
-            logger.error( "Error rebuilding index", ex );
+        } catch (Exception ex) {
+            logger.error("Error rebuilding index", ex);
             fail();
         }
 
         // ----------------- test that we can read them
 
-        Thread.sleep( 2000 );
-        results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 3 );
-        assertEquals(results.size(),3);
-        q = Query.fromQL("select * where location within 100 of "+lat+", "+lon);
-        results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 1 );
-        assertEquals(results.size(),1);
+        app.waitForQueueDrainAndRefreshIndex(5000);
+        results = em.searchCollectionConsistent(em.getApplicationRef(), collectionName, q, 3);
+        assertEquals(results.size(), 3);
+        q = Query.fromQL("select * where location within 100 of " + lat + ", " + lon);
+        results = em.searchCollectionConsistent(em.getApplicationRef(), collectionName, q, 1);
+        assertEquals(results.size(), 1);
     }
 
 
-    @Test( timeout = 120000 )
+    @Test(timeout = 120000)
     public void rebuildUpdatedSince() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info("Started rebuildUpdatedSince()");
 
-        String rand = RandomStringUtils.randomAlphanumeric( 5 );
-        final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        final UUID appId = setup.createApplication("org_" + rand, "app_" + rand);
 
-        final EntityManager em = setup.getEmf().getEntityManager( appId );
+        final EntityManager em = setup.getEmf().getEntityManager(appId);
 
-        final ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+        final ReIndexService reIndexService = setup.getInjector().getInstance(ReIndexService.class);
 
         // ----------------- create a bunch of entities
 
 
         Map<String, Object> entityData = new HashMap<String, Object>() {{
-            put( "key1", 1000 );
+            put("key1", 1000);
         }};
 
 
-        final Entity firstEntity = em.create( "thing", entityData );
+        final Entity firstEntity = em.create("thing", entityData);
 
 
-        final Entity secondEntity = em.create( "thing",  entityData);
+        final Entity secondEntity = em.create("thing", entityData);
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex(15000);
 
         // ----------------- test that we can read them, should work fine
 
-        logger.debug( "Read the data" );
+        logger.debug("Read the data");
         final String collectionName = "things";
 
-        countEntities( em, collectionName, 2 );
+        countEntities(em, collectionName, 2);
 
         // ----------------- delete the system and application indexes
 
-        logger.debug( "Deleting app index" );
+        logger.debug("Deleting app index");
 
-        deleteIndex( em.getApplicationId() );
+        deleteIndex(em.getApplicationId());
 
         // ----------------- test that we can read them, should fail
 
@@ -461,14 +458,14 @@ public class RebuildIndexTest extends AbstractCoreIT {
             logger.debug("Reading data, should fail this time ");
         }
 
-        countEntities( em, collectionName, 0);
+        countEntities(em, collectionName, 0);
 
         // ----------------- rebuild index
 
         final long firstUpdatedTimestamp = firstEntity.getModified();
         final long secondUpdatedTimestamp = secondEntity.getModified();
 
-        assertTrue( "second should be updated after second", firstUpdatedTimestamp < secondUpdatedTimestamp );
+        assertTrue("second should be updated after second", firstUpdatedTimestamp < secondUpdatedTimestamp);
 
 
         try {
@@ -480,53 +477,62 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
             //set our update timestamp
             final ReIndexRequestBuilder builder =
-                reIndexService.getBuilder().withApplicationId( em.getApplicationId() ).withStartTimestamp(
-                    updatedTimestamp );
+                reIndexService.getBuilder().withApplicationId(em.getApplicationId()).withStartTimestamp(
+                    updatedTimestamp);
 
-            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );
+            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
 
-            assertNotNull( status.getJobId(), "JobId is present" );
+            assertNotNull(status.getJobId(), "JobId is present");
 
-            logger.info( "Rebuilt index" );
+            logger.info("Rebuilt index");
 
-            waitForRebuild( status, reIndexService );
+            waitForRebuild(status, reIndexService);
 
-            logger.info( "Rebuilt index" );
+            logger.info("Rebuilt index");
 
-            app.refreshIndex();
-        }
-        catch ( Exception ex ) {
-            logger.error( "Error rebuilding index", ex );
+        } catch (Exception ex) {
+            logger.error("Error rebuilding index", ex);
             fail();
         }
 
         // ----------------- test that we can read them
 
-        Thread.sleep( 2000 );
-        countEntities( em, collectionName, 1 );
+        app.waitForQueueDrainAndRefreshIndex(5000);
+        countEntities(em, collectionName, 1);
     }
 
 
     /**
      * Wait for the rebuild to occur
      */
-    private void waitForRebuild( final ReIndexService.ReIndexStatus status, final ReIndexService reIndexService )
-        throws InterruptedException {
-        while ( true ) {
+    private void waitForRebuild(final ReIndexService.ReIndexStatus status, final ReIndexService reIndexService)
+        throws InterruptedException, IllegalArgumentException {
+        if (status != null) {
+            logger.info("waitForRebuild: jobID={}", status.getJobId());
+        } else {
+            logger.info("waitForRebuild: error, status = null");
+            throw new IllegalArgumentException("reindexStatus = null");
+        }
+        while (true) {
 
             try {
-                final ReIndexService.ReIndexStatus updatedStatus = reIndexService.getStatus( status.getJobId() );
+                final ReIndexService.ReIndexStatus updatedStatus = reIndexService.getStatus(status.getJobId());
 
-                if ( updatedStatus.getStatus() == ReIndexService.Status.COMPLETE ) {
-                    break;
+                if (updatedStatus == null) {
+                    logger.info("waitForRebuild: updated status is null");
+                } else {
+                    logger.info("waitForRebuild: status={} numberProcessed={}", updatedStatus.getStatus().toString(), updatedStatus.getNumberProcessed());
+
+                    if (updatedStatus.getStatus() == ReIndexService.Status.COMPLETE) {
+                        break;
+                    }
                 }
-            }
-            catch ( IllegalArgumentException iae ) {
+            } catch (IllegalArgumentException iae) {
                 //swallow.  Thrown if our job can't be found.  I.E hasn't updated yet
             }
 
 
-            Thread.sleep( 1000 );
+            Thread.sleep(1000);
         }
     }
 
@@ -534,27 +540,35 @@ public class RebuildIndexTest extends AbstractCoreIT {
     /**
      * Delete app index
      */
-    private void deleteIndex( UUID appUuid ) {
+    private void deleteIndex(UUID appUuid) {
 
-        Injector injector = SpringResource.getInstance().getBean( Injector.class );
+        Injector injector = SpringResource.getInstance().getBean(Injector.class);
         IndexLocationStrategyFactory indexLocationStrategyFactory = injector.getInstance(IndexLocationStrategyFactory.class);
-        EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
+        EntityIndexFactory eif = injector.getInstance(EntityIndexFactory.class);
 
-        Id appId = new SimpleId( appUuid, Schema.TYPE_APPLICATION );
-        ApplicationScope scope = new ApplicationScopeImpl( appId );
+        Id appId = new SimpleId(appUuid, Schema.TYPE_APPLICATION);
+        ApplicationScope scope = new ApplicationScopeImpl(appId);
         EntityIndex ei = eif.createEntityIndex(
             indexLocationStrategyFactory.getIndexLocationStrategy(scope)
         );
 
-        ei.deleteApplication().toBlocking().lastOrDefault( null );
-        app.refreshIndex();
+        ei.deleteApplication().toBlocking().lastOrDefault(null);
+        app.waitForQueueDrainAndRefreshIndex();
     }
 
+    private int retryReadData(EntityManager em, String collectionName, int expectedEntities, int expectedConnections, int retry) throws Exception {
+        int count =  readData(em, collectionName, expectedEntities, expectedConnections);
+        while (count != expectedEntities && --retry >=0) {
+            count =  readData(em, collectionName, expectedEntities, expectedConnections);
+        }
+        assertEquals( "Did not get expected entities", expectedEntities, count );
+        return count;
+    }
 
     private int readData( EntityManager em, String collectionName, int expectedEntities, int expectedConnections )
         throws Exception {
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query q = Query.fromQL( "select * where key1=1000" ).withLimit( 1000 );
         Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, expectedEntities );
@@ -586,14 +600,13 @@ public class RebuildIndexTest extends AbstractCoreIT {
             }
         }
 
-        assertEquals( "Did not get expected entities", expectedEntities, count );
         return count;
     }
 
     private int countEntities( EntityManager em, String collectionName, int expectedEntities)
            throws Exception {
 
-           app.refreshIndex();
+           app.waitForQueueDrainAndRefreshIndex();
 
            Query q = Query.fromQL( "select * where key1=1000" ).withLimit( 1000 );
            Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, expectedEntities );

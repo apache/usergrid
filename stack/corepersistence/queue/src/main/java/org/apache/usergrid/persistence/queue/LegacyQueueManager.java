@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.queue;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 /**ctor
  * Manages queues for usergrid.  Current implementation is sqs based.
@@ -65,20 +66,35 @@ public interface LegacyQueueManager {
      * @param bodies body objects must be serializable
      * @throws IOException
      */
+    void sendMessagesAsync(List bodies) throws IOException;
+
+    /**
+     * send messages to queue
+     * @param bodies body objects must be serializable
+     * @throws IOException
+     */
     void sendMessages(List bodies) throws IOException;
+
+    /**
+     * send messages to queue
+     * @param queueMessages
+     * @throws IOException
+     * @return set of receipt handles for successfully sent messages
+     */
+    List<LegacyQueueMessage> sendQueueMessages(List<LegacyQueueMessage> queueMessages) throws IOException;
 
     /**
      * send a message to queue
      * @param body
      * @throws IOException
      */
-    <T extends Serializable> void sendMessageToLocalRegion(T body)throws IOException;
+    <T extends Serializable> void sendMessageToLocalRegion(T body, Boolean async)throws IOException;
 
     /**
      * Send a messae to the topic to be sent to other queues
      * @param body
      */
-    <T extends Serializable> void sendMessageToAllRegions(T body) throws IOException;
+    <T extends Serializable> void sendMessageToAllRegions(T body, Boolean async) throws IOException;
 
     /**
      * purge messages

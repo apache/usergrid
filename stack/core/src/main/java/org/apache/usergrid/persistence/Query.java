@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.index.query.tree.Operand;
 import org.apache.usergrid.persistence.index.utils.ClassUtils;
 import org.apache.usergrid.persistence.index.utils.ListUtils;
 import org.apache.usergrid.persistence.index.utils.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -43,6 +45,7 @@ import java.util.Map.Entry;
 public class Query {
 
 
+    private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
@@ -78,6 +81,8 @@ public class Query {
     private String collection;
     private String ql;
     private Collection<SelectFieldMapping> selectFields;
+    private boolean analyzeOnly = false;
+    private boolean returnQuery = false;
 
 
     private static ObjectMapper mapper = new ObjectMapper();
@@ -120,7 +125,8 @@ public class Query {
                 ? new ArrayList<>( q.counterFilters ) : null;
         collection = q.collection;
         level = q.level;
-
+        analyzeOnly = q.analyzeOnly;
+        returnQuery = q.returnQuery;
     }
 
 
@@ -235,6 +241,7 @@ public class Query {
         }
 
         if ( ql != null ) {
+            ql = ql.replace("+", "%2b"); // ql string supports literal + symbol, encode so it will decode correctly later
             q = Query.fromQL( decode( ql ) );
         }
 
@@ -316,6 +323,13 @@ public class Query {
 
 
     public static Query fromIdentifier( Object id ) {
+        if (id == null) {
+            throw new IllegalArgumentException("null identifier passed in");
+        }
+        Identifier objectIdentifier = Identifier.from(id);
+        if (objectIdentifier == null) {
+            throw new IllegalArgumentException("Supplied id results in null Identifier");
+        }
         Query q = new Query();
         q.addIdentifier( Identifier.from(id) );
         return q;
@@ -406,6 +420,10 @@ public class Query {
         }
 
         for ( Identifier identifier : identifiers ) {
+            if (identifier == null) {
+                logger.error("containsUuidIdentifiersOnly(): identifier in identifiers list is null");
+                return false;
+            }
             if ( !identifier.isUUID() ) {
                 return false;
             }
@@ -481,6 +499,21 @@ public class Query {
         this.permissions = permissions;
     }
 
+    public void setAnalyzeOnly(final boolean analyzeOnly){
+        this.analyzeOnly = analyzeOnly;
+    }
+
+    public boolean getAnalyzeOnly(){
+        return analyzeOnly;
+    }
+
+    public void setReturnQuery(final boolean returnQuery) {
+        this.returnQuery = returnQuery;
+    }
+
+    public boolean getReturnQuery() {
+        return returnQuery;
+    }
 
     public boolean isMergeSelectResults() {
         return mergeSelectResults;
@@ -624,6 +657,9 @@ public class Query {
     public void addIdentifier( Identifier identifier ) {
         if ( identifiers == null ) {
             identifiers = new ArrayList<Identifier>();
+        }
+        if (identifier == null) {
+            throw new IllegalArgumentException("adding null identifier is not allowed");
         }
         identifiers.add( identifier );
     }

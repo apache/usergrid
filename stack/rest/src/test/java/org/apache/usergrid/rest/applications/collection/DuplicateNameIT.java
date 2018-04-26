@@ -41,7 +41,7 @@ public class DuplicateNameIT extends AbstractRestIT {
         entity.put("name", "enzo");
         //Create an entity named "enzo" in the "things" collection
         entity = this.app().collection(collectionName).post(entity);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         try {
             // Try to create a second entity in "things" with the name "enzo".
             this.app().collection(collectionName).post(entity);

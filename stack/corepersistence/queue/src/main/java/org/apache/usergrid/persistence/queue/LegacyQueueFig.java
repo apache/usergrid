@@ -14,11 +14,14 @@ public interface LegacyQueueFig extends GuicyFig {
      * http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html*
      */
 
+    String USERGRID_QUEUE_REGION_LIST = "usergrid.queue.regionList";
+    String USERGRID_QUEUE_REGION_LOCAL = "usergrid.queue.region";
+
 
     /**
      * Primary region to use for Amazon queues.
      */
-    @Key( "usergrid.cluster.region.local" )
+    @Key(USERGRID_QUEUE_REGION_LOCAL)
     @Default("us-east-1")
     String getPrimaryRegion();
 
@@ -34,7 +37,7 @@ public interface LegacyQueueFig extends GuicyFig {
      * Comma-separated list of one or more Amazon regions to use if multiregion
      * is set to true.
      */
-    @Key( "usergrid.cluster.region.list" )
+    @Key(USERGRID_QUEUE_REGION_LIST)
     @Default("us-east-1")
     String getRegionList();
 
@@ -102,5 +105,17 @@ public interface LegacyQueueFig extends GuicyFig {
     @Key( "usergrid.queue.quorum.fallback")
     @Default("false") // 30 seconds
     boolean getQuorumFallback();
+
+    @Key("usergrid.queue.map.message.timeout")
+    @Default("900000") // 15 minutes
+    int getMapMessageTimeout();
+
+    @Key("usergrid.queue.strategy")
+    @Default("async")
+    String getQueueStrategy();
+
+    @Key("usergrid.queue.test")
+    @Default("false")
+    String getQueueDebugMode();
 
 }

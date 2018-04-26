@@ -27,7 +27,7 @@ limitations under the License.
 </head>
 <body>
 
-	<p>An error occurred <c:out value="${it}"/>.</p>
+	<p>An error occurred <c:out value="${it}" escapeXml="true"/>.</p>
 
 </body>
 </html>

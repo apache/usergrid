@@ -39,14 +39,20 @@ public class PipelineContext {
     private final ApplicationScope applicationScope;
     private final RequestCursor requestCursor;
     private final int limit;
+    // An entry is stale if the ES version number is less than the Cassandra version number
+    // it can happen if ES was not updated or has yet to be updated.
+    private final boolean keepStaleEntries;
+    private String query;
 
 
-    public PipelineContext( final ApplicationScope applicationScope, final RequestCursor requestCursor, final int limit, final int id ) {
+    public PipelineContext( final ApplicationScope applicationScope, final RequestCursor requestCursor, final int limit, final int id, boolean keepStaleEntries, String query ) {
 
         this.applicationScope = applicationScope;
         this.requestCursor = requestCursor;
         this.limit = limit;
         this.id = id;
+        this.keepStaleEntries = keepStaleEntries;
+        this.query = query;
     }
 
 
@@ -78,5 +84,18 @@ public class PipelineContext {
         return limit;
     }
 
+    /**
+     * return true if stales entries are not to be filtered out.
+     */
+    public boolean getKeepStaleEntries() {
+        return keepStaleEntries;
+    }
+
+    /**
+     * return the query string if any
+     */
+    public String getQuery() {
+        return query;
+    }
 
 }

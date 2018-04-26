@@ -181,8 +181,8 @@ public class CoreApplication implements Application, TestRule {
 
         logger.info( "Created new application {} in organization {}", appName, orgName );
 
-//        //wait for the index before proceeding
-//        em.refreshIndex();
+        //wait for the index before proceeding
+        waitForQueueDrainAndRefreshIndex(500);
 
     }
 
@@ -223,17 +223,19 @@ public class CoreApplication implements Application, TestRule {
         return em.get( new SimpleEntityRef( type, id ) );
     }
 
+    @Override
+    public synchronized void waitForQueueDrainAndRefreshIndex(int waitTimeMillis) {
+        try{
+            Thread.sleep(waitTimeMillis);
+        } catch (InterruptedException e ){
+            //noop
+        }
+        em.refreshIndex();
+    }
 
     @Override
-    public synchronized void refreshIndex() {
-        //Insert test entity and find it
-        setup.getEmf().refreshIndex(CpNamingUtils.getManagementApplicationId().getUuid());
-
-        if (!em.getApplicationId().equals(CpNamingUtils.getManagementApplicationId().getUuid())) {
-            setup.getEmf().refreshIndex(em.getApplicationId());
-        }
-
-        em.refreshIndex();
+    public synchronized void waitForQueueDrainAndRefreshIndex() {
+        waitForQueueDrainAndRefreshIndex(750);
     }
 
 

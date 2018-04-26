@@ -686,6 +686,8 @@ public abstract class AbstractService implements Service {
                     Query.fromIdentifier( name ), parameters, payload );
         }
         else if ( query != null ) {
+            query.setAnalyzeOnly(request.isAnalyzeQueryOnly());
+            query.setReturnQuery(request.shouldReturnQuery());
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, query, parameters,
                     payload );
         }

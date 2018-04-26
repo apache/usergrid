@@ -62,13 +62,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private NotificationsService ns;
     private QueueListener listener;
 
-
-    @BeforeClass
-    public static void setup() {
-
-
-    }
-
     @Before
     public void before() throws Exception {
 
@@ -103,7 +96,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         ns = getNotificationService();
 
         listener = new QueueListener(ns.getServiceManagerFactory(), ns.getEntityManagerFactory(), new Properties());
-        listener.DEFAULT_SLEEP = 200;
         listener.start();
     }
 
@@ -569,6 +561,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // wait for notification to be marked finished
         notification = notificationWaitForComplete(notification);
 
+        // receipts are created and queried, wait a bit longer for this to happen as indexing
+        app.waitForQueueDrainAndRefreshIndex(500);
+
         // get the receipts entity IDs
         List<EntityRef> receipts = getNotificationReceipts(notification);
         assertEquals(1, receipts.size());
@@ -635,8 +630,19 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         notification = notificationWaitForComplete(notification);
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
+
+        // receipts are created and queried, wait a bit longer for this to happen as indexing
+        app.waitForQueueDrainAndRefreshIndex(2000);
+
         // get the receipts entity IDs
         List<EntityRef> receipts = getNotificationReceipts(notification);
+
+        int retry = 30;
+        while (receipts.size() == 0 && --retry >=0 ) {
+            app.waitForQueueDrainAndRefreshIndex(1000);
+            receipts = getNotificationReceipts(notification);
+        }
+
         assertEquals(1, receipts.size());
 
         // Validate the error is the correct type InvalidRegistration

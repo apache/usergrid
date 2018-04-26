@@ -21,6 +21,7 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,38 @@ public class BasicIT extends AbstractRestIT {
         payload.put( "name", uuid );
 
         returnedUser = this.app().collection( "suspects" ).post(payload);
+
+        assertNotNull( returnedUser );
+    }
+
+    @Test
+    public void testEntityWithSingleQuoteName() throws Exception {
+
+        Entity payload = new Entity();
+        payload.put( "name", "test'value" );
+
+        //Create a user with the payload
+        Entity returnedUser = this.app().collection( "suspects" ).post(payload);
+        assertNotNull( returnedUser );
+
+
+        returnedUser = this.app().collection( "suspects" ).entity("test'value").get();
+
+        assertNotNull( returnedUser );
+    }
+
+    @Test
+    public void testEntityWithPlusName() throws Exception {
+
+        Entity payload = new Entity();
+        payload.put( "name", "test+value" );
+
+        //Create a user with the payload
+        Entity returnedUser = this.app().collection( "suspects" ).post(payload);
+        assertNotNull( returnedUser );
+
+
+        returnedUser = this.app().collection( "suspects" ).entity("test+value").get();
 
         assertNotNull( returnedUser );
     }

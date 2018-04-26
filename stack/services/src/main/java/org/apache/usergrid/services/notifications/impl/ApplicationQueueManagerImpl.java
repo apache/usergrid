@@ -356,11 +356,11 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                             if(logger.isTraceEnabled()) {
                                 logger.trace("Queueing notification message for device: {}", message.get().getDeviceId());
                             }
-                            qm.sendMessageToLocalRegion( message.get() );
+                            qm.sendMessageToLocalRegion( message.get(), Boolean.TRUE );
                             queueMeter.mark();
                         }
 
-                    } catch (IOException e) {
+                    } catch (Exception e) {
 
                         if(message.isPresent()){
                             logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",

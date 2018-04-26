@@ -181,6 +181,9 @@ public class ShardAllocatorTest extends AbstractAkkaTest {
 
         distributedQueueService.refresh();
 
+        // the shard allocator kicks in when messages are first received
+        distributedQueueService.getNextMessages(queueName,10);
+
         try {
 
             // Create number of messages

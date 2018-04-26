@@ -18,17 +18,15 @@ package org.apache.usergrid.rest;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
-import com.fasterxml.jackson.databind.JsonNode;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.usergrid.rest.test.resource.*;
-import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.junit.After;
@@ -85,7 +83,7 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource.Abst
 
         String unIndexedCollectionName = "notifications";
         app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create notifier
         Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
@@ -103,7 +101,7 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource.Abst
         Token token = this.app().token().post(new Token("ed", "sesame"));
         this.clientSetup.getRestClient().token().setToken(token);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // create devices
         int devicesCount = 0;
@@ -129,7 +127,7 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource.Abst
             devicesCount++;
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         String postMeterName = getClass().getSimpleName() + ".postNotifications";
         Meter postMeter = registry.meter( postMeterName );
@@ -168,7 +166,7 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource.Abst
         }
         registry.remove( postMeterName );
 
-        refreshIndex( );
+        waitForQueueDrainAndRefreshIndex( );
 
         logger.info("Waiting for all notifications to be sent");
         StopWatch sw = new StopWatch();

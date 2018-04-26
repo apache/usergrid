@@ -27,9 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -81,6 +79,11 @@ public class LocalQueueManager implements LegacyQueueManager {
     }
 
     @Override
+    public void sendMessagesAsync(List bodies) throws IOException {
+        sendMessages(bodies);
+    }
+
+    @Override
     public  void sendMessages(List bodies) throws IOException {
         for(Object body : bodies){
             String uuid = UUID.randomUUID().toString();
@@ -92,9 +95,25 @@ public class LocalQueueManager implements LegacyQueueManager {
         }
     }
 
+    @Override
+    public List<LegacyQueueMessage> sendQueueMessages(List<LegacyQueueMessage> queueMessages) throws IOException {
+        List<LegacyQueueMessage> successMessages = new ArrayList<>();
+        for(LegacyQueueMessage queueMessage : queueMessages){
+            String uuid = UUID.randomUUID().toString();
+            try {
+                LegacyQueueMessage msg = new LegacyQueueMessage(uuid, "handle_" + uuid, queueMessage.getBody(), "put type here");
+                queue.put(msg);
+                successMessages.add(queueMessage);
+            }catch (InterruptedException ie){
+                throw new RuntimeException(ie);
+            }
+        }
+        return successMessages;
+    }
+
 
     @Override
-    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body, Boolean async) throws IOException {
         String uuid = UUID.randomUUID().toString();
         try {
             queue.offer(new LegacyQueueMessage(uuid, "handle_" + uuid, body, "put type here"),5000,TimeUnit.MILLISECONDS);
@@ -106,8 +125,8 @@ public class LocalQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
-       sendMessageToLocalRegion( body );
+    public <T extends Serializable> void sendMessageToAllRegions(final T body, Boolean async) throws IOException {
+       sendMessageToLocalRegion( body, null );
     }
 
 

@@ -209,7 +209,12 @@ public class ShiroCache<K, V> implements Cache<K,V> {
                     if (p.getAccessTokenCredentials() != null) {
                         ret = p.getAccessTokenCredentials().getToken() + "_" + typeName;
                     } else {
-                        ret = p.getApplicationId() + "_" + typeName;
+                        if (p instanceof OrganizationPrincipal){
+                            OrganizationPrincipal op = (OrganizationPrincipal) p;
+                            ret = op.getOrganizationId() + "_" + typeName;
+                        }else{
+                            ret = p.getApplicationId() + "_" + typeName;
+                        }
                     }
 
                 } else {

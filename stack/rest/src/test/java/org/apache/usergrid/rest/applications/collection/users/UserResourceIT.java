@@ -75,7 +75,7 @@ public class UserResourceIT extends AbstractRestIT {
         usersResource = this.app().collection("users");
         userResource = this.app().collection("user");
 
-        clientSetup.refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
     }
 
     @Test
@@ -249,14 +249,14 @@ public class UserResourceIT extends AbstractRestIT {
         // same as above, but with actor partially filled out
 
         Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         UUID firstActivityId = entity.getUuid();
 
         activity = new ActivityEntity("rod@rodsimpson.com", "POST", "activity 2");
         entity = usersResource.entity(userId.toString()).activities().post(activity);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         UUID secondActivityId = entity.getUuid();
 
@@ -284,7 +284,7 @@ public class UserResourceIT extends AbstractRestIT {
         map.put("email", email);
 
         Entity userEntity = usersResource.post(new Entity(map));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // get the user with username property that has an email value
         Entity testUser = usersResource.entity(username).get();
@@ -296,6 +296,54 @@ public class UserResourceIT extends AbstractRestIT {
         // get the user with email property value
         // get the user with username property that has an email value
         testUser = usersResource.entity(email).get();
+
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
+        assertEquals(email, testUser.get("email").toString());
+
+    }
+
+    @Test
+    public void getUserWithEmailContainingSingleQuote() throws IOException {
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username-email" + "@usergrid.org";
+        String name = "name" + id;
+        String email = "e'mail" + id + "@usergrid.org";
+
+        User map = new User(username, name, email, null);
+        map.put("email", email);
+
+        usersResource.post(new Entity(map));
+        waitForQueueDrainAndRefreshIndex();
+
+        // get the user with email property value
+        // get the user with username property that has an email value
+        Entity testUser = usersResource.entity(email).get();
+
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
+        assertEquals(email, testUser.get("email").toString());
+
+    }
+
+    @Test
+    public void getUserWithEmailContainingPlus() throws IOException {
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username-email" + "@usergrid.org";
+        String name = "name" + id;
+        String email = "e+mail" + id + "@usergrid.org";
+
+        User map = new User(username, name, email, null);
+        map.put("email", email);
+
+        usersResource.post(new Entity(map));
+        waitForQueueDrainAndRefreshIndex();
+
+        // get the user with email property value
+        // get the user with username property that has an email value
+        Entity testUser = usersResource.entity(email).get();
 
         assertEquals(username, testUser.get("username").toString());
         assertEquals(name, testUser.get("name").toString());
@@ -350,7 +398,7 @@ public class UserResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void clientNameQuery() {
+    public void clientNameQuery() throws Exception {
 
 
         String username = "username";
@@ -361,8 +409,19 @@ public class UserResourceIT extends AbstractRestIT {
         Entity entity = usersResource.post(user);
         UUID createdId = entity.getUuid();
 
-        refreshIndex();
-        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("name = '%s'", name)));
+        waitForQueueDrainAndRefreshIndex();
+
+        QueryParameters queryParameters = new QueryParameters().setQuery(String.format("name = '%s'", name));
+        Collection results = usersResource.get(queryParameters);
+
+        int retry = 30;
+        while (results.getResponse().getEntities().size() == 0 && --retry >= 0) {
+            Thread.sleep(1000);
+            results = usersResource.get(queryParameters);
+            logger.info("clientNameQuery results size {} ", results.getResponse().getEntities().size());
+        }
+        assertEquals(1 , results.getResponse().getEntities().size());
+
         entity = new User(results.getResponse().getEntities().get(0));
         assertEquals(createdId, entity.getUuid());
     }
@@ -381,13 +440,13 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID createdId = entity.getUuid();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Entity newEntity = usersResource.entity(createdId.toString()).get();
 
         userResource.entity(newEntity).delete();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Collection results = usersResource.get(
             new QueryParameters().setQuery(String.format("username = '%s'", username)));
@@ -412,7 +471,7 @@ public class UserResourceIT extends AbstractRestIT {
         User entity = new User(username, name, email, "password");
 
         entity = new User(usersResource.post(entity));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         UUID firstCreatedId = entity.getUuid();
         username = "username2";
@@ -422,7 +481,7 @@ public class UserResourceIT extends AbstractRestIT {
         entity = new User(username, name, email, "password");
 
         entity = new User(usersResource.post(entity));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         UUID secondCreatedId = entity.getUuid();
 
@@ -436,7 +495,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         Entity conn2 = usersResource.entity(
@@ -444,7 +503,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Collection conn1Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
@@ -494,7 +553,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // named entity in collection name
         Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1", "users")
@@ -547,6 +606,7 @@ public class UserResourceIT extends AbstractRestIT {
         role = new Entity();
         role.put("name", "connectionQuerybyEmail2");
         role = this.app().collection("roles").post(role);
+        waitForQueueDrainAndRefreshIndex();
 
 
         UUID roleId2 = role.getUuid();
@@ -557,24 +617,24 @@ public class UserResourceIT extends AbstractRestIT {
         perms.put("permission", "get:/stuff/**");
         Entity perms2 = this.app().collection("roles").entity(roleId2.toString()).connection("permissions")
             .post(new Entity(perms));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
+
         //connect the entities where role is the root
         Entity perms3 = this.app().collection("roles").entity(roleId1.toString()).connection("users")
             .entity(userId.toString()).post();
+        assertEquals(userId.toString(), perms3.getUuid().toString());
+        waitForQueueDrainAndRefreshIndex();
+
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
-
-        assertEquals(userId.toString(), perms3.getUuid().toString());
-
-
         //connect the second role
 
         Entity perms4 = this.app().collection("roles").entity(roleId2).connection("users").entity(userId).post();
-
         assertEquals(userId.toString(), perms4.getUuid().toString());
+        waitForQueueDrainAndRefreshIndex();
 
-        refreshIndex();
+
         //query the second role, it should work
         Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users")
             .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
@@ -630,7 +690,7 @@ public class UserResourceIT extends AbstractRestIT {
         Entity pizzaEntity = this.app().collection("pizzas").post(pizza);
 
         UUID secondCreatedId = pizzaEntity.getUuid();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
@@ -660,7 +720,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         Entity userEntity = usersResource.post(entity);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         // attempt to log in
         Token token = this.app().token().post(new Token(username, "password"));
 
@@ -680,7 +740,7 @@ public class UserResourceIT extends AbstractRestIT {
         userEntity = usersResource.entity(username).put(userEntity);
 
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         // now see if we've updated
 
 
@@ -734,7 +794,7 @@ public class UserResourceIT extends AbstractRestIT {
                     .chainPut("pin", "1234");
 
         usersResource.post(entity);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Collection response = usersResource.get();
         // disable the user
@@ -750,7 +810,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void test_PUT_password_fail() {
         Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
         this.app().token().post(new Token("edanuff", "sesame"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         boolean fail = false;
         try {
             Entity changeResponse = usersResource.entity("edanuff").collection("password")
@@ -781,17 +841,17 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void test_PUT_password_ok() {
         Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         usersResource.entity(entity).collection("password").post(new ChangePasswordEntity("sesame", "sesame1"));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         this.app().token().post(new Token("edanuff", "sesame1"));
 
         // if this was successful, we need to re-set the password for other
         // tests
         Entity changeResponse = usersResource.entity("edanuff").collection("password")
             .post(new ChangePasswordEntity("sesame1", "sesame"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         assertNotNull(changeResponse);
 
     }
@@ -801,14 +861,14 @@ public class UserResourceIT extends AbstractRestIT {
     public void setUserPasswordAsAdmin() throws IOException {
         usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
         String newPassword = "foofoo";
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // change the password as admin. The old password isn't required
         Entity node = usersResource.entity("edanuff").connection("password")
             .post(new ChangePasswordEntity(newPassword));
         assertNotNull(node);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         Token response = this.app().token().post(new Token("edanuff", newPassword));
         assertNotNull(response);
     }
@@ -851,7 +911,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void testChangePassordToInvalidValue() {
 
         Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         try {
             usersResource.entity(entity).collection("password").post(new ChangePasswordEntity("sesame", "abc"));
@@ -882,12 +942,12 @@ public class UserResourceIT extends AbstractRestIT {
         this.app().collection("roles").post(role);
         // check it
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         // add Role
 
         role = usersResource.entity(createdId).collection("roles").entity(roleName).post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         // check it
         assertNotNull(role);
         assertNotNull(role.get("name"));
@@ -918,7 +978,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void revokeToken() throws Exception {
 
         this.app().collection("users").post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         Token token1 = this.app().token().post(new Token("edanuff", "sesame"));
         Token token2 = this.app().token().post(new Token("edanuff", "sesame"));
 
@@ -936,7 +996,7 @@ public class UserResourceIT extends AbstractRestIT {
         this.app().token().setToken(adminToken);
 
         usersResource.entity("edanuff").connection("revoketokens").post(new Entity().chainPut("token", token1));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         // the tokens shouldn't work
 
         int status = 0;
@@ -984,7 +1044,7 @@ public class UserResourceIT extends AbstractRestIT {
         // now revoke the tokens
         this.app().token().setToken(adminToken);
         usersResource.entity("edanuff").connection("revoketokens").post();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // the token3 shouldn't work
 
@@ -1022,7 +1082,7 @@ public class UserResourceIT extends AbstractRestIT {
         usersResource.post(new User("test_1", "Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
         usersResource.post(new User("test_2", "Test2 User", "test_2@test.com", "test123")); // client.setApiUrl(apiUrl);
         usersResource.post(new User("test_3", "Test3 User", "test_3@test.com", "test123")); // client.setApiUrl(apiUrl);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Entity appInfo = this.app().get().getResponse().getEntities().get(0);
 
@@ -1032,7 +1092,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertNotNull(token.getAccessToken());
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         int status = 0;
 
@@ -1075,7 +1135,7 @@ public class UserResourceIT extends AbstractRestIT {
         Entity entityConn = usersResource.entity(userId).connection("deactivate").post(new Entity());
 
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         try {
             this.app().token().post(new Token("test_1", "test123"));
@@ -1093,7 +1153,7 @@ public class UserResourceIT extends AbstractRestIT {
         String randomName = "user1_" + UUIDUtils.newTimeUUID().toString();
         User user = new User(randomName, randomName, randomName + "@apigee.com", "password");
         usersResource.post(user);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // should update a field
         Entity response = usersResource.entity(randomName).get();
@@ -1107,7 +1167,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         response = usersResource.post(user2);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Entity response2 = usersResource.entity(randomName).get();
 
@@ -1160,12 +1220,16 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertNotNull(userId);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         ql = "uuid = " + userId;
 
         Collection response = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
-
+        int retry = 30;
+        while (response.getResponse().getEntities().isEmpty() &&--retry >= 0) {
+            Thread.sleep(1000);
+        }
+        assertFalse(response.getResponse().getEntities().isEmpty());
         assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
     }
 
@@ -1175,7 +1239,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void testCredentialsTransfer() throws Exception {
 
         usersResource.post(new User("test_1", "Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Entity appInfo = this.app().get().getResponse().getEntities().get(0);
 

@@ -305,7 +305,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 getEm().update( data );
             }
 
-            logger.info( "Updating stats for job {}", data.getJobName() );
+            logger.debug( "Updating stats for job {}", data.getJobName() );
 
             getEm().update( stat );
         }

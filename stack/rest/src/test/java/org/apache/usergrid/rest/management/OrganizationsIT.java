@@ -68,7 +68,7 @@ public class OrganizationsIT extends AbstractRestIT {
         assertNotNull( organizationResponse );
 
 //        Thread.sleep( 1000 );
-//        this.refreshIndex();
+//        this.waitForQueueDrainAndRefreshIndex();
 
         //Creates token
         Token token =
@@ -78,7 +78,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( token );
 
-        //this.refreshIndex();
+        //this.waitForQueueDrainAndRefreshIndex();
 
         //Assert that the get returns the correct org and owner.
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().org( organization.getOrganization() ).get();
@@ -90,6 +90,38 @@ public class OrganizationsIT extends AbstractRestIT {
         //Assert that the property was retained in the owner of the organization.
         assertNotNull( returnedUser );
         assertEquals( "Apigee", returnedUser.getProperties().get( "company" ) );
+    }
+
+    // Admin users are allowed to be created with an email address only, in which a password reset flow is invoked
+    @Test
+    public void createNewOrgUserNoPassword() throws Exception {
+
+        //User property to see if owner properties exist when created.
+        Map<String, Object> userProperties = new HashMap<String, Object>();
+        userProperties.put( "company", "Usergrid" );
+
+        //Create organization
+        Organization organization = createOrgPayload( "createNewOrgUserNoPassword", userProperties );
+
+        //Get back organization response
+        Organization organizationResponse = clientSetup.getRestClient().management().orgs().post( organization );
+
+        assertNotNull( organizationResponse );
+
+
+        //Creates token
+        Token token =
+            clientSetup.getRestClient().management().token().post(false,Token.class, new Token( "password",
+                organization.getUsername(), organization.getPassword() ) ,null);
+        this.management().token().setToken(token);
+
+        assertNotNull( token );
+
+
+        Map<String, Object> newUser = new HashMap<String, Object>(){{put("email", "ed@usergrid.com");}};
+        clientSetup.getRestClient().management().orgs().org( organization.getOrganization() ).users().post(newUser);
+
+        // the test will fail if any exception is thrown
     }
 
 
@@ -104,7 +136,7 @@ public class OrganizationsIT extends AbstractRestIT {
         // Create organization
         Organization organization = createOrgPayload( "testCreateDuplicateOrgName", null );
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
@@ -161,7 +193,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //create the org/owner
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
@@ -362,7 +394,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //update the organization.
         management().orgs().org( clientSetup.getOrganizationName() ).put(orgPayload);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //retrieve the organization
         Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
@@ -376,7 +408,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //update the organization.
         management().orgs().org( clientSetup.getOrganizationName() ).put(orgPayload);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
@@ -401,7 +433,7 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         //attempt to post duplicate connection
         Entity userPostResponse = management().orgs().org( clientSetup.getOrganizationName() ).users().user( clientSetup.getEmail() ).put( entity );
 
@@ -429,7 +461,7 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         //attempt to post duplicate connection
         try {
             Entity userPostResponse = management().orgs().org( clientSetup.getOrganizationName() ).users().post( Entity.class, entity );

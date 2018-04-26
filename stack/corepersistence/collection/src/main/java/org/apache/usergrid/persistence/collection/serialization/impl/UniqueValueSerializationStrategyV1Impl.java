@@ -268,7 +268,7 @@ public class UniqueValueSerializationStrategyV1Impl  extends
         }
 
         stuff.flip();
-        return stuff.duplicate();
+        return stuff;
 
     }
 
@@ -350,7 +350,7 @@ public class UniqueValueSerializationStrategyV1Impl  extends
         }
 
         stuff.flip();
-        return stuff.duplicate();
+        return stuff;
 
     }
 
@@ -499,7 +499,7 @@ public class UniqueValueSerializationStrategyV1Impl  extends
 
         }
         stuff.flip();
-        return stuff.duplicate();
+        return stuff;
 
     }
 
@@ -544,7 +544,7 @@ public class UniqueValueSerializationStrategyV1Impl  extends
 
         }
         stuff.flip();
-        return stuff.duplicate();
+        return stuff;
 
     }
 

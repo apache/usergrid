@@ -18,7 +18,9 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -37,6 +39,7 @@ import java.util.*;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -47,12 +50,234 @@ import static org.junit.Assert.*;
  *  misc tests for collections
  */
 
+@NotThreadSafe
 public class CollectionsResourceIT extends AbstractRestIT {
 
     private final String REGION_SETTING = "authoritativeRegion";
 
     private static final Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
 
+    @Test
+    public void testPostValidSettings() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "collection_" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity = new Entity();
+
+        testEntity.put( "one","value" );
+        app().collection( collectionName ).post( testEntity );
+
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "one" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+        payload.put( "queueIndex", "direct");
+
+        //Post index to the collection metadata
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        Object queueIndexValue = settings.get("queueIndex");
+        assertEquals( "direct", queueIndexValue);
+
+        Object feildsValue = settings.get("fields");
+        assertTrue(feildsValue  instanceof  List);
+        List list = (List) feildsValue;
+        assertEquals(1, list.size()  );
+        assertEquals( "one", list.get(0) );
+    }
+
+
+    /**
+     * test that invalid settings are ignored
+     * @throws IOException
+     */
+    @Test
+    public void testPostInvalidSettings() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "collection" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity = new Entity();
+
+        testEntity.put( "one","value" );
+        app().collection( collectionName ).post( testEntity );
+
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "one" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "queueIndex", "BADVALUE");
+
+        //Post index to the collection metadata
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        Object queueIndexValue = settings.get("queueIndex");
+        // BAD value should be rejected and we get the default.
+        assertEquals( "config", queueIndexValue);
+    }
+
+
+
+    /**
+     * test that we can add new properties and modify existing ones.
+     * @throws IOException
+     */
+    @Test
+    public void testAddNewSettings() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "collection_" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity = new Entity();
+
+        testEntity.put( "one","value" );
+        testEntity.put( "two","value" );
+        app().collection( collectionName ).post( testEntity );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", Collections.singletonList("one"));
+
+        //Post index to the collection metadata
+        app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        // Now add a new setting 'queueIndex'
+
+        payload = new Entity();
+        payload.put( "queueIndex", "direct");
+
+        Map<String, String> queryParams = Collections.singletonMap("replace_all","false");
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload , queryParams );
+        waitForQueueDrainAndRefreshIndex();
+
+        // assert that both old and new are in the setting.
+
+        Object queueIndexValue = settings.get("queueIndex");
+        assertEquals( "direct", queueIndexValue);
+
+        Object feildsValue = settings.get("fields");
+        assertNotNull(feildsValue);
+        assertTrue(feildsValue  instanceof  List);
+        List list = (List) feildsValue;
+        assertEquals(1, list.size()  );
+        assertEquals( "one", list.get(0) );
+
+        // now replace the settings
+
+        payload = new Entity();
+        payload.put( "queueIndex", "async");
+        payload.put( "fields", Collections.singletonList("two"));
+
+        settings = app().collection( collectionName ).collection( "_settings" ).post( payload , queryParams );
+        waitForQueueDrainAndRefreshIndex();
+
+        // assert that they have new values
+
+        queueIndexValue = settings.get("queueIndex");
+        assertEquals( "async", queueIndexValue);
+
+        feildsValue = settings.get("fields");
+        assertNotNull(feildsValue);
+        assertTrue(feildsValue  instanceof  List);
+        list = (List) feildsValue;
+        assertEquals(1, list.size()  );
+        assertEquals( "two", list.get(0) );
+
+    }
+
+
+
+    @Test
+    public void testStaleEntries() throws IOException {
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "cars_" + randomizer;
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity1 = new Entity();
+        testEntity1.put( "make","tesla" );
+        testEntity1.put( "color","red" );
+        testEntity1 = app().collection( collectionName ).post( testEntity1 );
+
+        Entity testEntity2 = new Entity();
+        testEntity2.put( "make","honda" );
+        testEntity2.put( "color","red" );
+        testEntity2 = app().collection( collectionName ).post( testEntity2 );
+
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "make" );
+        indexingArray.add( "color" );
+
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+        payload.put( "queueIndex", "direct");
+
+        Entity settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+        waitForQueueDrainAndRefreshIndex();
+
+        String query = "color ='red'";
+        QueryParameters queryParameters = new QueryParameters().setQuery( query );
+
+        Collection resultEntity = app().collection( collectionName ).get( queryParameters, true );
+
+        assertNotNull(resultEntity);
+        assertEquals(resultEntity.getResponse().getEntities().size(), 2);
+
+        Object color0 = resultEntity.getResponse().getEntities().get(0).get("color");
+        Object color1 = resultEntity.getResponse().getEntities().get(1).get("color");
+
+        assertEquals("red", color0);
+        assertEquals("red", color1);
+
+        // Allow illegal settings
+        CpCollectionUtils.setDebugMode(true);
+        payload.put( "queueIndex", "debug_noindex");
+        payload.put( "indexConsistency", "latest");
+        settings = app().collection( collectionName ).collection( "_settings" ).post( payload );
+
+        testEntity2.put("color", "blue");
+        Entity response = app().collection( collectionName ).entity(testEntity2.getUuid()).put(testEntity2);
+
+        queryParameters = new QueryParameters().setQuery( "color ='red'" );
+
+        resultEntity = app().collection( collectionName ).get( queryParameters, true );
+
+        waitForQueueDrainAndRefreshIndex();
+
+        assertEquals(resultEntity.getResponse().getEntities().size(), 2);
+
+        Entity entity0 = resultEntity.getResponse().getEntities().get(0);
+        Entity entity1 = resultEntity.getResponse().getEntities().get(1);
+
+        color0 = entity0.get("color");
+        color1 = entity1.get("color");
+
+        Object make0 = entity0.get("make");
+        Object make1 = entity1.get("make");
+
+        if (make0.equals("honda")) {
+            assertEquals("blue", color0);
+            assertEquals("red", color1);
+        } else {
+            assertEquals("red", color0);
+            assertEquals("blue", color1);
+        }
+
+    }
 
     /***
      *
@@ -136,7 +361,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
             fail("This should return a success.");
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         Collection collection = this.app().collection( "testCollections" ).collection( "_settings" ).get();
@@ -159,7 +384,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         Entity thing = this.app().collection( "testCollections" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         //The above verifies the test case.
@@ -172,7 +397,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post entity.
         Entity postedEntity = this.app().collection( "testCollections" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Do a query to see if you can find the indexed query.
         String query = "two ='query'";
@@ -198,11 +423,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //next part is to delete the schema then reindex it and it should work.
         this.app().collection( "testCollections" ).collection( "_settings" ).delete();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         this.app().collection( "testCollections" ).collection( "_reindex" )
             .post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         //Do a query to see if you can find the indexed query.
@@ -233,14 +458,14 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity payload = new Entity();
         payload.put( "fields", "all");
         app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // post entity with two fields
         Entity testEntity = new Entity();
         testEntity.put( "one", "helper" );
         testEntity.put( "two","query" );
         app().collection( "testCollection" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // verify it can be queried on both fields
 
@@ -285,10 +510,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //field "fields" is required.
         Entity payload = new Entity();
         payload.put( "fields", indexingArray);
+        payload.put( "queueIndex", "direct");
 
         //Post index to the collection metadata
         Entity thing = this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         //Reindex and verify that the entity only has field one index.
@@ -339,7 +565,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         Entity thing = this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Collection collection = this.app().collection( "testCollection" ).collection( "_settings" ).get();
 
@@ -419,7 +645,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
         Entity testEntity = new Entity();
@@ -428,7 +654,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post entity.
         this.app().collection( "testCollection" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Do a query to see if you can find the indexed query.
         String query = "two ='query'";
@@ -461,7 +687,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
 
@@ -475,7 +701,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post entity.
         this.app().collection( "testCollection" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Do a query to see if you can find the indexed query.
         String query = "one.key = 'value'";
@@ -511,7 +737,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
 
@@ -525,7 +751,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post entity.
         this.app().collection( "testCollection" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Do a query to see if you can find the indexed query.
         String query = "one.key = 'value'";
@@ -554,7 +780,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
 
@@ -573,7 +799,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post entity.
         this.app().collection( "testCollection" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Do a query to see if you can find the indexed query.
         String query = "one.key.wowMoreKeys = 'value'";
@@ -609,7 +835,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
 
@@ -629,7 +855,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post entity.
         this.app().collection( "testCollection" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Do a query to see if you can find the indexed query.
         String query = "name = 'howdy'";
@@ -660,7 +886,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
         Entity testEntity = new Entity();
@@ -669,11 +895,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post entity.
         Entity postedEntity = this.app().collection( "testCollection" ).post( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         testEntity.put( "one","three" );
         this.app().collection( "testCollection" ).entity( postedEntity.getUuid() ).put( testEntity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Do a query to see if you can find the indexed query.
         String query = "one = 'three'";
@@ -715,7 +941,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity user = this.app().collection("users").post(payload);
         assertEquals(user.get("username"), username);
         assertEquals(user.get("email"), email);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         String collectionName = "nestprofiles";
         //create a permission with the path "me" in it
@@ -743,7 +969,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity nestProfile = this.app().collection(collectionName).post(payload);
         assertEquals(nestProfile.get("name"), profileName);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         Entity nestprofileReturned = this.app().collection(collectionName).entity(nestProfile).get();
         assertEquals(nestprofileReturned.get("name"), profileName);
@@ -766,7 +992,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertEquals( calendarlistOne.get( "summaryOverview" ), summaryOverview );
         assertEquals(calendarlistOne.get("caltype"), calType);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //post a second entity
         payload = new Entity();
@@ -819,9 +1045,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertNotSame( null,
             ((LinkedHashMap)(collectionHashMap.get( "collections" ))).get( collectionName.toLowerCase() ));
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         this.app().collection( collectionName ).entity( testEntity.getEntity().getUuid() ).delete();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
 
         //Verify that the collection still exists despite deleting its only entity.)
@@ -850,7 +1076,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put("name", name);
         Entity user = this.app().collection("app_users").post(payload);
         assertEquals(user.get("name"), name);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         Entity user2 = this.app().collection("app_users").entity(user).get();
 
@@ -880,7 +1106,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String collectionName = "col_" + randomizer;
         app().collection( collectionName ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // was the no-index wildcard saved and others ignored?
         Collection collection = app().collection( collectionName ).collection( "_settings" ).get();
@@ -923,7 +1149,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String unIndexedCollectionName = "col_" + randomizer;
         app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         String entityName1 = "unindexed1";
         Entity unindexed1 = this.app().collection( unIndexedCollectionName )
@@ -982,7 +1208,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         String unIndexedCollectionName = "col_" + randomizer;
         app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         String entityName1 = "unindexed1";
         Entity unindexed1 = this.app().collection( unIndexedCollectionName )
@@ -1018,7 +1244,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         app().collection( collectionName ).collection( "_settings" )
             .post( new Entity().chainPut( "fields", "all" ) );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // get collection settings, should see no region
 
@@ -1030,7 +1256,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         try {
             app().collection( collectionName ).collection( "_settings" )
-                .post( new Entity().chainPut(REGION_SETTING, "us-moon-1" ) );
+                .post( new Entity().chainPut(REGION_SETTING, "us-moon" ) );
             fail( "post should have failed");
 
         } catch ( BadRequestException expected ) {}
@@ -1038,20 +1264,20 @@ public class CollectionsResourceIT extends AbstractRestIT {
         // set collection region with good region
 
         app().collection( collectionName ).collection( "_settings" )
-            .post( new Entity().chainPut( REGION_SETTING, "us-east-1" ) );
+            .post( new Entity().chainPut( REGION_SETTING, "us-east" ) );
 
         // get collection settings see that we have a region
 
         collection = app().collection( collectionName ).collection( "_settings" ).get();
         settings = (Map<String, Object>)collection.getResponse().getData();
         assertNotNull( settings.get( REGION_SETTING ));
-        assertEquals( "us-east-1", settings.get( REGION_SETTING ));
+        assertEquals( "us-east", settings.get( REGION_SETTING ));
 
         // unset the collection region
 
         app().collection( collectionName ).collection( "_settings" )
             .post( new Entity().chainPut( REGION_SETTING, "" ) );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // get collection settings, should see no region
 
@@ -1091,14 +1317,14 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
         this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).post(payload );
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         Collection user2 = this.app().collection("notifications").get();
 
         assertEquals(1,user2.getNumOfEntities());
 
         this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).put(null,payload );
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         user2 = this.app().collection("notifications").get();
 

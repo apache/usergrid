@@ -47,6 +47,9 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.SortBuilder.sortPropertyTermFilter;
 
@@ -79,17 +82,19 @@ public class SearchRequestBuilderStrategy {
      * Get the search request builder
      */
     public SearchRequestBuilder getBuilder( final SearchEdge searchEdge, final SearchTypes searchTypes,
-                                            final ParsedQuery query, final int limit, final int from ) {
+                                            final QueryVisitor visitor, final int limit, final int from,
+                                            final List<SortPredicate> sortPredicates,
+                                            final Map<String, Class> fieldsWithType ) {
 
         Preconditions
             .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
+
+        Preconditions.checkNotNull( visitor, "query visitor cannot be null");
 
         SearchRequestBuilder srb =
             esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE )
                       .setSearchType( SearchType.QUERY_THEN_FETCH );
 
-
-        final QueryVisitor visitor = visitParsedQuery( query );
 
         final Optional<QueryBuilder> queryBuilder = visitor.getQueryBuilder();
 
@@ -108,11 +113,11 @@ public class SearchRequestBuilderStrategy {
 
 
         //no sort predicates, sort by edge time descending, entity id second
-        if ( query.getSortPredicates().size() == 0 ) {
+        if ( sortPredicates.size() == 0 ) {
             applyDefaultSortPredicates( srb, geoFields );
         }
         else {
-            applySortPredicates( srb, query, geoFields );
+            applySortPredicates( srb, sortPredicates, geoFields, fieldsWithType );
         }
 
 
@@ -136,8 +141,9 @@ public class SearchRequestBuilderStrategy {
         //sort by the edge timestamp
         srb.addSort( SortBuilders.fieldSort( IndexingUtils.EDGE_TIMESTAMP_FIELDNAME ).order( SortOrder.DESC ) );
 
+        // removing secondary sort by entity ID -- takes ES resources and provides no benefit
         //sort by the entity id if our times are equal
-        srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
+        //srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
 
         return;
     }
@@ -146,45 +152,49 @@ public class SearchRequestBuilderStrategy {
     /**
      * Invoked when there are sort predicates
      */
-    private void applySortPredicates( final SearchRequestBuilder srb, final ParsedQuery query,
-                                      final GeoSortFields geoFields ) {
+    private void applySortPredicates( final SearchRequestBuilder srb, final List<SortPredicate> sortPredicates,
+                                      final GeoSortFields geoFields, final Map<String, Class> knownFieldsWithType ) {
 
+        Preconditions.checkNotNull(sortPredicates, "sort predicates list cannot be null");
 
-        //we have sort predicates, sort them
-        for ( SortPredicate sp : query.getSortPredicates() ) {
+        for ( SortPredicate sp : sortPredicates ) {
 
-
-            // we do not know the type of the "order by" property and so we do not know what
-            // type prefix to use. So, here we add an order by clause for every possible type
-            // that you can order by: string, number and boolean and we ask ElasticSearch
-            // to ignore any fields that are not present.
             final SortOrder order = sp.getDirection().toEsSort();
             final String propertyName = sp.getPropertyName();
 
-
-            //if the user specified a geo field in their sort, then honor their sort order and use the point they
-            // specified
+            // if the user specified a geo field in their sort, then honor their sort order and use the field they
+            // specified. this is added first so it's known on the response hit when fetching the geo distance later
+            // see org.apache.usergrid.persistence.index.impl.IndexingUtils.parseIndexDocId(org.elasticsearch.search.SearchHit, boolean)
             if ( geoFields.contains( propertyName ) ) {
                 final GeoDistanceSortBuilder geoSort = geoFields.applyOrder( propertyName, SortOrder.ASC );
                 srb.addSort( geoSort );
             }
+            // fieldsWithType gives the caller an option to provide any schema related details on properties that
+            // might appear in a sort predicate.  loop through these and set a specific sort, rather than adding a sort
+            // for all possible types
+            else if ( knownFieldsWithType != null && knownFieldsWithType.size() > 0 && knownFieldsWithType.containsKey(propertyName)) {
 
-            //apply regular sort logic, since this is not a geo point
+                String esFieldName = EsQueryVistor.getFieldNameForClass(knownFieldsWithType.get(propertyName));
+                // always make sure string sorts use the unanalyzed field
+                if ( esFieldName.equals(IndexingUtils.FIELD_STRING_NESTED)){
+                    esFieldName = IndexingUtils.FIELD_STRING_NESTED_UNANALYZED;
+                }
+
+                srb.addSort( createSort( order, esFieldName, propertyName ) );
+
+            }
+            //apply regular sort logic which check all possible data types, since this is not a known property name
             else {
-
 
                 //sort order is arbitrary if the user changes data types.  Double, long, string, boolean are supported
                 //default sort types
-
                 srb.addSort( createSort( order, IndexingUtils.FIELD_DOUBLE_NESTED, propertyName ) );
-
                 srb.addSort( createSort( order, IndexingUtils.FIELD_LONG_NESTED, propertyName ) );
 
                 /**
                  * We always want to sort by the unanalyzed string field to ensure correct ordering
                  */
                 srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, propertyName ) );
-
                 srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
             }
         }
@@ -240,26 +250,6 @@ public class SearchRequestBuilderStrategy {
         }
 
         return boolQueryFilter;
-    }
-
-
-    /**
-     * Perform our visit of the query once for efficiency
-     */
-    private QueryVisitor visitParsedQuery( final ParsedQuery parsedQuery ) {
-        QueryVisitor v = new EsQueryVistor();
-
-        if ( parsedQuery.getRootOperand() != null ) {
-
-            try {
-                parsedQuery.getRootOperand().visit( v );
-            }
-            catch ( IndexException ex ) {
-                throw new RuntimeException( "Error building ElasticSearch query", ex );
-            }
-        }
-
-        return v;
     }
 
 

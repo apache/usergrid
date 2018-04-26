@@ -232,7 +232,7 @@ public class CollectionServiceIT extends AbstractServiceIT {
             // ok
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         try {
             // try DELETE on cats with dogs name
             app.testRequest( ServiceAction.DELETE, 0, "cats", "Danny" );

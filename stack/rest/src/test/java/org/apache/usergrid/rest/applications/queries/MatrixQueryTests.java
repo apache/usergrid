@@ -21,7 +21,6 @@ import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -78,7 +77,7 @@ public class MatrixQueryTests extends AbstractRestIT {
         restaurant2 = this.app().collection("restaurants").post(restaurant2);
         restaurant3 = this.app().collection("restaurants").post(restaurant3);
         restaurant4 = this.app().collection("restaurants").post(restaurant4);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //3. Create "likes" connections between users and restaurants
         //user 1 likes old major
@@ -91,7 +90,7 @@ public class MatrixQueryTests extends AbstractRestIT {
 
         //user 3 likes  Lola (it shouldn't appear in the results)
         this.app().collection("users").entity(user3).connection("likes").collection("restaurants").entity(restaurant4).post();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //4. Retrieve "likes" connections per user and ensure the correct restaurants are returned
         Collection user1likes = this.app().collection("users").entity(user1).connection("likes").get();

@@ -428,6 +428,12 @@
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
+            <artifactId>token</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>actorsystem</artifactId>
             <version>${project.version}</version>
         </dependency>

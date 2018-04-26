@@ -363,7 +363,7 @@ public class EsQueryVistor implements QueryVisitor {
 
         //special case so we support our '*' char with wildcard, also should work for uuids
         if ( value instanceof String || value instanceof UUID ) {
-            final String stringValue = ((value instanceof String) ? (String)value : value.toString()).toLowerCase().trim();
+            String stringValue = ((value instanceof String) ? (String)value : value.toString()).toLowerCase().trim();
 
             // or field is just a string that does need a prefix us a query
             if ( stringValue.contains( "*" ) ) {
@@ -375,6 +375,11 @@ public class EsQueryVistor implements QueryVisitor {
                 queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
                 filterBuilders.push( NoOpFilterBuilder.INSTANCE );
                 return;
+            }
+
+            // Usergrid query parser allows single quotes to be escaped in values
+            if ( stringValue.contains("\\'")) {
+                stringValue = stringValue.replace("\\'", "'");
             }
 
             //it's an exact match, use a filter
@@ -524,6 +529,32 @@ public class EsQueryVistor implements QueryVisitor {
 
         throw new UnsupportedOperationException(
                 "Unkown search type of " + object.getClass().getName() + " encountered" );
+    }
+
+    /**
+     * Get the field name for the primitive type
+     */
+    public static String getFieldNameForClass( final Class clazz ) {
+        if ( clazz == String.class || clazz == UUID.class ) {
+            return IndexingUtils.FIELD_STRING_NESTED;
+        }
+
+        if ( clazz == Boolean.class ) {
+            return IndexingUtils.FIELD_BOOLEAN_NESTED;
+        }
+
+
+        if ( clazz == Integer.class || clazz == Long.class ) {
+            return IndexingUtils.FIELD_LONG_NESTED;
+        }
+
+        if ( clazz == Float.class || clazz == Double.class ) {
+            return IndexingUtils.FIELD_DOUBLE_NESTED;
+        }
+
+
+        throw new UnsupportedOperationException(
+            "Unkown search type of " + clazz.getClass().getName() + " encountered" );
     }
 
 

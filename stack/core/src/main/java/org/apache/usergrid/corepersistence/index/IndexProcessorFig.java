@@ -34,9 +34,19 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.rejected_retry_wait";
 
+    String DLQ_FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.deadletter.rejected_retry_wait";
+
     String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
 
     String ELASTICSEARCH_WORKER_COUNT_UTILITY = "elasticsearch.worker_count_utility";
+
+    String ELASTICSEARCH_WORKER_COUNT_DELETE = "elasticsearch.worker_count_delete";
+
+    String ELASTICSEARCH_WORKER_COUNT_DEADLETTER = "elasticsearch.worker_count_deadletter";
+
+    String ELASTICSEARCH_WORKER_COUNT_UTILITY_DEADLETTER = "elasticsearch.worker_count_utility_deadletter";
+
+    String ELASTICSEARCH_WORKER_COUNT_DELETE_DEADLETTER = "elasticsearch.worker_count_delete_deadletter";
 
     String EVENT_CONCURRENCY_FACTOR = "event.concurrency.factor";
 
@@ -46,16 +56,26 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String REINDEX_BUFFER_SIZE = "elasticsearch.reindex.buffer_size";
 
+    String COLLECTION_DELETE_BUFFER_SIZE = "elasticsearch.collection_delete.buffer_size";
+
     String REINDEX_CONCURRENCY_FACTOR = "elasticsearch.reindex.concurrency.factor";
 
 
     /**
-     * Set the amount of time to wait when Elasticsearch rejects a requests before
+     * Set the amount of time to wait when indexing or utility queue rejects a request before
      * retrying.  This provides simple back pressure. (in milliseconds)
      */
     @Default("1000")
     @Key(FAILURE_REJECTED_RETRY_WAIT_TIME)
     long getFailureRetryTime();
+
+    /**
+     * Set the amount of time to wait when indexing or utility dead letter queue rejects a request before
+     * retrying.  This provides simple back pressure. (in milliseconds)
+     */
+    @Default("2000")
+    @Key(DLQ_FAILURE_REJECTED_RETRY_WAIT_TIME)
+    long getDeadLetterFailureRetryTime();
 
 
     /**
@@ -91,6 +111,34 @@ public interface IndexProcessorFig extends GuicyFig {
     int getWorkerCountUtility();
 
     /**
+     * The number of worker threads used to read delete requests from the queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_DELETE)
+    int getWorkerCountDelete();
+
+    /**
+     * The number of worker threads used to read dead messages from the index dead letter queue and reload them into the index queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_DEADLETTER)
+    int getWorkerCountDeadLetter();
+
+    /**
+     * The number of worker threads used to read dead messages from the utility dead letter queue and reload them into the utility queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_UTILITY_DEADLETTER)
+    int getWorkerCountUtilityDeadLetter();
+
+    /**
+     * The number of worker threads used to read dead messages from the delete dead letter queue and reload them into the delete queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_DELETE_DEADLETTER)
+    int getWorkerCountDeleteDeadLetter();
+
+    /**
      * Set the implementation to use for queuing.
      * Valid values: TEST, LOCAL, SQS, SNS
      * NOTE: SQS and SNS equate to the same implementation of Amazon queue services.
@@ -109,6 +157,13 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("10")
     @Key(REINDEX_CONCURRENCY_FACTOR)
     int getReindexConcurrencyFactor();
+
+    /**
+     * Number of parallel buffers during collection delete
+     */
+    @Default("500")
+    @Key(COLLECTION_DELETE_BUFFER_SIZE)
+    int getCollectionDeleteBufferSize();
 
     /**
      * Flag to resolve the LOCAL queue implementation service synchronously.

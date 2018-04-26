@@ -21,9 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.connectionpool.exceptions.NoAvailableHostsException;
-import com.netflix.astyanax.connectionpool.exceptions.PoolTimeoutException;
+import com.netflix.astyanax.connectionpool.exceptions.*;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 import com.netflix.astyanax.model.ColumnFamily;
@@ -195,20 +193,24 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
     private void createLocksKeyspace() throws ConnectionException {
 
+        try {
+            KeyspaceDefinition keyspaceDefinition = keyspace.describeKeyspace();
+            if ( keyspaceDefinition != null ) {
+                logger.info("Keyspace {} already exists", keyspace.getKeyspaceName());
+                return;
+            }
+        } catch (ConnectionException ce){
+            logger.debug( "Received a NotFoundException when attempting to describe keyspace.  It does not exist" );
+        }
+
         ImmutableMap.Builder<String, Object> strategyOptions = getKeySpaceProps();
-
         ImmutableMap<String, Object> options =
-            ImmutableMap.<String, Object>builder().put( "strategy_class", cassandraFig.getLocksKeyspaceStrategy() )
-                .put( "strategy_options", strategyOptions.build() ).build();
+            ImmutableMap.<String, Object>builder().put("strategy_class", cassandraFig.getLocksKeyspaceStrategy())
+                .put("strategy_options", strategyOptions.build()).build();
 
+        keyspace.createKeyspace(options);
+        logger.info("Keyspace {} created with options {}",  keyspace.getKeyspaceName(), options.toString());
 
-        keyspace.createKeyspaceIfNotExists( options );
-
-        strategyOptions.toString();
-
-        logger.info( "Keyspace {} created or already exists with options {}",
-            keyspace.getKeyspaceName(),
-            options.toString() );
     }
 
     /**

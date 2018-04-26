@@ -28,12 +28,15 @@ import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.StringReader;
+
+import static org.junit.Assert.fail;
 
 
 //TODO: add error checking to each of the REST calls.
@@ -101,9 +104,15 @@ public class OrgResource  extends NamedResource {
 
     public Organization post(Organization organization){
 
-        ApiResponse apiResponse = getTarget( false ).request()
-            .accept( MediaType.APPLICATION_JSON )
-            .post( Entity.json( organization ), ApiResponse.class );
+        ApiResponse apiResponse = null;
+        try {
+            apiResponse = getTarget(false).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .post(Entity.json(organization), ApiResponse.class);
+        } catch( InternalServerErrorException e){
+            logger.error("Unable to create organization, {}", e);
+            fail("Unable to create organization");
+        }
 
 
         Organization org = new Organization(apiResponse);

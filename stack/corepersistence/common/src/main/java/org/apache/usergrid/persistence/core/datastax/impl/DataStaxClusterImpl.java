@@ -310,6 +310,9 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .withQueryOptions(queryOptions)
             .withSocketOptions(socketOptions)
             .withReconnectionPolicy(Policies.defaultReconnectionPolicy())
+            // client side timestamp generation is IMPORTANT; otherwise successive writes are left up to the server
+            // to determine the ts and bad network delays, clock sync, etc. can result in bad behaviors
+            .withTimestampGenerator(new AtomicMonotonicTimestampGenerator())
             .withProtocolVersion(getProtocolVersion(cassandraConfig.getVersion()));
 
         // only add auth credentials if they were provided

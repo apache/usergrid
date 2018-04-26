@@ -144,7 +144,7 @@ public abstract class AsyncIndexServiceTest {
 
 
         //queue up processing
-        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity, 0);
+        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity, 0, null);
 
 
         final EntityIndex EntityIndex =
@@ -182,7 +182,7 @@ public abstract class AsyncIndexServiceTest {
 
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                entityIndex.search( searchEdge, searchTypes, "select *", 100, 0 );
+                entityIndex.search( searchEdge, searchTypes, "select *", 100, 0, false );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

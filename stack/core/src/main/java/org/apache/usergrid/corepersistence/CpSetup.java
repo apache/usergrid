@@ -33,14 +33,9 @@ import org.apache.usergrid.persistence.exceptions.OrganizationAlreadyExistsExcep
 
 import com.google.inject.Injector;
 
-import me.prettyprint.hector.api.ddl.ComparatorType;
-
-import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.getApplicationKeyspace;
 
 
@@ -115,12 +110,6 @@ public class CpSetup implements Setup {
     private void setupLegacySchema() throws Exception {
 
         logger.info( "Initialize keyspace and legacy column families" );
-
-        cass.createColumnFamily( getApplicationKeyspace(),
-            createColumnFamilyDefinition( getApplicationKeyspace(), TOKENS_CF, ComparatorType.BYTESTYPE ) );
-
-        cass.createColumnFamily( getApplicationKeyspace(),
-            createColumnFamilyDefinition( getApplicationKeyspace(), PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
 
         cass.createColumnFamilies( getApplicationKeyspace(),
             getCfDefs( ApplicationCF.class, getApplicationKeyspace() ) );

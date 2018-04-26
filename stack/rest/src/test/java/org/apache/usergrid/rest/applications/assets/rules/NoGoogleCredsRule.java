@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.rest.applications.assets.aws;
+package org.apache.usergrid.rest.applications.assets.rules;
 
 
 import com.amazonaws.AmazonClientException;
@@ -29,19 +29,26 @@ import org.junit.internal.runners.model.MultipleFailureException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.Properties;
 
 
 /**
- * Created in an attempt to mark no aws cred tests as ignored.  Blocked by this issue
+ * Created in an attempt to mark no Google cred tests as ignored.  Blocked by this issue
  * https://github.com/junit-team/junit/issues/116
  *
  * Until then, simply marks as passed, which is a bit dangerous
  */
-public class NoAWSCredsRule  extends AbstractRestIT implements TestRule {
+public class NoGoogleCredsRule extends AbstractRestIT implements TestRule {
+
+    private static final Logger logger = LoggerFactory.getLogger( NoGoogleCredsRule.class );
+
 
     @Autowired
     private Properties properties;
@@ -51,19 +58,15 @@ public class NoAWSCredsRule  extends AbstractRestIT implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                String accessId;
-                String secretKey;
-                String bucketName;
-                try {
-                     Map<String,Object> properties = getRemoteTestProperties();
-                    //TODO: GREY change this so that it checks for the properties, then if it doesn't have them, mark the tests as ignored.
-                    accessId = (String)System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
-                    secretKey = (String)System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
-                    bucketName =(String) properties.get( "usergrid.binary.bucketname" );
 
-                    if(accessId==null||secretKey==null||bucketName==null){
-                        throw new AwsPropertiesNotFoundException( "Access Keys" );
-                    }
+
+                try {
+
+                    final String filename = System.getenv( "GOOGLE_APPLICATION_CREDENTIALS" );
+                    logger.info("cred filename: {}", filename);
+                    // if the file doesn't exist, an exception will be thrown
+                    new FileInputStream(filename);
+
                     base.evaluate();
 
                 }
@@ -85,20 +88,11 @@ public class NoAWSCredsRule  extends AbstractRestIT implements TestRule {
 
     private boolean isMissingCredsException( final Throwable t ) {
 
-        if ( t instanceof AmazonClientException ) {
-
-            final AmazonClientException ace = ( AmazonClientException ) t;
-
-            if ( ace.getMessage().contains( "could not get aws access key" ) || ace.getMessage().contains(
-                "could not get aws secret key from system properties" ) ) {
-                //swallow
+        // either no filename was provided or the filename provided doesn't actually exist on the file system
+        if ( t instanceof FileNotFoundException || t instanceof NullPointerException ) {
                 return true;
             }
-        }
 
-        if( t instanceof AwsPropertiesNotFoundException ){
-            return true;
-        }
 
         /**
          * Handle the multiple failure junit trace

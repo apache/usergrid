@@ -24,7 +24,9 @@ package org.apache.usergrid.services.queues;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.usergrid.persistence.queue.LegacyQueueManager;
 import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
@@ -57,6 +59,10 @@ public class ImportQueueManager implements LegacyQueueManager {
 
     }
 
+    @Override
+    public void sendMessagesAsync( final List bodies ) throws IOException {
+
+    }
 
     @Override
     public void sendMessages( final List bodies ) throws IOException {
@@ -65,13 +71,19 @@ public class ImportQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
+    public List<LegacyQueueMessage> sendQueueMessages(final List<LegacyQueueMessage> queueMessages ) throws IOException {
+        return new ArrayList<>();
+    }
+
+
+    @Override
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body, Boolean async) throws IOException {
 
     }
 
 
     @Override
-    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToAllRegions(final T body, Boolean async) throws IOException {
 
     }
 

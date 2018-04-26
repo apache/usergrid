@@ -169,6 +169,15 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
         return true;
     }
 
+    @Override
+    public String toString(){
+        return "SimpleSearchByEdgeType{node="+node
+            +", type="+type
+            +", maxTimestamp="+maxTimestamp
+            +", order="+order
+            +", filterMarked="+filterMarked
+            +", last="+last+"}";
+    }
 
     @Override
     public int hashCode() {

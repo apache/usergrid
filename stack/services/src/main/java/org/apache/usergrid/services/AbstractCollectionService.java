@@ -19,6 +19,7 @@ package org.apache.usergrid.services;
 
 import java.util.*;
 
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -441,6 +442,14 @@ public class AbstractCollectionService extends AbstractService {
                 try {
                     item = em.createItemInCollection( context.getOwner(), context.getCollectionName(), getEntityType(),
                             p );
+                }
+                catch (DuplicateUniquePropertyExistsException e) {
+                    // this is not an error (caller tried to create entity with a duplicate unique value)
+                    logger.info("Entity [{}] unable to be created in collection [{}] due to [{} - {}]", p, context.getCollectionName(),
+                        e.getClass().getSimpleName(), e.getMessage());
+
+                    // would be nice if status for each batch entry was returned...
+                    continue;
                 }
                 catch ( Exception e ) {
 

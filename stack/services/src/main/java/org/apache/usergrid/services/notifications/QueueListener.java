@@ -20,6 +20,7 @@ import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
 import com.google.inject.Injector;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -148,7 +149,7 @@ public class QueueListener  {
             Thread.currentThread().setDaemon(true);
         }
 
-        Thread.currentThread().setName(getClass().getSimpleName()+"_PushNotifications-"+threadNumber);
+        Thread.currentThread().setName(getClass().getSimpleName()+"_Push-"+ RandomStringUtils.randomAlphanumeric(4)+"-"+threadNumber);
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
 
@@ -268,12 +269,16 @@ public class QueueListener  {
                                 if (logger.isTraceEnabled()) {
                                     logger.trace("no messages...sleep...{}", sleepWhenNoneFound);
                                 }
-                                Thread.sleep(sleepWhenNoneFound);
+                                try {
+                                    Thread.sleep(sleepWhenNoneFound);
+                                } catch (InterruptedException e){
+                                    // noop
+                                }
                             }
                             timerContext.stop();
                             //send to the providers
                             consecutiveExceptions.set(0);
-                        }catch (Exception ex){
+                        } catch (Exception ex){
                             logger.error("failed to dequeue",ex);
 
                             // clear the queue name cache b/c tests might have wiped the keyspace
@@ -286,7 +291,7 @@ public class QueueListener  {
                                 Thread.sleep(sleeptime);
                             }catch (InterruptedException ie){
                                 if (logger.isTraceEnabled()) {
-                                    logger.info("sleep interrupted");
+                                    logger.trace("sleep interrupted");
                                 }
                             }
                         }
@@ -306,7 +311,7 @@ public class QueueListener  {
             return;
         }
         for(Future future : futures){
-            future.cancel(true);
+            future.cancel(false);
         }
 
         pool.shutdownNow();

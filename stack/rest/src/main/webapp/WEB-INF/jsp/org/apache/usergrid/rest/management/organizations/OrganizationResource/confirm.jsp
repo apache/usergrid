@@ -26,7 +26,7 @@ limitations under the License.
 </head>
 <body>
 
-	<p>Your organization <c:out value="${it.organization.name}"/> has been successfully confirmed.
+	<p>Your organization <c:out value="${it.organization.name}" escapeXml="true"/> has been successfully confirmed.
 	You will received an email soon to let you know when you organization has been activated</p>
 
 </body>

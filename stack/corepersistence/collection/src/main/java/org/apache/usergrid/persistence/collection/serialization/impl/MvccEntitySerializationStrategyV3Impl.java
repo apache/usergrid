@@ -146,11 +146,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         for ( final Id entityId : entityIds ) {
 
-            final ScopedRowKey<Id> rowKey =
-                    ScopedRowKey.fromKey( applicationId, entityId );
+            if ( entityId != null ) { // the size of entityIds is checked as preconditions, but the values are not
+                final ScopedRowKey<Id> rowKey =
+                    ScopedRowKey.fromKey(applicationId, entityId);
 
 
-            rowKeys.add( rowKey );
+                rowKeys.add(rowKey);
+            }
         }
 
         /**
@@ -160,12 +162,14 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
          *
          */
 
-        final int maxEntityResultSizeInBytes = serializationFig.getMaxEntitySize() * entityIds.size();
+        // convert getMaxEntitySize to a long avoid a numeric overflow and use a double for the result precision
+        final double maxEntityResultSizeInBytes = (double)( (long)serializationFig.getMaxEntitySize() * (long)entityIds.size() );
 
-        //if we're less than 1, set the number of requests to 1
-        final int numberRequests = Math.max( 1, maxEntityResultSizeInBytes / cassandraFig.getThriftBufferSize() );
+        // if we're less than 1, set the number of requests to 1
+        final double numberRequests = Math.max( 1, maxEntityResultSizeInBytes / cassandraFig.getThriftBufferSize() );
 
-        final int entitiesPerRequest = entityIds.size() / numberRequests;
+        // don't overflow the buffer because of the remainder
+        final double entitiesPerRequest = Math.floor(entityIds.size() / numberRequests);
 
 
         final Scheduler scheduler;
@@ -182,10 +186,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         final EntitySetImpl entitySetResults = Observable.from( rowKeys )
             //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
-            .buffer( entitiesPerRequest ).flatMap( listObservable -> {
+            .buffer( (int)entitiesPerRequest ).flatMap( listObservable -> {
 
 
-                //here, we execute our query then emit the items either in parallel, or on the current thread
+                // here, we execute our query then emit the items either in parallel, or on the current thread
                 // if we have more than 1 request
                 return Observable.just( listObservable ).map( scopedRowKeys -> {
 

@@ -129,9 +129,9 @@ public class JobSchedulerService extends AbstractScheduledService {
                 }
 
                 for ( JobDescriptor jd : activeJobs ) {
-                    logger.info( "Submitting work for {}", jd );
+                    logger.debug( "Submitting work for {}", jd );
                     submitWork( jd );
-                    logger.info( "Work submitted for {}", jd );
+                    logger.debug( "Work submitted for {}", jd );
                 }
             }
         }
@@ -228,7 +228,7 @@ public class JobSchedulerService extends AbstractScheduledService {
                 // TODO wrap and throw specifically typed exception for onFailure,
                 // needs jobId
 
-                logger.info( "Starting job {} with execution data {}", job, execution );
+                logger.debug( "Starting job {} with execution data {}", job, execution );
 
                 job.execute( execution );
 
@@ -259,7 +259,7 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 //TODO, refactor into the execution itself for checking if done
                 if ( execution.getStatus() == Status.IN_PROGRESS ) {
-                    logger.info( "Successful completion of bulkJob {}", execution );
+                    logger.debug( "Successful completion of bulkJob {}", execution );
                     execution.completed();
                 }
 

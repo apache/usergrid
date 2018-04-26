@@ -130,7 +130,7 @@ public class PagingResourceIT extends AbstractRestIT {
 
             ApiResponse response = this.app().collection( collectionName ).delete( queryParameters );
 
-            this.refreshIndex();
+            this.waitForQueueDrainAndRefreshIndex();
 
             if(validate)
                 assertEquals("Entities should have been deleted", deletePageSize,response.getEntityCount() );
@@ -268,7 +268,7 @@ public class PagingResourceIT extends AbstractRestIT {
             entityPayload.put( "name", created );
             Entity entity = new Entity( entityPayload );
             entity = this.app().collection( collectionName ).post( entity );
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
             if(created == 1){
                 connectedEntity = entity;
             }
@@ -277,7 +277,7 @@ public class PagingResourceIT extends AbstractRestIT {
             }
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         QueryParameters qp = new QueryParameters();
         qp.setQuery("select * order by created asc");
@@ -323,7 +323,7 @@ public class PagingResourceIT extends AbstractRestIT {
             this.app().collection( collectionName ).post( entity );
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Creates query looking for entities with the very stop.
         String query = "select * where verb = 'stop'";
@@ -454,7 +454,7 @@ public class PagingResourceIT extends AbstractRestIT {
             }
         }
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         return entities;
     }

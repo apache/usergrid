@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.tools;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import org.apache.commons.cli.CommandLine;
@@ -29,7 +30,6 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.utils.StringUtils;
-import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

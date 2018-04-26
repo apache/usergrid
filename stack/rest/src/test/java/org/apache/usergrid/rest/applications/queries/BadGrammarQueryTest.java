@@ -69,7 +69,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
     public void exceptionOnDoubleQuotes() throws IOException {
 
         int numOfEntities = 1;
-        String collectionName = "things";
+        String collectionName = "otherthings";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
@@ -95,7 +95,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
     public void exceptionOnMissingQuotes() throws IOException {
 
         int numOfEntities = 1;
-        String collectionName = "things";
+        String collectionName = "stillotherthings";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
@@ -121,7 +121,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
     public void exceptionOnMissingProperty() throws IOException {
 
         int numOfEntities = 1;
-        String collectionName = "things";
+        String collectionName = "yetotherthings";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
@@ -147,7 +147,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
     public void exceptionOnMissingPropertyValue() throws IOException {
 
         int numOfEntities = 1;
-        String collectionName = "things";
+        String collectionName = "thesethings";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
@@ -173,7 +173,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
     public void exceptionOnMissingOperator() throws IOException {
 
         int numOfEntities = 1;
-        String collectionName = "things";
+        String collectionName = "thosethings";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
@@ -200,7 +200,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
     public void limitInQuery() throws IOException {
 
         int numOfEntities =1;
-        String collectionName = "things";
+        String collectionName = "whatthings";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 

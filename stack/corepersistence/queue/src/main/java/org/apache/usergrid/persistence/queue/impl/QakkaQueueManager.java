@@ -101,7 +101,7 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToLocalRegion(T body) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(T body, Boolean async) throws IOException {
         List<String> regionsList = regions.getRegions( Regions.LOCAL );
         logger.trace( "Sending message to queue {} local region {}", scope.getName(), regionsList );
         doSendMessage( body, regionsList );
@@ -109,7 +109,7 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToAllRegions(T body) throws IOException {
+    public <T extends Serializable> void sendMessageToAllRegions(T body, Boolean async) throws IOException {
         List<String> regionsList = regions.getRegions( Regions.ALL );
         logger.trace( "Sending message to queue {} all regions {}", scope.getName(), regionsList );
         doSendMessage( body, regionsList );
@@ -166,6 +166,10 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
         createQueueIfNecessary();
 
+        if(logger.isTraceEnabled()){
+            logger.trace("Committing message with id: {}", queueMessage.getMessageId());
+        }
+
         UUID queueMessageId  = UUID.fromString( queueMessage.getMessageId() );
         queueMessageManager.ackMessage( scope.getName(), queueMessageId );
     }
@@ -179,14 +183,31 @@ public class QakkaQueueManager implements LegacyQueueManager {
         }
     }
 
+    @Override
+    public void sendMessagesAsync( List bodies ) throws IOException {
+        sendMessages(bodies);
+    }
 
     @Override
     public void sendMessages( List bodies ) throws IOException {
 
         for ( Object body : bodies ) {
-            sendMessageToLocalRegion( (Serializable)body );
+            sendMessageToLocalRegion( (Serializable)body, null );
         }
 
+    }
+
+
+    @Override
+    public List<LegacyQueueMessage> sendQueueMessages( List<LegacyQueueMessage> queueMessages ) throws IOException {
+
+        List<LegacyQueueMessage> successMessages = new ArrayList<>();
+        for ( LegacyQueueMessage queueMessage : queueMessages ) {
+            sendMessageToLocalRegion( (Serializable)queueMessage.getBody() , null);
+            successMessages.add(queueMessage);
+        }
+
+        return successMessages;
     }
 
 

@@ -40,4 +40,9 @@ public interface LegacyQueueScope {
      * Get the Usergrid region enum
      */
     RegionImplementation getRegionImplementation();
+
+    /**
+     * Is this for the dead letter queue?
+     */
+    boolean isDeadLetterQueue();
 }

@@ -47,20 +47,20 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void queryAndInclusive() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "apples";
         // create our test entities
         generateTestEntities(numOfEntities, collectionName);
         // Query where madeup = true (the last half) and the last quarter of entries
         QueryParameters params = new QueryParameters()
             .setQuery("select * where madeup = true AND ordinal >= " + (numOfEntities - numOfEntities / 4));
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         // results should have madeup = true and ordinal 15-19
-        assertEquals(numOfEntities / 4, activities.getResponse().getEntityCount());
+        assertEquals(numOfEntities / 4, coll.getResponse().getEntityCount());
         // loop though entities that were returned, and test against the ordinals and values we are
         // expecting, starting with the last entity and decrementing
         int index = 19;
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity activity = coll.next();
             // ensure the 'madeup' property is set to true
             assertTrue(Boolean.parseBoolean(activity.get("madeup").toString()));
             // make sure the correct ordinal properties are returned
@@ -71,15 +71,15 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void someTestProp() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "bananas";
         // create our test entities
         generateTestEntities(numOfEntities, collectionName);
         // Query where madeup = true (the last half) and the last quarter of entries
         QueryParameters params = new QueryParameters()
             .setQuery("where sometestprop = 'testprop'");
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         // results should have madeup = true and ordinal 15-19
-        assertEquals(10, activities.getResponse().getEntityCount());
+        assertEquals(10, coll.getResponse().getEntityCount());
 
 
     }
@@ -87,15 +87,15 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void someTestPropPartialContains() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "cantaloupes";
         // create our test entities
         generateTestEntities(numOfEntities, collectionName);
         // Query where madeup = true (the last half) and the last quarter of entries
         QueryParameters params = new QueryParameters()
             .setQuery("where sometestprop contains 'test*'");
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         // results should have madeup = true and ordinal 15-19
-        assertEquals(10, activities.getResponse().getEntityCount());
+        assertEquals(10, coll.getResponse().getEntityCount());
 
 
     }
@@ -108,25 +108,25 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void queryAndExclusive() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "dates";
 
         generateTestEntities(numOfEntities, collectionName);
 
         //Query where madeup = true (the last half) and NOT the last quarter of entries
         QueryParameters params = new QueryParameters()
             .setQuery("select * where madeup = true AND NOT ordinal >= " + (numOfEntities - numOfEntities / 4));
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         //results should have madeup = true and ordinal 10-14
-        assertEquals(numOfEntities / 4, activities.getResponse().getEntityCount());
+        assertEquals(numOfEntities / 4, coll.getResponse().getEntityCount());
         // loop though entities that were returned, and test against the ordinals and values we are
         // expecting, starting with the last expected entity and decrementing
         int index = 14;
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity entity = coll.next();
             //ensure the 'madeup' property is set to true
-            assertTrue(Boolean.parseBoolean(activity.get("madeup").toString()));
+            assertTrue(Boolean.parseBoolean(entity.get("madeup").toString()));
             //make sure the correct ordinal properties are returned
-            assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
+            assertEquals(index--, Long.parseLong(entity.get("ordinal").toString()));
         }
     }
 
@@ -138,7 +138,7 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void queryOrInclusive() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "elderberries";
 
         generateTestEntities(numOfEntities, collectionName);
 
@@ -146,26 +146,26 @@ public class AndOrQueryTest extends QueryTestBase {
         QueryParameters params = new QueryParameters()
             .setQuery("select * where madeup = false OR ordinal >= " + (numOfEntities - numOfEntities / 4))
             .setLimit((numOfEntities));
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         int index = numOfEntities - 1;
         int count = 0;
-        int returnSize = activities.getResponse().getEntityCount();
+        int returnSize = coll.getResponse().getEntityCount();
         //loop through the returned results
         for (int i = 0; i < returnSize; i++, index--) {
             count++;
-            Entity activity = activities.getResponse().getEntities().get(i);
-            logger.info(String.valueOf(activity.get("ordinal")) + " " + String.valueOf(activity.get("madeup")));
+            Entity entity = coll.getResponse().getEntities().get(i);
+            logger.info(String.valueOf(entity.get("ordinal")) + " " + String.valueOf(entity.get("madeup")));
             //if the entity is in the first half, the property "madeup" should be false
             if (index < numOfEntities / 2) {
-                assertFalse(Boolean.parseBoolean(String.valueOf(activity.get("madeup"))));
+                assertFalse(Boolean.parseBoolean(String.valueOf(entity.get("madeup"))));
             }
             //else if the entity is in the second half, the property "madeup" should be true
             else if (index >= (numOfEntities - numOfEntities / 4)) {
-                assertTrue(Boolean.parseBoolean(String.valueOf(activity.get("madeup"))));
+                assertTrue(Boolean.parseBoolean(String.valueOf(entity.get("madeup"))));
             }
             //test to ensure that the ordinal is in the first half (where "madeup = false")
             //OR that the ordinal is in the last quarter of the entity list (where "ordinal >=  (numOfEntities - numOfEntities / 4))")
-            long ordinal = Long.parseLong(String.valueOf(activity.get("ordinal")));
+            long ordinal = Long.parseLong(String.valueOf(entity.get("ordinal")));
             assertTrue(ordinal < (numOfEntities / 2) || ordinal >= (numOfEntities - numOfEntities / 4));
         }
         //results should have madeup = false or ordinal 0-9,15-19
@@ -181,7 +181,7 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void queryOrExclusive() throws IOException {
         int numOfEntities = 30;
-        String collectionName = "activities";
+        String collectionName = "figs";
 
         generateTestEntities(numOfEntities, collectionName);
 
@@ -189,23 +189,23 @@ public class AndOrQueryTest extends QueryTestBase {
         QueryParameters params = new QueryParameters()
             .setQuery("select * where (verb = 'go' OR ordinal >= " + (numOfEntities - numOfEntities / 4) + ") AND NOT (verb = 'go' AND ordinal >= " + (numOfEntities - numOfEntities / 4) + ")")
             .setLimit((numOfEntities));
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
 
         int index = numOfEntities - 1;
         int count = 0;
-        int returnSize = activities.getResponse().getEntityCount();
+        int returnSize = coll.getResponse().getEntityCount();
         for (int i = 0; i < returnSize; i++, index--) {
             count++;
-            Entity activity = activities.getResponse().getEntities().get(i);
-            long ordinal = Long.parseLong(String.valueOf(activity.get("ordinal")));
-            logger.info(ordinal + " " + String.valueOf(activity.get("verb")));
+            Entity entity = coll.getResponse().getEntities().get(i);
+            long ordinal = Long.parseLong(String.valueOf(entity.get("ordinal")));
+            logger.info(ordinal + " " + String.valueOf(entity.get("verb")));
             //if the entity is in the first three quarters, the property "verb" should be "go"
             if (ordinal < (numOfEntities - numOfEntities / 4)) {
-                assertEquals("go", String.valueOf(activity.get("verb")));
+                assertEquals("go", String.valueOf(entity.get("verb")));
             }
             //if the entity is in the last quarter, the property "verb" should be "stop"
             else if (ordinal >= (numOfEntities - numOfEntities / 4)) {
-                assertEquals("stop", String.valueOf(activity.get("verb")));
+                assertEquals("stop", String.valueOf(entity.get("verb")));
             }
         }
         //results should be even ordinals in the first 3 quarters and odd ordinals from the last quarter
@@ -225,17 +225,18 @@ public class AndOrQueryTest extends QueryTestBase {
     public void queryWithAndPastLimit() throws IOException {
         int numValuesTested = 40;
 
-        generateTestEntities(numValuesTested, "activities");
+        String collectionName = "grapes";
+        generateTestEntities(numValuesTested, collectionName);
         //3. Query all entities where "madeup = true"
         String errorQuery = "select * where madeup = true";
         QueryParameters params = new QueryParameters()
             .setQuery(errorQuery)
             .setLimit(numValuesTested / 2);//4. Limit the query to half of the number of entities
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         //5. Ensure the correct entities are returned
-        assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
-        while (activities.hasNext()) {
-            assertTrue(Boolean.parseBoolean(activities.next().get("madeup").toString()));
+        assertEquals(numValuesTested / 2, coll.getResponse().getEntityCount());
+        while (coll.hasNext()) {
+            assertTrue(Boolean.parseBoolean(coll.next().get("madeup").toString()));
         }
     }
 
@@ -252,16 +253,17 @@ public class AndOrQueryTest extends QueryTestBase {
     public void queryNegated() throws IOException {
         int numValuesTested = 20;
 
-        generateTestEntities(numValuesTested, "activities");
+        String collectionName = "huckleberries";
+        generateTestEntities(numValuesTested, collectionName);
         //1. Query all entities where "NOT verb = 'go'"
         String query = "select * where not verb = 'go'";
         //2. Limit the query to half of the number of entities
         QueryParameters params = new QueryParameters().setQuery(query).setLimit(numValuesTested / 2);
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         //3. Ensure the returned entities have "verb = 'stop'"
-        assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
-        while (activities.hasNext()) {
-            assertEquals("stop", activities.next().get("verb").toString());
+        assertEquals(numValuesTested / 2, coll.getResponse().getEntityCount());
+        while (coll.hasNext()) {
+            assertEquals("stop", coll.next().get("verb").toString());
         }
 
 
@@ -278,15 +280,16 @@ public class AndOrQueryTest extends QueryTestBase {
     public void queryReturnCount() throws Exception {
         int numValuesTested = 20;
 
-        generateTestEntities(numValuesTested, "activities");
+        String collectionName = "lemons";
+        generateTestEntities(numValuesTested, collectionName);
         //1. Query for a subset of the entities
         String inCorrectQuery = "select * where ordinal >= " + (numValuesTested / 2) + " order by ordinal asc";
         QueryParameters params = new QueryParameters().setQuery(inCorrectQuery).setLimit(numValuesTested / 2);
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         //2. Validate that the correct entities are returned
-        assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
+        assertEquals(numValuesTested / 2, coll.getResponse().getEntityCount());
 
-        List<Entity> entitiesReturned = activities.getResponse().getEntities();
+        List<Entity> entitiesReturned = coll.getResponse().getEntities();
         for (int i = 0; i < numValuesTested / 2; i++) {
             assertEquals(numValuesTested / 2 + i, Integer.parseInt(entitiesReturned.get(i).get("ordinal").toString()));
         }
@@ -303,7 +306,7 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void queryCheckAsc() throws Exception {
         int numOfEntities = 20;
-        String collectionName = "imagination";
+        String collectionName = "melons";
 
         generateTestEntities(numOfEntities, collectionName);
 
@@ -332,18 +335,18 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void queryReturnCheck() throws Exception {
         int numOfEntities = 20;
-        String collectionName = "imagination";
+        String collectionName = "nectarines";
 
         generateTestEntities(numOfEntities, collectionName);
 
         //2. Issue a query
         String inquisitiveQuery = String.format("select * where ordinal >= 0 and ordinal <= %d or WhoHelpedYou = 'Ruff' ORDER BY created", numOfEntities);
         QueryParameters params = new QueryParameters().setQuery(inquisitiveQuery);
-        Collection activities = this.app().collection(collectionName).get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
 
         //3. validate that a full page of (10) entities is returned
-        assertEquals(10, activities.getResponse().getEntityCount());
-        List<Entity> entitiesReturned = activities.getResponse().getEntities();
+        assertEquals(10, coll.getResponse().getEntityCount());
+        List<Entity> entitiesReturned = coll.getResponse().getEntities();
         for (int i = 0; i < 10; i++) {
             assertEquals(i, Integer.parseInt(entitiesReturned.get(i).get("ordinal").toString()));
         }
@@ -359,7 +362,7 @@ public class AndOrQueryTest extends QueryTestBase {
     @Test
     public void queryReturnCheckWithShortHand() throws Exception {
         int numOfEntities = 10;
-        String collectionName = "imagination";
+        String collectionName = "oranges";
 
         generateTestEntities(numOfEntities, collectionName);
 

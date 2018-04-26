@@ -30,7 +30,7 @@ import org.apache.usergrid.rest.management.users.organizations.OrganizationsReso
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.tokens.TokenInfo;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.security.tokens.impl.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -43,6 +43,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -65,6 +66,9 @@ public class UserResource extends AbstractContextResource {
     String errorMsg;
 
     String token = null;
+
+    String loginEndpoint;
+
 
 
     public UserResource() {
@@ -294,8 +298,17 @@ public class UserResource extends AbstractContextResource {
             if ( ( password1 != null ) || ( password2 != null ) ) {
                 if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), tokenInfo ) ) {
                     if ( ( password1 != null ) && password1.equals( password2 ) ) {
+                        // validate password
+                        Collection<String> violations = management.passwordPolicyCheck(password1, true);
+                        if (violations.size() > 0) {
+                            // password not valid
+                            errorMsg = management.getPasswordDescription(true);
+                            return handleViewable( "resetpw_set_form", this, organizationId );
+                        }
+
                         management.setAdminUserPassword( user.getUuid(), password1 );
                         management.revokeAccessTokenForAdminUser( user.getUuid(), token );
+                        loginEndpoint = properties.getProperty("usergrid.viewable.loginEndpoint");
                         return handleViewable( "resetpw_set_success", this, organizationId );
                     }
                     else {
@@ -342,6 +355,9 @@ public class UserResource extends AbstractContextResource {
         return errorMsg;
     }
 
+    public String getLoginEndpoint() {
+        return loginEndpoint;
+    }
 
     public String getToken() {
         return token;

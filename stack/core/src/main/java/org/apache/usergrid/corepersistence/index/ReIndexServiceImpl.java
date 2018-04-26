@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventQueueType;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,7 +170,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             .buffer( indexProcessorFig.getReindexBufferSize())
             .doOnNext( edgeScopes -> {
                 logger.info("Sending batch of {} to be indexed.", edgeScopes.size());
-                indexService.indexBatch(edgeScopes, modifiedSince, true);
+                indexService.indexBatch(edgeScopes, modifiedSince, AsyncEventQueueType.UTILITY);
                 count.addAndGet(edgeScopes.size() );
                 if( edgeScopes.size() > 0 ) {
                     writeCursorState(jobId, edgeScopes.get(edgeScopes.size() - 1));
@@ -351,7 +352,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         final Status status = Status.valueOf( stringStatus );
 
         final long processedCount = mapManager.getLong( jobId + MAP_COUNT_KEY );
-        final long lastUpdated = mapManager.getLong( jobId + MAP_COUNT_KEY );
+        final long lastUpdated = mapManager.getLong( jobId + MAP_UPDATED_KEY );
 
         return new ReIndexStatus( jobId, status, processedCount, lastUpdated );
     }

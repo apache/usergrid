@@ -20,11 +20,14 @@ import com.google.inject.*;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.corepersistence.asyncevents.*;
+import org.apache.usergrid.corepersistence.export.ExportService;
+import org.apache.usergrid.corepersistence.export.ExportServiceImpl;
 import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.DeDupConnectionDataMigration;
 import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadRepairFig;
 import org.apache.usergrid.corepersistence.rx.impl.*;
 import org.apache.usergrid.corepersistence.service.*;
 import org.apache.usergrid.locking.guice.LockModule;
@@ -42,6 +45,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
+import org.apache.usergrid.persistence.token.guice.TokenModule;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import java.util.Properties;
@@ -65,6 +69,7 @@ public class CoreModule extends AbstractModule {
         install( new CommonModule());
         install( new LockModule());
         install( new CacheModule());
+        install( new TokenModule());
         install( new CollectionModule() {
             /**
              * configure our migration data provider for all entities in the system
@@ -136,6 +141,9 @@ public class CoreModule extends AbstractModule {
 
 
         bind( ReIndexService.class ).to( ReIndexServiceImpl.class );
+        bind( CollectionDeleteService.class ).to( CollectionDeleteServiceImpl.class );
+
+        bind( ExportService.class ).to( ExportServiceImpl.class );
 
         install( new FactoryModuleBuilder().implement( AggregationService.class, AggregationServiceImpl.class )
                                            .build( AggregationServiceFactory.class ) );
@@ -152,6 +160,8 @@ public class CoreModule extends AbstractModule {
         install( new GuicyFigModule( CollectionSettingsCacheFig.class ) );
 
         install( new GuicyFigModule( EntityManagerFig.class ) );
+
+        install( new GuicyFigModule( ReadRepairFig.class ) );
 
         install( new GuicyFigModule( AsyncEventsSchedulerFig.class ) );
 

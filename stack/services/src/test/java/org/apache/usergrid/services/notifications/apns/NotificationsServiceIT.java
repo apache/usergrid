@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.services.notifications.apns;
 
+import com.google.common.util.concurrent.Service;
 import com.relayrides.pushy.apns.util.*;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
@@ -33,12 +34,8 @@ import java.util.*;
 
 import org.apache.usergrid.services.ServiceAction;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import static org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl.NOTIFIER_ID_POSTFIX;
+import static org.junit.Assert.*;
 
 
 @NotThreadSafe
@@ -121,8 +118,12 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 setup.getEntityIndex().refresh(app.getId());
 
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(), new Properties());
-        listener.DEFAULT_SLEEP = 200;
         listener.start();
+
+        if ( !setup.getJobSchedulerService().isRunning()) {
+            setup.getJobSchedulerService().startAsync();
+            setup.getJobSchedulerService().awaitRunning();
+        }
     }
 
     @After
@@ -238,24 +239,24 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         );
 
 
-        // verify Query for CREATED state
+        notificationWaitForComplete(notification);
+        app.waitForQueueDrainAndRefreshIndex(250);
+
+        // verify Query for FINISHED state and that the devices processed is 0
         Query query =  Query.fromEquals( "state", Notification.State.FINISHED.toString() );
         Results results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(), "notifications", query);
-        Entity entity = results.getEntitiesMap().get(notification.getUuid());
-        assertNotNull(entity);
-
-        notificationWaitForComplete(notification);
+        notification = (Notification)results.getEntitiesMap().get(notification.getUuid()).toTypedEntity();
+        assertEquals(0, notification.getDeviceProcessedCount());
 
         // perform push //
 
-        //ns.getQueueManager().processBatchAndReschedule(notification, null);
         notification = app.getEntityManager().get(e.getUuid(), Notification.class);
 
         // verify Query for FINISHED state
         query = Query.fromEquals("state", Notification.State.FINISHED.toString());
         results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(),
                 "notifications", query);
-        entity = results.getEntitiesMap().get(notification.getUuid());
+        Entity entity = results.getEntitiesMap().get(notification.getUuid());
         assertNotNull(entity);
 
         notification = (Notification) entity.toTypedEntity();
@@ -295,14 +296,43 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         notification = app.getEntityManager().get(e.getUuid(), Notification.class);
         assertEquals(Notification.State.SCHEDULED, notification.getState());
 
+    }
 
-//        try {
-//            e = app.testRequest(ServiceAction.DELETE, 1, "notifications",
-//                    e.getUuid()).getEntity();
-//        }catch (Exception deleteException){
-//            LOG.error("Couldn't delete",deleteException);
-//        }
-//        app.getEntityManager().get(e.getUuid(), Notification.class);
+    @Test
+    public void scheduledNotificationAndEnsureSend() throws Exception {
+
+        // create push notification //
+        app.clear();
+        String payload = getPayload();
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getUuid().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("deliver", System.currentTimeMillis() + 2000);
+        app.put("debug",true);
+
+        Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications")
+            .getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+
+        Notification notification = app.getEntityManager().get(e.getUuid(),
+            Notification.class);
+        assertEquals(
+            notification.getPayloads().get(notifier.getUuid().toString()),
+            payload);
+
+
+        // delay until the scheduler has time to run
+        Notification.State notificationState = Notification.State.SCHEDULED;
+        int retry = 60;
+        do {
+            logger.info("Sleeping while the scheduler does its work " + retry);
+            Thread.sleep(1000);
+            notificationState = app.getEntityManager().get(e.getUuid(), Notification.class).getState();
+        } while (Notification.State.FINISHED != notificationState && --retry >= 0 );
+
+        assertEquals(Notification.State.FINISHED,  notificationState);
+
     }
 
     @Test
@@ -505,7 +535,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Test
     public void oneDeviceTwoNotifiers() throws Exception {
 
-        // This test should configure 2 notifiers on a device and ensure that we can send to one of them
+        // This test should configure 2 notifiers on device1 and ensure that we can send to one of them
 
         // create a 2nd notifier //
         Object notifierName1 = "apNs2";
@@ -529,17 +559,19 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(notifier2.getProvider(), PROVIDER);
         assertEquals(notifier2.getEnvironment(), environment1);
 
+
+        // Add a device token for the 2nd notifier
+        app.clear();
         String key2 = notifier2.getName() + NOTIFIER_ID_POSTFIX;
-        device1.setProperty(key2, PUSH_TOKEN);
-        app.getEntityManager().update(device1);
-        setup.getEntityIndex().refresh(app.getId()); // need to refresh the index after an update
+        app.put(key2, PUSH_TOKEN);
+        app.testRequest(ServiceAction.PUT, 1, "devices", device1).getEntity();
 
 
         // create push notification //
         app.clear();
         String payload = getPayload();
         Map<String, String> payloads = new HashMap<String, String>(1);
-        payloads.put(notifier.getUuid().toString(), payload);
+        payloads.put(notifierName, payload);
         app.put("payloads", payloads);
         app.put("debug",true);
 
@@ -547,14 +579,14 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
             "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", notificationEntity.getUuid());
 
-        Notification notification = app.getEntityManager().get(notificationEntity.getUuid(),
-                Notification.class);
-        assertEquals(
-                notification.getPayloads().get(notifier.getUuid().toString()),
-                payload);
+        Notification notification = app.getEntityManager().get(notificationEntity.getUuid(), Notification.class);
+        assertEquals(payload, notification.getPayloads().get(notifierName));
 
         // perform push //
         notification = notificationWaitForComplete(notification);
+
+        app.waitForQueueDrainAndRefreshIndex(2500);
+
         checkReceipts(notification, 1);
     }
 
@@ -696,6 +728,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
         notification = notificationWaitForComplete(notification);
+
+        app.waitForQueueDrainAndRefreshIndex(250);
+
         checkReceipts(notification, 2);
 
         // Statistics are not accurate.  See - https://issues.apache.org/jira/browse/USERGRID-1207
@@ -807,6 +842,49 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         } catch (Exception e) {
             fail("Delete should be successful after notification has finished.");
         }
+    }
+
+    @Test
+    public void pushNotificationBadDeliverProperty() throws Exception {
+
+        // try with timestamp in the past
+        app.clear();
+        String payload = getPayload();
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getName(), payload);
+        app.put("payloads", payloads);
+        app.put("deliver", System.currentTimeMillis() - 1000); // some time in the past
+        app.put("debug",true);
+
+        // post notification to
+        try {
+            app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();
+        } catch (Exception e) {
+            // should be bad request due to time in the past
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertTrue(e.getMessage().contains("Property 'deliver' cannot have a value in the past"));
+        }
+
+
+        // try with invalid type of a string for deliver, should be a number
+        app.clear();
+        payload = getPayload();
+        payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getName(), payload);
+        app.put("payloads", payloads);
+        app.put("deliver", "notatime"); // some time in the past
+        app.put("debug",true);
+
+        // post notification
+        try {
+            app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();
+        } catch (Exception e) {
+            // should be bad request due invalid deliver value
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertTrue(e.getMessage().contains("Property 'deliver' must be a number"));
+        }
+
+
     }
 
     private String getPayload(){

@@ -17,7 +17,6 @@
 
 package org.apache.usergrid.rest.management;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.management.MockImapClient;
@@ -77,7 +76,7 @@ public class AdminUsersIT extends AbstractRestIT {
         // change the password as admin. The old password isn't required
         management.users().user( username ).password().post(Entity.class,passwordPayload);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //Get the token using the new password
         Token adminToken = management.token().post( false, Token.class, new Token( username, "testPassword" ) ,null );
@@ -159,7 +158,7 @@ public class AdminUsersIT extends AbstractRestIT {
         // change the password as admin. The old password isn't required
         management.users().user( username ).password().post(Entity.class, passwordPayload );
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
 
         //Get the token using the new password
@@ -197,7 +196,7 @@ public class AdminUsersIT extends AbstractRestIT {
         management.token().setToken( clientSetup.getSuperuserToken());
         management.users().user( username ).password().post( passwordPayload );
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( management.token().post( false, Token.class, new Token(username, "testPassword"), null ));
 
@@ -260,7 +259,7 @@ public class AdminUsersIT extends AbstractRestIT {
             //Send rest call to the /testProperties endpoint to persist property changes
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
 
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
 
             //Create organization for the admin user to be confirmed
             Organization organization = createOrgPayload( "testUnconfirmedAdminLogin", null );
@@ -342,7 +341,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
             //Send rest call to the /testProperties endpoint to persist property changes
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
 
             Token superuserToken = management.token().post( Token.class,
                 new Token( clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword() )  );
@@ -379,7 +378,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
             //Send rest call to the /testProperties endpoint to persist property changes
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
 
             Token testToken = management().token().post(Token.class,
                 new Token( originalTestProperties.getAsString( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ),
@@ -586,7 +585,7 @@ public class AdminUsersIT extends AbstractRestIT {
     public void reactivateTest() throws Exception {
         //call reactivate endpoint on default user
         clientSetup.getRestClient().management().users().user( clientSetup.getUsername() ).reactivate().get();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Create mocked inbox and check to see if you recieved an email in the users inbox.
         List<Message> inbox = Mailbox.get( clientSetup.getEmail());
@@ -599,7 +598,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         // initiate password reset
         management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create mocked inbox, get password reset email and extract token
         List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
@@ -630,7 +629,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         assertTrue( html.contains( "password set" ) );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         html = management().users().user( clientSetup.getUsername() ).resetpw().post( formData );
@@ -644,7 +643,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         // initiate password reset
         management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create mocked inbox, get password reset email and extract token
         List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
@@ -725,7 +724,7 @@ public class AdminUsersIT extends AbstractRestIT {
         payload.put( "newpassword", passwords[1] );
         management().users().user( clientSetup.getUsername() ).password().post( Entity.class,payload );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         payload.put( "newpassword", passwords[0] );
         payload.put( "oldpassword", passwords[1] );
@@ -747,7 +746,7 @@ public class AdminUsersIT extends AbstractRestIT {
         // request password reset
 
         management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // get resetpw token from email
 
@@ -774,7 +773,7 @@ public class AdminUsersIT extends AbstractRestIT {
         String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
             .post( javax.ws.rs.client.Entity.form(formData), String.class );
         assertTrue( html.contains( "password set" ) );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // login with new password and get token
 
@@ -797,7 +796,7 @@ public class AdminUsersIT extends AbstractRestIT {
             put("newpassword", "test");
         }};
         management().users().user( clientSetup.getUsername() ).password().post( false, payload, null );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // get password and check password change time again
 
@@ -851,7 +850,7 @@ public class AdminUsersIT extends AbstractRestIT {
         //Create admin user
         management().orgs().org( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Retrieves the admin users
         ApiResponse adminUsers = management().orgs().org( clientSetup.getOrganizationName() ).users().get(ApiResponse.class);
@@ -905,7 +904,7 @@ public class AdminUsersIT extends AbstractRestIT {
             //Send rest call to the /testProperties endpoint to persist property changes
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
 
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
 
             //Retrieve properties and ensure that they are set correctly.
             ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();

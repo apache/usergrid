@@ -20,13 +20,12 @@
 package org.apache.usergrid.persistence.index;
 
 
-import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
-import java.util.UUID;
+import java.util.Map;
 
 
 /**
@@ -35,7 +34,7 @@ import java.util.UUID;
 public interface EntityIndex extends CPManager {
 
 
-    public static final int MAX_LIMIT = 1000;
+    int MAX_LIMIT = 1000;
 
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
@@ -75,7 +74,7 @@ public interface EntityIndex extends CPManager {
      * @param edge
      * @return
      */
-    long getEntitySize(final SearchEdge edge);
+    long getTotalEntitySizeInBytes(final SearchEdge edge);
 
     /**
      * Initialize the index if necessary.  This is an idempotent operation and should not create an index
@@ -97,10 +96,49 @@ public interface EntityIndex extends CPManager {
      * @param query       The query to execute
      * @param limit       The limit of values to return
      * @param offset      The offset to query on
+     * @param analyzeOnly This optional param will instruct the query processing to only analyze the query and
+     *                          provide info but not actually execute the query.
      * @return
      */
     CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                            final int limit, final int offset);
+                            final int limit, final int offset, final boolean analyzeOnly);
+
+    /**
+     * Search on every document in the specified search edge.  Also search by the types if specified
+     *
+     * @param searchEdge        The edge to search on
+     * @param searchTypes       The search types to search
+     * @param query             The query to execute
+     * @param limit             The limit of values to return
+     * @param offset            The offset to query on
+     * @param fieldsWithType    An optional param that allows the caller to provide schema related info which might
+     *                          relate to data in the query, such as sort predicate types
+     * @param analyzeOnly       This optional param will instruct the query processing to only analyze the query and
+     *                          provide info but not actually execute the query.
+     * @return
+     */
+    CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                            final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                            final boolean analyzeOnly);
+
+    /**
+     * Search on every document in the specified search edge.  Also search by the types if specified
+     *
+     * @param searchEdge        The edge to search on
+     * @param searchTypes       The search types to search
+     * @param query             The query to execute
+     * @param limit             The limit of values to return
+     * @param offset            The offset to query on
+     * @param fieldsWithType    An optional param that allows the caller to provide schema related info which might
+     *                          relate to data in the query, such as sort predicate types
+     * @param analyzeOnly       This optional param will instruct the query processing to only analyze the query and
+     *                          provide info but not actually execute the query.
+     * @param returnQuery       This optional param will cause the index query to be returned instead of run.
+     * @return
+     */
+    CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                            final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                            final boolean analyzeOnly, final boolean returnQuery);
 
 
     /**
@@ -112,14 +150,6 @@ public interface EntityIndex extends CPManager {
      */
     CandidateResults getAllEdgeDocuments(final IndexEdge edge, final Id entityId);
 
-    /**
-     * Returns all entity docs that match the entityId being the nodeId ( aka connections where entityId = sourceNode)
-     *
-     * @param entityId      The entityId to match when searching
-     * @param markedVersion The version that has been marked for deletion. All version before this one must be deleted.
-     * @return
-     */
-    CandidateResults getNodeDocsOlderThanMarked(final Id entityId, final UUID markedVersion);
     /**
      * delete all application records
      *
@@ -141,7 +171,6 @@ public interface EntityIndex extends CPManager {
      * @return
      */
     String[] getIndexes();
-
 
     /**
      * type of alias

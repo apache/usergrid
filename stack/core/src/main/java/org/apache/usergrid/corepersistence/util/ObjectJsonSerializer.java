@@ -77,6 +77,23 @@ public final class ObjectJsonSerializer {
         return stringValue;
     }
 
+    public <T> String toString( final T toSerialize ) {
+
+        Preconditions.checkNotNull( toSerialize, "toSerialize must not be null" );
+        final String stringValue;
+        //mark this version as empty
+
+        //Convert to internal entity map
+        try {
+            stringValue = MAPPER.writeValueAsString( toSerialize );
+        }
+        catch ( JsonProcessingException jpe ) {
+            throw new RuntimeException( "Unable to serialize entity", jpe );
+        }
+
+        return stringValue;
+    }
+
 
     public <T extends Serializable> T fromString( final String value, final Class<T> toSerialize ) {
 

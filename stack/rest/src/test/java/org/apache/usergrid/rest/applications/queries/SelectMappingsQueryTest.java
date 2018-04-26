@@ -41,14 +41,15 @@ public class SelectMappingsQueryTest extends QueryTestBase {
     @Test
     public void testNestedSelectFieldNames() throws Exception {
 
-        generateTestEntities(20, "things");
+        String collectionName = "basketballs";
+        generateTestEntities(20, collectionName);
 
         QueryParameters params = new QueryParameters()
             .setQuery("select actor.displayName,sometestprop where sometestprop = 'testprop'");
-        Collection things = this.app().collection("things").get(params);
-        assertEquals( 10, things.getNumOfEntities() );
+        Collection coll = this.app().collection(collectionName).get(params);
+        assertEquals( 10, coll.getNumOfEntities() );
 
-        Iterator<Entity> iter = things.iterator();
+        Iterator<Entity> iter = coll.iterator();
         while ( iter.hasNext() ) {
 
             Entity entity = iter.next();
@@ -73,7 +74,7 @@ public class SelectMappingsQueryTest extends QueryTestBase {
     @Test
     public void testMixedCaseDupField() throws Exception {
 
-        String collectionName = "things";
+        String collectionName = "baseballs";
 
         String value = RandomStringUtils.randomAlphabetic( 20 );
         String otherValue = RandomStringUtils.randomAlphabetic( 20 );
@@ -83,19 +84,68 @@ public class SelectMappingsQueryTest extends QueryTestBase {
             .withProp( "testProp", value )
             .withProp( "TESTPROP", otherValue);
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // testProp and TESTPROP should now have otherValue
 
         QueryParameters params = new QueryParameters()
             .setQuery( "select * where testProp='" + otherValue + "'" );
-        Collection things = this.app().collection( "things" ).get( params );
-        assertEquals( 1, things.getNumOfEntities() );
+        Collection coll = this.app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
 
         params = new QueryParameters()
             .setQuery( "select * where TESTPROP='" + otherValue + "'" );
-        things = app().collection( "things" ).get( params );
+        coll = app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
+    }
+
+    @Test
+    public void testStringWithSingleQuote() throws Exception {
+
+        String collectionName = "footballs";
+
+        String value = "test'value";
+        String escapedValue = "test\\'value";
+
+        // create entity with testProp=value
+        Entity entity = new Entity()
+            .withProp( "testprop", value );
+        app().collection( collectionName ).post( entity );
+        waitForQueueDrainAndRefreshIndex();
+
+        // testProp and TESTPROP should now have otherValue
+
+        QueryParameters params = new QueryParameters()
+            .setQuery( "select * where testprop='" + escapedValue + "'" );
+        Collection things = this.app().collection(collectionName).get( params );
         assertEquals( 1, things.getNumOfEntities() );
+    }
+
+    @Test
+    public void testStringWithPlus() throws Exception {
+
+        String collectionName = "volleyballs";
+        String value = "ed+test@usergrid.com";
+
+        // create entity with value containing a plus symbol
+        Entity entity = new Entity()
+            .withProp( "testprop", value );
+        app().collection( collectionName ).post( entity );
+        waitForQueueDrainAndRefreshIndex();
+
+        // now query this without encoding the plus symbol
+        QueryParameters params = new QueryParameters()
+            .setQuery( "select * where testprop='" + value + "'" );
+        Collection coll = this.app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
+
+        // again query with the plus symbol url encoded
+        String escapedValue = "ed%2Btest@usergrid.com";
+        params = new QueryParameters()
+            .setQuery( "select * where testprop='" + escapedValue + "'" );
+        coll = this.app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
+
     }
 
 
@@ -105,31 +155,31 @@ public class SelectMappingsQueryTest extends QueryTestBase {
     @Test
     public void testFieldOverride1() throws Exception {
 
-        String collectionName = "things";
+        String collectionName = "pickleballs";
 
         // create entity with testProp=value
         String value = RandomStringUtils.randomAlphabetic( 20 );
         Entity entity = new Entity().withProp( "testProp", value );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // override with TESTPROP=newValue
         String newValue = RandomStringUtils.randomAlphabetic( 20 );
         entity = new Entity().withProp( "TESTPROP", newValue );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // testProp and TESTPROP should new be queryable by new value
 
         QueryParameters params = new QueryParameters()
             .setQuery( "select * where testProp='" + newValue + "'" );
-        Collection things = this.app().collection( "things" ).get( params );
-        assertEquals( 1, things.getNumOfEntities() );
+        Collection coll = this.app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
 
         params = new QueryParameters()
             .setQuery( "select * where TESTPROP='" + newValue + "'" );
-        things = app().collection( "things" ).get( params );
-        assertEquals( 1, things.getNumOfEntities() );
+        coll = app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
     }
 
     /**
@@ -138,31 +188,31 @@ public class SelectMappingsQueryTest extends QueryTestBase {
     @Test
     public void testFieldOverride2() throws Exception {
 
-        String collectionName = "things";
+        String collectionName = "tennisballs";
 
         // create entity with TESTPROP=value
         String value = RandomStringUtils.randomAlphabetic( 20 );
         Entity entity = new Entity().withProp( "TESTPROP", value );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // override with testProp=newValue
         String newValue = RandomStringUtils.randomAlphabetic( 20 );
         entity = new Entity().withProp( "testProp", newValue );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // testProp and TESTPROP should new be queryable by new value
 
         QueryParameters params = new QueryParameters()
             .setQuery( "select * where testProp='" + newValue + "'" );
-        Collection things = this.app().collection( "things" ).get( params );
-        assertEquals( 1, things.getNumOfEntities() );
+        Collection coll = this.app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
 
         params = new QueryParameters()
             .setQuery( "select * where TESTPROP='" + newValue + "'" );
-        things = app().collection( "things" ).get( params );
-        assertEquals( 1, things.getNumOfEntities() );
+        coll = app().collection(collectionName).get( params );
+        assertEquals( 1, coll.getNumOfEntities() );
     }
 
 }

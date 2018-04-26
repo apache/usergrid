@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.index.impl;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.*;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -32,13 +34,17 @@ import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.StringUtils;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder.SearchRequestBuilderStrategyV2;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerEnforcementException;
+import org.apache.usergrid.persistence.index.exceptions.QueryReturnException;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
+import org.apache.usergrid.persistence.index.query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -52,6 +58,8 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
+import org.elasticsearch.action.admin.indices.stats.CommonStats;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -63,6 +71,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
@@ -76,6 +85,7 @@ import rx.Observable;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.applicationId;
@@ -125,6 +135,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private IndexCache aliasCache;
     private Timer mappingTimer;
     private Meter refreshIndexMeter;
+
+
+    private Cache<String, Long> sizeCache =
+        CacheBuilder.newBuilder().maximumSize( 1000 ).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
 
     @Inject
@@ -410,7 +424,19 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     }
 
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                                    final int limit, final int offset ) {
+                                    final int limit, final int offset, final boolean analyzeOnly ) {
+        return search(searchEdge, searchTypes, query, limit, offset, new HashMap<>(0), analyzeOnly);
+    }
+
+    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                                    final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                                    final boolean analyzeOnly ) {
+        return search(searchEdge, searchTypes, query, limit, offset, fieldsWithType, analyzeOnly, false);
+    }
+
+    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                                    final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                                    final boolean analyzeOnly, final boolean returnQuery ) {
 
         IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull(searchTypes, "searchTypes cannot be null");
@@ -422,13 +448,60 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset )
+        if ( parsedQuery == null ){
+            throw new IllegalArgumentException("a null query string cannot be parsed");
+        }
+
+        final QueryVisitor visitor = visitParsedQuery(parsedQuery);
+
+        boolean hasGeoSortPredicates = false;
+
+        for (SortPredicate sortPredicate : parsedQuery.getSortPredicates() ){
+            hasGeoSortPredicates = visitor.getGeoSorts().contains(sortPredicate.getPropertyName());
+        }
+
+        final String cacheKey = applicationScope.getApplication().getUuid().toString()+"_"+searchEdge.getEdgeName();
+        final Object totalEdgeSizeFromCache = sizeCache.getIfPresent(cacheKey);
+        long totalEdgeSizeInBytes;
+        if (totalEdgeSizeFromCache == null){
+            totalEdgeSizeInBytes = getTotalEntitySizeInBytes(searchEdge);
+            sizeCache.put(cacheKey, totalEdgeSizeInBytes);
+        }else{
+            totalEdgeSizeInBytes = (long) totalEdgeSizeFromCache;
+        }
+
+        final Object totalIndexSizeFromCache = sizeCache.getIfPresent(indexLocationStrategy.getIndexRootName());
+        long totalIndexSizeInBytes;
+        if (totalIndexSizeFromCache == null){
+            totalIndexSizeInBytes = getIndexSize();
+            sizeCache.put(indexLocationStrategy.getIndexRootName(), totalIndexSizeInBytes);
+        }else{
+            totalIndexSizeInBytes = (long) totalIndexSizeFromCache;
+        }
+
+        List<Map<String, Object>> violations = QueryAnalyzer.analyze(parsedQuery, totalEdgeSizeInBytes, totalIndexSizeInBytes, indexFig);
+        if(indexFig.enforceQueryBreaker() && violations.size() > 0){
+            throw new QueryAnalyzerEnforcementException(violations, parsedQuery.getOriginalQuery());
+        }else if (violations.size() > 0){
+            logger.warn( QueryAnalyzer.violationsAsString(violations, parsedQuery.getOriginalQuery()) );
+        }
+
+        if(analyzeOnly){
+            throw new QueryAnalyzerException(violations, parsedQuery.getOriginalQuery(), applicationScope.getApplication().getUuid());
+        }
+
+        final SearchRequestBuilder srb = searchRequest
+            .getBuilder( searchEdge, searchTypes, visitor, limit, offset, parsedQuery.getSortPredicates(), fieldsWithType )
             .setTimeout(TimeValue.timeValueMillis(queryTimeout));
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
                 this.alias.getReadAlias(), searchEdge.getNodeId(), searchEdge.getEdgeName(),
                 searchTypes.getTypeNames( applicationScope ), srb );
+        }
+
+        if (returnQuery) {
+            throw new QueryReturnException(parsedQuery.getOriginalQuery(), srb.toString(), applicationScope.getApplication().getUuid());
         }
 
         //Added For Graphite Metrics
@@ -439,7 +512,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             searchResponse = srb.execute().actionGet();
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
+            logger.error( "Unable to communicate with Elasticsearch: {}", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
@@ -449,7 +522,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         failureMonitor.success();
 
-        return parseResults( searchResponse, parsedQuery, limit, offset);
+        return parseResults( searchResponse, parsedQuery, limit, offset, hasGeoSortPredicates);
     }
 
 
@@ -521,68 +594,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     }
 
 
-    @Override
-    public CandidateResults getNodeDocsOlderThanMarked(final Id entityId, final UUID markedVersion ) {
-
-        // TODO: investigate if functionality via iterator so a caller can page the deletion until all is gone
-
-        Preconditions.checkNotNull( entityId, "entityId cannot be null" );
-        Preconditions.checkNotNull(markedVersion, "markedVersion cannot be null");
-        ValidationUtils.verifyVersion(markedVersion);
-
-        SearchResponse searchResponse;
-        List<CandidateResult> candidates = new ArrayList<>();
-
-        final long markedTimestamp = markedVersion.timestamp();
-
-        // never let this fetch more than 100 to save memory
-        final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
-
-        // this query will find all the documents where this entity is a source/target node
-        final QueryBuilder nodeQuery = QueryBuilders
-            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(entityId));
-
-        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
-            .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
-
-        try {
-
-            long queryTimestamp = 0L;
-
-            QueryBuilder timestampQuery =  QueryBuilders
-                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
-                .gte(queryTimestamp)
-                .lt(markedTimestamp);
-
-            QueryBuilder finalQuery = QueryBuilders.constantScoreQuery(
-                QueryBuilders
-                    .boolQuery()
-                    .must(timestampQuery)
-                    .must(nodeQuery)
-            );
-
-
-            searchResponse = srb
-                .setQuery(finalQuery)
-                .setSize(searchLimit)
-                .execute()
-                .actionGet();
-
-
-            candidates = aggregateScrollResults(candidates, searchResponse, markedVersion);
-
-        }
-        catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
-            failureMonitor.fail( "Unable to execute batch", t );
-            throw t;
-        }
-        failureMonitor.success();
-
-        return new CandidateResults( candidates, Collections.EMPTY_SET);
-    }
-
-
     /**
      * Completely delete an index.
      */
@@ -636,7 +647,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
      * Parse the results and return the canddiate results
      */
     private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
-                                           final int limit, final int from ) {
+                                           final int limit, final int from, boolean hasGeoSortPredicates ) {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
@@ -647,12 +658,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
-
-
         for ( SearchHit hit : hits ) {
             CandidateResult candidateResult;
 
-            candidateResult =  parseIndexDocId( hit, query.isGeoQuery() );
+            candidateResult =  parseIndexDocId( hit, hasGeoSortPredicates );
             candidates.add( candidateResult );
         }
 
@@ -743,6 +752,26 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
     /**
+     * Perform our visit of the query once for efficiency
+     */
+    private QueryVisitor visitParsedQuery( final ParsedQuery parsedQuery ) {
+        QueryVisitor v = new EsQueryVistor();
+
+        if ( parsedQuery.getRootOperand() != null ) {
+
+            try {
+                parsedQuery.getRootOperand().visit( v );
+            }
+            catch ( IndexException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+        }
+
+        return v;
+    }
+
+
+    /**
      * Check health of cluster.
      */
     @Override
@@ -754,6 +783,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
+            ex.printStackTrace();
             logger.error( "Error connecting to ElasticSearch", ex.getMessage() );
         }
 
@@ -785,9 +815,30 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return Health.RED;
     }
 
+    private long getIndexSize(){
+        long indexSize = 0L;
+        final String indexName = indexLocationStrategy.getIndexInitialName();
+        try {
+            final IndicesStatsResponse statsResponse = esProvider.getClient()
+                .admin()
+                .indices()
+                .prepareStats(indexName)
+                .all()
+                .execute()
+                .actionGet();
+            final CommonStats indexStats = statsResponse.getIndex(indexName).getTotal();
+            indexSize = indexStats.getStore().getSizeInBytes();
+        } catch (IndexMissingException e) {
+            // if for some reason the index size does not exist,
+            // log an error and we can assume size is 0 as it doesn't exist
+            logger.error("Unable to get size for index {} due to IndexMissingException for app {}",
+                indexName, indexLocationStrategy.getApplicationScope().getApplication().getUuid());
+        }
+        return indexSize;
+    }
 
     @Override
-    public long getEntitySize(final SearchEdge edge){
+    public long getTotalEntitySizeInBytes(final SearchEdge edge){
         //"term":{"edgeName":"zzzcollzzz|roles"}
         SearchRequestBuilder builder = searchRequestBuilderStrategyV2.getBuilder();
         builder.setQuery(new TermQueryBuilder("edgeSearch",IndexingUtils.createContextName(applicationScope,edge)));
@@ -817,7 +868,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public int getImplementationVersion() {
         return IndexDataVersions.SINGLE_INDEX.getVersion();
     }
-
 
 
     /**

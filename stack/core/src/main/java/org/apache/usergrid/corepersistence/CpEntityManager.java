@@ -34,6 +34,7 @@ import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
+import org.apache.usergrid.corepersistence.util.CpCollectionUtils;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.mq.QueueManager;
@@ -68,6 +69,7 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.mq.Message;
+import org.apache.usergrid.persistence.queue.settings.QueueIndexingStrategy;
 import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,7 +162,6 @@ public class CpEntityManager implements EntityManager {
     private EntityCollectionManager ecm;
 
     public QueueManagerFactory queueManagerFactory;
-
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
@@ -521,6 +522,10 @@ public class CpEntityManager implements EntityManager {
 
         cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
 
+        String entityType = cpEntity.getId().getType();
+        boolean skipIndexingForType = skipIndexingForType(entityType);
+        QueueIndexingStrategy queueIndexingStrategy = getIndexingStrategyForType(entityType);
+
         try {
 
             String region = lookupAuthoritativeRegionForType( entity.getType() );
@@ -546,38 +551,31 @@ public class CpEntityManager implements EntityManager {
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
-        if ( !skipIndexingForType( cpEntity.getId().getType() ) ) {
-
-            // queue an event to update the new entity
-            indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 );
-
-            // queue up an event to clean-up older versions than this one from the index
-            if (entityManagerFig.getDeindexOnUpdate()) {
-                indexService.queueDeIndexOldVersion( applicationScope, cpEntity.getId(), cpEntity.getVersion());
-            }
+        if (!skipIndexingForType) {
+            indexEntity(cpEntity, queueIndexingStrategy);
+            deIndexOldVersionsOfEntity(cpEntity);
         }
     }
 
-    private boolean skipIndexingForType( String type ) {
+    private void indexEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity, QueueIndexingStrategy queueIndexingStrategy) {
+        // queue an event to update the new entity
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , queueIndexingStrategy);
+    }
 
-        boolean skipIndexing = false;
-        String collectionName = Schema.defaultCollectionName( type );
-
-
-        CollectionSettings collectionSettings = collectionSettingsFactory
-            .getInstance( new CollectionSettingsScopeImpl(getAppIdObject(), collectionName) );
-        Optional<Map<String, Object>> existingSettings =
-            collectionSettings.getCollectionSettings( collectionName );
-
-        if ( existingSettings.isPresent()) {
-            Map jsonMapData = existingSettings.get();
-            Object fields = jsonMapData.get("fields");
-            if ( fields != null && "none".equalsIgnoreCase( fields.toString() ) ) {
-                skipIndexing = true;
-            }
+    private void deIndexOldVersionsOfEntity(org.apache.usergrid.persistence.model.entity.Entity cpEntity) {
+        // queue up an event to clean-up older versions than this one from the index
+        if (entityManagerFig.getDeindexOnUpdate()) {
+            indexService.queueDeIndexOldVersion( applicationScope, cpEntity.getId(), cpEntity.getVersion());
         }
+    }
 
-        return skipIndexing;
+    private QueueIndexingStrategy getIndexingStrategyForType(String type ) {
+        return CpCollectionUtils.getIndexingStrategyForType(collectionSettingsFactory, applicationId, type);
+    }
+
+
+    private boolean skipIndexingForType( String type ) {
+        return CpCollectionUtils.skipIndexingForType(collectionSettingsFactory, applicationId, type);
     }
 
 
@@ -1153,7 +1151,7 @@ public class CpEntityManager implements EntityManager {
         //Adding graphite metrics
 
         if ( !skipIndexingForType( cpEntity.getId().getType() ) ) {
-            indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 );
+            indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 , null);
         }
     }
 
@@ -1813,9 +1811,11 @@ public class CpEntityManager implements EntityManager {
             updatedSettings.put( "lastReindexed", 0 );
         }
 
-        // if fields specified, then put in settings
-        if ( newSettings.get("fields") != null ) {
-            updatedSettings.put("fields", newSettings.get("fields"));
+        for (String validName : CpCollectionUtils.getValidSettings()) {
+            if (newSettings.containsKey(validName)) {
+                Object value = CpCollectionUtils.validateValue(validName, newSettings.get(validName));
+                updatedSettings.put(validName, value);
+            }
         }
 
         // if region specified
@@ -2471,10 +2471,9 @@ public class CpEntityManager implements EntityManager {
 
         final Entity entity;
 
-        //this is the fall back, why isn't this writt
         if ( entityType == null ) {
              return null;
-//            throw new EntityNotFoundException( String.format( "Counld not find type for uuid {}", uuid ) );
+//            throw new EntityNotFoundException( String.format( "Could not find type for uuid {}", uuid ) );
         }
 
         entity = get( new SimpleEntityRef( entityType, uuid ) );
@@ -2855,14 +2854,8 @@ public class CpEntityManager implements EntityManager {
         entity.setProperties( cpEntity );
 
         // add to and index in collection of the application
-        if ( !is_application ) {
-
-            String collectionName = Schema.defaultCollectionName( eType );
-            CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
-            cpr.addToCollection( collectionName, entity );
-
-            // Invoke counters
-            incrementEntityCollection( collectionName, timestamp );
+        if ( !is_application) {
+            updateIndexForEntity(eType, entity, timestamp);
         }
 
         //write to our types map
@@ -2872,6 +2865,14 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
+    private <A extends Entity> void updateIndexForEntity(String eType, A entity, long timestamp) throws Exception {
+        String collectionName = Schema.defaultCollectionName( eType );
+        CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
+        cpr.addToCollection( collectionName, entity );
+
+        // Invoke counters
+        incrementEntityCollection( collectionName, timestamp );
+    }
 
     private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
         try {
@@ -3089,52 +3090,16 @@ public class CpEntityManager implements EntityManager {
         managerCache.getEntityIndex(applicationScope).addIndex(newIndexName, shards, replicas, writeConsistency);
     }
 
+
     @Override
     public void initializeIndex(){
         managerCache.getEntityIndex(applicationScope).initialize();
     }
-    /**
-     * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
-     */
+
+
     public EntityIndex.IndexRefreshCommandInfo refreshIndex() {
         try {
-            long start = System.currentTimeMillis();
-            // refresh special indexes without calling EntityManager refresh because stack overflow
-            Map<String, Object> map = new org.apache.usergrid.persistence.index.utils.MapUtils.HashMapBuilder<>();
-            map.put("some prop", "test");
-            boolean hasFinished = false;
-            Entity refreshEntity = create("refresh", map);
-            EntityIndex.IndexRefreshCommandInfo indexRefreshCommandInfo
-                = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
-
-            try {
-                for (int i = 0; i < 20; i++) {
-                    if (searchCollection(
-                        new SimpleEntityRef(
-                            org.apache.usergrid.persistence.entities.Application.ENTITY_TYPE, getApplicationId()),
-                        InflectionUtils.pluralize("refresh"),
-                        Query.fromQL("select * where uuid='" + refreshEntity.getUuid() + "'")
-                    ).size() > 0
-                        ) {
-                        hasFinished = true;
-                        break;
-                    }
-                    int sleepTime = 500;
-                    logger.info("Sleeping {} ms during refreshIndex", sleepTime);
-                    Thread.sleep(sleepTime);
-
-                    indexRefreshCommandInfo
-                        = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
-                }
-                if(!hasFinished){
-                    throw new RuntimeException("Did not find entity {} during refresh. uuid->"+refreshEntity.getUuid());
-                }
-            }finally {
-                delete(refreshEntity);
-            }
-            Thread.sleep(100);
-
-            return indexRefreshCommandInfo;
+            return managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
         } catch (Exception e) {
             throw new RuntimeException("refresh failed",e);
         }

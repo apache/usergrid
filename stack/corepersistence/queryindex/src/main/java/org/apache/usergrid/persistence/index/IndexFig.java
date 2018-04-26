@@ -62,6 +62,19 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_VERSION_QUERY_LIMIT = "elasticsearch.version_query_limit";
 
+    String USERGRID_QUERYANALYZER_OPERAND_COUNT = "usergrid.queryanalyzer.operand_count";
+
+    String USERGRID_QUERYANALYZER_SORTPREDICATE_COUNT = "usergrid.queryanalyzer.sortpredicate_count";
+
+    String USERGRID_QUERYANALYZER_COLLECTIONSIZE = "usergrid.queryanalyzer.collectionsize_bytes";
+
+    String USERGRID_QUERYANALYZER_INDEXSIZE = "usergrid.queryanalyzer.indexsize_bytes";
+
+    String USERGRID_QUERYANALYZER_ENFORCE = "usergrid.queryanalyzer.enforce";
+
+
+
+
 
     /**
      * Comma-separated list of Elasticsearch hosts.
@@ -196,7 +209,33 @@ public interface IndexFig extends GuicyFig {
     @Key( "elasticsearch_queue_error_sleep_ms" )
     long getSleepTimeForQueueError();
 
+
     @Default("100")
     @Key( ELASTICSEARCH_VERSION_QUERY_LIMIT )
     int getVersionQueryLimit();
+
+
+    @Default("8")
+    @Key( USERGRID_QUERYANALYZER_OPERAND_COUNT )
+    int getQueryBreakerErrorOperandCount();
+
+
+    @Default("8")
+    @Key( USERGRID_QUERYANALYZER_SORTPREDICATE_COUNT )
+    int getQueryBreakerErrorSortPredicateCount();
+
+
+    @Default("500000000") // 500 MB
+    @Key(USERGRID_QUERYANALYZER_COLLECTIONSIZE)
+    long getQueryBreakerErrorCollectionSizeBytes();
+
+
+    @Default("10000000000") // 10 GB
+    @Key( USERGRID_QUERYANALYZER_INDEXSIZE )
+    long getQueryBreakerErrorIndexSizeBytes();
+
+
+    @Default("false")
+    @Key( USERGRID_QUERYANALYZER_ENFORCE )
+    boolean enforceQueryBreaker();
 }
