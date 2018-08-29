@@ -154,12 +154,12 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex(builder);
 
-        assertNotNull(status.getJobId(), "JobId is present");
+        assertNotNull(status.getCollectionName(), "Collection name is present");
 
         logger.info("Rebuilt index");
 
 
-        waitForRebuild(status, reIndexService);
+        waitForRebuild(em.getApplicationId().toString(), status.getCollectionName(), reIndexService);
 
         //app.waitForQueueDrainAndRefreshIndex(15000);
 
@@ -279,7 +279,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
             logger.info("Rebuilt index, jobID={}", status.getJobId());
 
 
-            waitForRebuild(status, reIndexService);
+            waitForRebuild(status.getJobId(), reIndexService);
 
 
             logger.info("Rebuilt index");
@@ -387,7 +387,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
             logger.info("Rebuilt index");
 
-            waitForRebuild(status, reIndexService);
+            waitForRebuild(status.getJobId(), reIndexService);
 
             logger.info("Rebuilt index");
 
@@ -486,7 +486,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
             logger.info("Rebuilt index");
 
-            waitForRebuild(status, reIndexService);
+            waitForRebuild(status.getJobId(), reIndexService);
 
             logger.info("Rebuilt index");
 
@@ -505,18 +505,53 @@ public class RebuildIndexTest extends AbstractCoreIT {
     /**
      * Wait for the rebuild to occur
      */
-    private void waitForRebuild(final ReIndexService.ReIndexStatus status, final ReIndexService reIndexService)
+    private void waitForRebuild(final String jobId, final ReIndexService reIndexService)
         throws InterruptedException, IllegalArgumentException {
-        if (status != null) {
-            logger.info("waitForRebuild: jobID={}", status.getJobId());
+        if (jobId != null && !jobId.trim().equals("")) {
+            logger.info("waitForRebuild: jobID={}", jobId);
         } else {
-            logger.info("waitForRebuild: error, status = null");
-            throw new IllegalArgumentException("reindexStatus = null");
+            logger.info("waitForRebuild: error, jobId = null or empty");
+            throw new IllegalArgumentException("jobId = null or empty");
         }
         while (true) {
 
             try {
-                final ReIndexService.ReIndexStatus updatedStatus = reIndexService.getStatus(status.getJobId());
+                final ReIndexService.ReIndexStatus updatedStatus = reIndexService.getStatus(jobId);
+
+                if (updatedStatus == null) {
+                    logger.info("waitForRebuild: updated status is null");
+                } else {
+                    logger.info("waitForRebuild: status={} numberProcessed={}", updatedStatus.getStatus().toString(), updatedStatus.getNumberProcessed());
+
+                    if (updatedStatus.getStatus() == ReIndexService.Status.COMPLETE) {
+                        break;
+                    }
+                }
+            } catch (IllegalArgumentException iae) {
+                //swallow.  Thrown if our job can't be found.  I.E hasn't updated yet
+            }
+
+
+            Thread.sleep(1000);
+        }
+    }
+    
+    
+    /**
+     * Wait for the rebuild to occur
+     */
+    private void waitForRebuild(final String appId, final String collectionName, final ReIndexService reIndexService)
+        throws InterruptedException, IllegalArgumentException {
+        if (appId != null && !appId.trim().equals("") && collectionName != null && !collectionName.trim().equals("")) {
+            logger.info("waitForRebuild: appId={} collName={}", appId, collectionName);
+        } else {
+            logger.info("waitForRebuild: error, appId or collName = null or empty");
+            throw new IllegalArgumentException("appId or collName = null or empty");
+        }
+        while (true) {
+
+            try {
+                final ReIndexService.ReIndexStatus updatedStatus = reIndexService.getStatusForCollection(appId, collectionName);
 
                 if (updatedStatus == null) {
                     logger.info("waitForRebuild: updated status is null");
