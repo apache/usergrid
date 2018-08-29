@@ -681,9 +681,9 @@ public class GrammarTreeTest {
         }
 
         assertEquals(
-                "NoViableAltException('!'@[1:1: Tokens : ( T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | "
-                        + "T__38 | T__39 | T__40 | LT | LTE | EQ | GT | GTE | BOOLEAN | AND | OR | NOT | ASC | DESC |"
-                        + " CONTAINS | WITHIN | OF | UUID | ID | LONG | FLOAT | STRING | WS );])",
+                "NoViableAltException('!'@[1:1: Tokens : ( T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 |"
+		+" T__41 | LT | LTE | EQ | GT | GTE | BOOLEAN | AND | OR | NOT | ASC | DESC | CONTAINS | WITHIN | OF | DIRECT |"
+		+" UUID | ID | LONG | FLOAT | STRING | WS );])",
                 error );
     }
 }
