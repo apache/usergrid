@@ -120,6 +120,7 @@ public class NewOrgAppAdminRule implements TestRule {
      * Create the org admin and application
      */
     protected void before( Description description ) throws Exception {
+    	logger.info( "Test {}: Starting with application", description.getDisplayName() );
         final String className = description.getClassName();
         final String methodName = description.getMethodName();
         final String uuidString = newUUIDString();
