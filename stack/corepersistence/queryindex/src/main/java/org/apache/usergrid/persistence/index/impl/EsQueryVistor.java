@@ -19,44 +19,21 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.Stack;
-import java.util.UUID;
-
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
+import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
+import org.apache.usergrid.persistence.index.query.tree.*;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
-import org.elasticsearch.index.query.BoolFilterBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.NestedFilterBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeFilterBuilder;
-import org.elasticsearch.index.query.TermFilterBuilder;
-import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
-import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
-import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
-import org.apache.usergrid.persistence.index.query.tree.AndOperand;
-import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.index.query.tree.Equal;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.LessThan;
-import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.NotOperand;
-import org.apache.usergrid.persistence.index.query.tree.OrOperand;
-import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
-import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
-
-import com.google.common.base.Optional;
+import java.util.Stack;
+import java.util.UUID;
 
 import static org.apache.usergrid.persistence.index.impl.SortBuilder.sortPropertyTermFilter;
 
@@ -264,21 +241,19 @@ public class EsQueryVistor implements QueryVisitor {
 
         // or field is just a string that does need a prefix
         if ( value.indexOf( "*" ) != -1 ) {
+
             final WildcardQueryBuilder wildcardQuery =
-                    QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED, value );
-            queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
+                QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED, value );
+            final QueryFilterBuilder wildcardFilter = FilterBuilders.queryFilter(fieldNameTerm( name, wildcardQuery ));
+            filterBuilders.push( wildcardFilter);
         }
         else {
             final MatchQueryBuilder termQuery = QueryBuilders.matchQuery( IndexingUtils.FIELD_STRING_NESTED, value );
+            final QueryFilterBuilder wildcardFilter = FilterBuilders.queryFilter(fieldNameTerm( name, termQuery ));
+            filterBuilders.push( wildcardFilter);
 
-            queryBuilders.push( fieldNameTerm( name, termQuery ) );
         }
-
-
-        //no op for filters, push an empty operation
-
-        //TODO, validate this works
-        filterBuilders.push( NoOpFilterBuilder.INSTANCE );
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
 
 
@@ -370,10 +345,14 @@ public class EsQueryVistor implements QueryVisitor {
 
                 //Because of our legacy behavior, where we match CCCC*, we need to use the unanalyzed string to ensure that
                 //we start
+
+
                 final WildcardQueryBuilder wildcardQuery =
                         QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, stringValue );
-                queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
-                filterBuilders.push( NoOpFilterBuilder.INSTANCE );
+
+                final QueryFilterBuilder wildcardFilter = FilterBuilders.queryFilter(fieldNameTerm( name, wildcardQuery ));
+                filterBuilders.push( wildcardFilter);
+                queryBuilders.push( NoOpQueryBuilder.INSTANCE );
                 return;
             }
 
