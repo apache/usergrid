@@ -59,6 +59,8 @@ import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import static org.apache.usergrid.TestHelper.newUUIDString;
 import static org.apache.usergrid.TestHelper.uniqueApp;
 import static org.apache.usergrid.TestHelper.uniqueOrg;
@@ -74,6 +76,7 @@ import static org.mockito.Mockito.when;
  *
  *
  */
+@NotThreadSafe
 public class ExportServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ExportServiceIT.class );

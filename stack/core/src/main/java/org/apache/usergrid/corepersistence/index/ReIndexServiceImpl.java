@@ -202,7 +202,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             .subscribeOn( Schedulers.io() ).subscribe();
 
         if(isForCollection){
-            return new ReIndexStatus( "", Status.STARTED, 0, 0, reIndexRequestBuilder.getCollectionName().get() );
+            return new ReIndexStatus( "", Status.STARTED, 0, 0, CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get()) );
 
         }
 
@@ -365,21 +365,23 @@ public class ReIndexServiceImpl implements ReIndexService {
     private void writeStateMetaForCollection(final String appIdString, final String collectionName,
                                              final Status status, final long processedCount, final long lastUpdated ) {
 
-        if(logger.isDebugEnabled()) {
+    	String prefixedColName = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName.toLowerCase() );
+    	if(logger.isDebugEnabled()) {
             logger.debug( "Flushing state for collection {}, status {}, processedCount {}, lastUpdated {}",
-                collectionName, status, processedCount, lastUpdated);
+            		collectionName, status, processedCount, lastUpdated);
         }
 
-        mapManager.putString( appIdString + MAP_SEPARATOR + collectionName + MAP_STATUS_KEY, status.name() );
-        mapManager.putLong( appIdString + MAP_SEPARATOR + collectionName + MAP_COUNT_KEY, processedCount );
-        mapManager.putLong( appIdString + MAP_SEPARATOR + collectionName + MAP_UPDATED_KEY, lastUpdated );
+        mapManager.putString( appIdString + MAP_SEPARATOR + prefixedColName + MAP_STATUS_KEY, status.name() );
+        mapManager.putLong( appIdString + MAP_SEPARATOR + prefixedColName + MAP_COUNT_KEY, processedCount );
+        mapManager.putLong( appIdString + MAP_SEPARATOR + prefixedColName + MAP_UPDATED_KEY, lastUpdated );
     }
 
 
     private ReIndexStatus getIndexResponseForCollection( final String appIdString, final String collectionName ) {
 
-        final String stringStatus =
-            mapManager.getString( appIdString + MAP_SEPARATOR + collectionName + MAP_STATUS_KEY );
+        String prefixedColName = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName.toLowerCase() );
+    	final String stringStatus =
+            mapManager.getString( appIdString + MAP_SEPARATOR + prefixedColName + MAP_STATUS_KEY );
 
         if(stringStatus == null){
             return new ReIndexStatus( "", Status.UNKNOWN, 0, 0, collectionName );
@@ -387,8 +389,8 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         final Status status = Status.valueOf( stringStatus );
 
-        final long processedCount = mapManager.getLong( appIdString + MAP_SEPARATOR + collectionName + MAP_COUNT_KEY );
-        final long lastUpdated = mapManager.getLong( appIdString + MAP_SEPARATOR + collectionName + MAP_UPDATED_KEY );
+        final long processedCount = mapManager.getLong( appIdString + MAP_SEPARATOR + prefixedColName + MAP_COUNT_KEY );
+        final long lastUpdated = mapManager.getLong( appIdString + MAP_SEPARATOR + prefixedColName + MAP_UPDATED_KEY );
 
         return new ReIndexStatus( "", status, processedCount, lastUpdated, collectionName );
     }

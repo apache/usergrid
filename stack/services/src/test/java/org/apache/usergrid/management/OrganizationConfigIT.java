@@ -32,12 +32,14 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import java.util.*;
 
 import static org.apache.usergrid.TestHelper.*;
 import static org.junit.Assert.*;
 
-
+@NotThreadSafe
 public class OrganizationConfigIT {
 
     @Rule

@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
+import org.apache.usergrid.corepersistence.index.ReIndexService.Status;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -68,35 +69,51 @@ public class IndexResourceIT extends AbstractRestIT {
             .get(clientSetup.getSuperuserName(),clientSetup.getSuperuserPassword());
 
         QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "access_token",superUserToken.getAccessToken());
+        queryParameters.addParam("access_token", superUserToken.getAccessToken());
         ApiResponse result = clientSetup.getRestClient()
-            .pathResource( "system/index/rebuild/" + clientSetup.getAppUuid() + "/StOrElaTloNs" )
-            .post( false, ApiResponse.class, null, queryParameters, true );
+            .pathResource("system/index/rebuild/" + clientSetup.getAppUuid() + "/StOrElaTloNs")
+            .post(false, ApiResponse.class, null, queryParameters, true);
 
         assertNotNull(result);
+        assertEquals(Status.STARTED.name(), result.getStatus());
 
         //try the reindex endpoint with all lowercase Characters
         queryParameters = new QueryParameters();
-        queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        queryParameters.addParam("access_token", superUserToken.getAccessToken());
         result = clientSetup.getRestClient()
-            .pathResource( "system/index/rebuild/"+clientSetup.getAppUuid()+"/storelatlons" )
-            .post( false, ApiResponse.class,null,queryParameters,true);
-        String status = result.getProperties().get("jobId").toString();
-
-        assertNotNull( result );
+            .pathResource("system/index/rebuild/" + clientSetup.getAppUuid() + "/storelatlons")
+            .post(false, ApiResponse.class, null, queryParameters, true);
+        
+        assertNotNull(result);
+        //at this point, this could return a result of the previous reindex, or if it has completed, it will create a new job
+        assertNotEquals(Status.UNKNOWN.name(), result.getStatus());
 
         WebTarget res = clientSetup.getRestClient()
-            .pathResource( "system/index/rebuild/" + result.getProperties()
-                .get( "jobId" ).toString() )
+            .pathResource("system/index/rebuild/" + clientSetup.getAppUuid() + "/storelatlons")
             .getTarget();
 
         HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
             .credentials( "superuser", "superpassword" ).build();
 
         result = res.register( feature ).request().get( ApiResponse.class );
-
-        assertNotNull( result );
-        assertEquals(status,result.getProperties().get("jobId").toString());
+        assertNotNull(result);
+        
+        int retry = 0;
+        while(retry < 5 && !result.getStatus().equals(Status.COMPLETE.name())) {
+        	try {
+        		//hope reindex completes, if not, that's still ok
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				
+			}
+        	result = res.register( feature ).request().get( ApiResponse.class );
+        	retry++;
+        	assertNotNull(result);
+        }
+        
+        Map<String, Object> resultMap = result.getProperties();
+        assertNotNull( resultMap );
+        assertEquals(1,resultMap.get("numberQueued"));
 
 
     }
