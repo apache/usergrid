@@ -97,7 +97,7 @@ public interface ReIndexService {
         }
 
         /**
-         * Get the jobId used to resume this operation
+         * Get the collectionName used to resume this operation
          */
         public String getCollectionName() {
             return collectionName;
