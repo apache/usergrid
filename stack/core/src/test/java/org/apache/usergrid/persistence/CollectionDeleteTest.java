@@ -17,33 +17,31 @@
 package org.apache.usergrid.persistence;
 
 
-import com.codahale.metrics.MetricRegistry;
-import com.google.inject.Injector;
-import net.jcip.annotations.NotThreadSafe;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.corepersistence.index.*;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.corepersistence.index.CollectionDeleteRequestBuilder;
+import org.apache.usergrid.corepersistence.index.CollectionDeleteService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-
-import static org.junit.Assert.*;
+import com.codahale.metrics.MetricRegistry;
 
 
-@NotThreadSafe
-@Ignore("fix later")
+
 public class CollectionDeleteTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( CollectionDeleteTest.class );
 
@@ -201,9 +199,10 @@ public class CollectionDeleteTest extends AbstractCoreIT {
 
     private int retryReadData(EntityManager em, String collectionName, int expectedEntities,  int retry) throws Exception {
         int count = -1;
+        Set<Entity> uniqueRemEnts = new HashSet<Entity>();
         do {
             try {
-                count = readData(em, collectionName, expectedEntities);
+                count = readData(em, collectionName, expectedEntities, uniqueRemEnts);
             } catch (Exception ignore) {
                 logger.info( "caught exception ", ignore);
             }
@@ -213,7 +212,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
         return count;
     }
 
-    private int readData(EntityManager em, String collectionName, int expectedEntities)
+    private int readData(EntityManager em, String collectionName, int expectedEntities, Set<Entity> uniqueRemEnts)
         throws Exception {
 
         app.waitForQueueDrainAndRefreshIndex();
@@ -221,45 +220,44 @@ public class CollectionDeleteTest extends AbstractCoreIT {
         Results results = em.getCollection(em.getApplicationRef(), collectionName, null, expectedEntities,
             Query.Level.ALL_PROPERTIES, false);
 
-        int count = 0;
-        List<Entity> list = new ArrayList<>();
+        
         while ( true ) {
 
             if (results.getEntities().size() == 0) {
                 break;
             }
+            
 
             UUID lastEntityUUID = null;
             for ( Entity e : results.getEntities() ) {
 
                 assertEquals(2000, e.getProperty("key2"));
 
-                if (count % 100 == 0) {
-                    logger.info("read {} entities", count);
+                if (uniqueRemEnts.size() % 100 == 0) {
+                    logger.info("read {} entities", uniqueRemEnts.size());
                 }
                 lastEntityUUID = e.getUuid();
-                count++;
-                list.add(e);
+                uniqueRemEnts.add(e);
+                logger.info("Found remaining entity {}", lastEntityUUID);
             }
 
             results = em.getCollection(em.getApplicationRef(), collectionName, lastEntityUUID, expectedEntities,
                 Query.Level.ALL_PROPERTIES, false);
 
         }
-        logger.info("read {} total entities", count);
 
-        if (count != expectedEntities) {
-            logger.info("Expected {} did not match actual {}", expectedEntities, count);
-            if (count < 20) {
-                for (Entity e : list) {
+        if (uniqueRemEnts.size() != expectedEntities) {
+            logger.info("Expected {} did not match actual {}", expectedEntities, uniqueRemEnts.size());
+            if (uniqueRemEnts.size() < 20) {
+                for (Entity e : uniqueRemEnts) {
                     Object key = e.getProperty("key2");
-                    logger.info("Entity key {} ceated {}", key, e.getCreated());
+                    logger.info("Entity key {} uuid {} created {}", key,e.getUuid(), e.getCreated());
                 }
             }
         }
 
-        assertEquals( "Did not get expected entities", expectedEntities, count );
-        return count;
+        assertEquals( "Did not get expected entities", expectedEntities, uniqueRemEnts.size() );
+        return uniqueRemEnts.size();
     }
 
     private int countEntities( EntityManager em, String collectionName, int expectedEntities)
