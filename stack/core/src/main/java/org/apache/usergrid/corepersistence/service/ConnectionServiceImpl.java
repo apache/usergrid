@@ -84,8 +84,11 @@ public class ConnectionServiceImpl implements ConnectionService {
         final Optional<String> query = search.getQuery();
 
         final IdBuilder pipelineBuilder =
-            pipelineBuilderFactory.create( search.getApplicationScope() ).withCursor( search.getCursor() )
-                                  .withLimit( search.getLimit() ).fromId( search.getSourceNodeId() );
+            pipelineBuilderFactory.create( search.getApplicationScope() )
+            	.withCursor( search.getCursor() )
+            	.withLimit( search.getLimit() )
+            	.query(query)
+            	.fromId( search.getSourceNodeId() );
 
 
         //we want to load all entities

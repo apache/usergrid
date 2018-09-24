@@ -27,6 +27,7 @@ import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.DistanceField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
@@ -103,7 +104,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
         boolean keepStaleEntries = pipelineContext.getKeepStaleEntries();
         String query = pipelineContext.getQuery();
-        boolean isDirectQuery = pipelineContext.getParsedQuery().isDirectQuery();
+        ParsedQuery parsedQuery = pipelineContext.getParsedQuery();
+        boolean isDirectQuery = parsedQuery == null ? false : parsedQuery.isDirectQuery();
 
         //buffer them to get a page size we can make 1 network hop
         final Observable<FilterResult<Entity>> searchIdSetObservable =
