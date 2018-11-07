@@ -71,9 +71,11 @@ public abstract class ToolBase {
     protected CassandraService cass;
 
     protected Injector injector;
-
-
-
+    
+    protected static final String AWS_KEY = "awsKey";
+    protected static final String AWS_ID = "awsId";
+    protected static final String BINARY_BUCKET_NAME = "bucketName";
+    protected static final String STORE_TYPE = "storeType";
 
     public void startTool( String[] args ) {
         startTool( args, true );
@@ -93,6 +95,15 @@ public abstract class ToolBase {
         if ( line == null ) {
             return;
         }
+        
+        
+        try {
+            validateOptions(line);
+        }
+        catch ( MissingOptionException exp ) {
+            printCliHelp( "Required or dependent options are missing.  Reason: " + exp.getMessage() );
+        }
+        
 
         // notification queue listener not needed for tools
         System.setProperty("usergrid.notifications.listener.run", "false");
@@ -127,6 +138,21 @@ public abstract class ToolBase {
             System.setProperty( "cassandra.lock.keyspace", line.getOptionValue( "lockskeyspace" ) );
         }
 
+        if(line.hasOption(AWS_ID)) {
+        	System.setProperty("AWS_ACCESS_KEY_ID", line.getOptionValue( AWS_ID ));
+        }
+        
+        if(line.hasOption(AWS_KEY)) {
+        	System.setProperty("AWS_SECRET_KEY", line.getOptionValue( AWS_KEY ));
+        }
+       
+        if(line.hasOption(BINARY_BUCKET_NAME)) {
+        	System.setProperty("usergrid.binary.bucketname", line.getOptionValue( BINARY_BUCKET_NAME ));
+        }
+        
+        if(line.hasOption( STORE_TYPE )) {
+        	System.setProperty("usergrid.binary.uploader", line.getOptionValue( STORE_TYPE ));
+        }
 
         try {
             runTool( line );
@@ -192,6 +218,11 @@ public abstract class ToolBase {
         options.addOption( verbose );
 
         return options;
+    }
+    
+    
+    protected void validateOptions(CommandLine line) throws MissingOptionException {
+    	
     }
 
 
@@ -304,7 +335,10 @@ public abstract class ToolBase {
             "   cassandra.connections: {}\n" +
             "   usergrid.notifications.listener.run: {}\n" +
             "   usergrid.push.worker_count: {}\n" +
-            "   usergrid.scheduler.enabled: {}\n",
+            "   usergrid.scheduler.enabled: {}\n" +
+            "   cassandra.readcl: {}\n" +
+            "   usergrid.read.cl: {}\n" +
+            "   usergrid.binary.uploader: {}\n",
             properties.get("cassandra.url"),
             properties.get("cassandra.datacenter.local"),
             properties.get("cassandra.username"),
@@ -316,7 +350,11 @@ public abstract class ToolBase {
             properties.get("cassandra.connections"),
             properties.get("usergrid.notifications.listener.run"),
             properties.get("usergrid.push.worker_count"),
-            properties.get("usergrid.scheduler.enabled")
+            properties.get("usergrid.scheduler.enabled"),
+            properties.get("cassandra.readcl"),
+            properties.get("usergrid.read.cl"),
+            properties.get("usergrid.binary.uploader")
+            
         );
     }
 
