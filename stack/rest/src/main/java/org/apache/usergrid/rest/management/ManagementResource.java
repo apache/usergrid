@@ -189,6 +189,9 @@ public class ManagementResource extends AbstractContextResource {
         final boolean ssoEnabled = Boolean.parseBoolean(properties.getProperty(USERGRID_EXTERNAL_SSO_ENABLED));
         long tokenTtl;
 
+        //@TODO - This code takes the access token from the principal in the cache instead of using the sesssion token.
+        //The token needs to be taken from the thread context instead to ensure that the correct token for the session is used
+      
         PrincipalIdentifier userPrincipal  = (PrincipalIdentifier) SecurityUtils.getSubject().getPrincipal();
         if ( userPrincipal != null && userPrincipal.getAccessTokenCredentials() != null ) {
             this.access_token = userPrincipal.getAccessTokenCredentials().getToken();
