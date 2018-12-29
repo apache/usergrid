@@ -94,7 +94,7 @@ module.exports = function(grunt) {
           mangle: false,
           compress: false,
           beautify: true,
-          wrap: true
+          wrap: false
         },
         files: {
           'js/generated/usergrid-dev.js': [
