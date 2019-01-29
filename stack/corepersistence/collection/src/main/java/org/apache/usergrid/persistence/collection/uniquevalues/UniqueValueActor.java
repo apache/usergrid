@@ -38,14 +38,17 @@ public class UniqueValueActor extends UntypedActor {
     private final ActorSystemManager actorSystemManager;
 
     private final UniqueValuesTable table;
+    
+    private final UniqueValuesFig uniqueValuesFig;
 
     private int count = 0;
 
 
     @Inject
-    public UniqueValueActor( UniqueValuesTable table, ActorSystemManager actorSystemManager ) {
+    public UniqueValueActor( UniqueValuesTable table, ActorSystemManager actorSystemManager, UniqueValuesFig uniqueValuesFig) {
 
-        this.table = table;
+        this.uniqueValuesFig = uniqueValuesFig;
+    	this.table = table;
         this.actorSystemManager = actorSystemManager;
     }
 
@@ -86,8 +89,12 @@ public class UniqueValueActor extends UntypedActor {
 
                 getSender().tell( new Response( Response.Status.IS_UNIQUE, res.getConsistentHashKey() ),
                     getSender() );
-
-                actorSystemManager.publishToAllRegions( "content", new Reservation( res ), getSelf() );
+                
+                if(uniqueValuesFig.getSkipRemoteRegions()) {
+                	actorSystemManager.publishToLocalRegion( "content", new Reservation( res ), getSelf() );
+                } else {
+                	actorSystemManager.publishToAllRegions( "content", new Reservation( res ), getSelf() );
+                }
 
             } catch (Throwable t) {
 
@@ -111,14 +118,24 @@ public class UniqueValueActor extends UntypedActor {
                     // cannot reserve, somebody else owns the unique value
                     Response response  = new Response( Response.Status.NOT_UNIQUE, con.getConsistentHashKey());
                     getSender().tell( response, getSender() );
-                    actorSystemManager.publishToAllRegions( "content", response, getSelf() );
+                    if(uniqueValuesFig.getSkipRemoteRegions()) {
+                    	actorSystemManager.publishToLocalRegion( "content", response, getSelf() );
+                    } else {
+                    	actorSystemManager.publishToAllRegions( "content", response, getSelf() );
+                    }
                     return;
 
                 } else if ( owner == null ) {
                     // cannot commit without first reserving
                     Response response  = new Response( Response.Status.BAD_REQUEST, con.getConsistentHashKey());
                     getSender().tell( response, getSender() );
-                    actorSystemManager.publishToAllRegions( "content", response, getSelf() );
+                    
+                    if(uniqueValuesFig.getSkipRemoteRegions()) {
+                    	actorSystemManager.publishToLocalRegion( "content", response, getSelf() );
+                    } else {
+                    	actorSystemManager.publishToAllRegions( "content", response, getSelf() );
+                    }
+                    
                     return;
                 }
 
@@ -127,7 +144,11 @@ public class UniqueValueActor extends UntypedActor {
                 Response response = new Response( Response.Status.IS_UNIQUE, con.getConsistentHashKey() );
                 getSender().tell( response, getSender() );
 
-                actorSystemManager.publishToAllRegions( "content", response, getSelf() );
+                if(uniqueValuesFig.getSkipRemoteRegions()) {
+                	actorSystemManager.publishToLocalRegion( "content", response, getSelf() );
+                } else {
+                	actorSystemManager.publishToAllRegions( "content", response, getSelf() );
+                }
 
             } catch (Throwable t) {
                 getSender().tell( new Response( Response.Status.ERROR, con.getConsistentHashKey() ),
@@ -158,7 +179,11 @@ public class UniqueValueActor extends UntypedActor {
                         getSender() );
 
                     // unique value record may have already been cleaned up, also clear cache
-                    actorSystemManager.publishToAllRegions( "content", new Cancellation( can ), getSelf() );
+                    if(uniqueValuesFig.getSkipRemoteRegions()) {
+                    	actorSystemManager.publishToLocalRegion( "content", new Cancellation( can ), getSelf() );
+                    } else {
+                    	actorSystemManager.publishToAllRegions( "content", new Cancellation( can ), getSelf() );
+                    }
 
                     return;
                 }
@@ -170,7 +195,11 @@ public class UniqueValueActor extends UntypedActor {
                 getSender().tell( new Response( Response.Status.SUCCESS, can.getConsistentHashKey() ),
                     getSender() );
 
-                actorSystemManager.publishToAllRegions( "content", new Cancellation( can ), getSelf() );
+                if(uniqueValuesFig.getSkipRemoteRegions()) {
+                	actorSystemManager.publishToLocalRegion( "content", new Cancellation( can ), getSelf() );
+                } else {
+                	actorSystemManager.publishToAllRegions( "content", new Cancellation( can ), getSelf() );
+                }
 
             } catch (Throwable t) {
                 getSender().tell( new Response( Response.Status.ERROR, can.getConsistentHashKey() ),

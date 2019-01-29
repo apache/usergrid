@@ -29,6 +29,8 @@ import java.io.Serializable;
 public interface UniqueValuesFig extends GuicyFig, Serializable {
 
     String UNIQUEVALUE_USE_CLUSTER = "collection.uniquevalues.usecluster";
+    
+    String UNIQUEVALUE_SKIP_REMOTE_REGIONS = "collection.uniquevalues.skip.remote.regions";
 
     String UNIQUEVALUE_ACTORS = "collection.uniquevalues.actors";
 
@@ -41,14 +43,25 @@ public interface UniqueValuesFig extends GuicyFig, Serializable {
     String UNIQUEVALUE_REQUEST_TIMEOUT = "collection.uniquevalues.request.timeout";
 
     String UNIQUEVALUE_REQUEST_RETRY_COUNT = "collection.uniquevalues.request.retrycount";
+    
+    
 
 
     /**
-     * Tells Usergrid whether or not to use the Akka Cluster sytem to verify unique values ( more consistent)
+     * Tells Usergrid whether or not to use the Akka Cluster system to verify unique values ( more consistent)
+     * Setting this to false by default to avoid extra complications by default.
      */
     @Key(UNIQUEVALUE_USE_CLUSTER)
-    @Default("true")
+    @Default("false")
     boolean getUnqiueValueViaCluster();
+    
+    /**
+     * Tells Usergrid to restrict UniqueValue related chatter to local Akka Cluster only. Skips remote regions
+     * Setting this to true by default to avoid extra complications by default.
+     */
+    @Key(UNIQUEVALUE_SKIP_REMOTE_REGIONS)
+    @Default("true")
+    boolean getSkipRemoteRegions();
 
     /**
      * Unique Value cache TTL in seconds.
