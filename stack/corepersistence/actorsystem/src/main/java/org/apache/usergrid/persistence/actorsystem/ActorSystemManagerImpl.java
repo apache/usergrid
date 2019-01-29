@@ -423,7 +423,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 }
 
                 ActorRef clusterClient = system.actorOf( ClusterClient.props(
-                    ClusterClientSettings.create(system).withInitialContacts( seedPaths )), "client");
+                    ClusterClientSettings.create(system).withInitialContacts( seedPaths )), "client-"+region);
 
                 clusterClientsByRegion.put( region, clusterClient );
             }
