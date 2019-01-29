@@ -74,6 +74,14 @@ public interface ActorSystemManager {
      * Publish message to all topic subscribers in all regions.
      */
     void publishToAllRegions( String topic, Object message, ActorRef sender );
+    /**
+     * Publish message to all topic subscribers in local region only.
+     */
+    void publishToLocalRegion( String topic, Object message, ActorRef sender );
+    /**
+     * Publish message to all topic subscribers in remote regions only.
+     */
+    void publishToRemoteRegions( String topic, Object message, ActorRef sender );
 
     void leaveCluster();
 }
