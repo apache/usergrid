@@ -152,8 +152,20 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     @Override
     public void publishToAllRegions( String topic, Object message, ActorRef sender  ) {
 
+        publishToLocalRegion(topic, message, sender);
+        publishToRemoteRegions(topic, message, sender);
+    }
+    
+    @Override
+    public void publishToLocalRegion( String topic, Object message, ActorRef sender  ) {
+
         // send to local subscribers to topic
         mediator.tell( new DistributedPubSubMediator.Publish( topic, message ), sender );
+
+    }
+    
+    @Override
+    public void publishToRemoteRegions( String topic, Object message, ActorRef sender  ) {
 
         // send to each ClusterClient
         for ( ActorRef clusterClient : clusterClientsByRegion.values() ) {
@@ -423,7 +435,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 }
 
                 ActorRef clusterClient = system.actorOf( ClusterClient.props(
-                    ClusterClientSettings.create(system).withInitialContacts( seedPaths )), "client");
+                    ClusterClientSettings.create(system).withInitialContacts( seedPaths )), "client-"+region);
 
                 clusterClientsByRegion.put( region, clusterClient );
             }
