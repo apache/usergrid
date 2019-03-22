@@ -639,6 +639,8 @@ public class Export extends ExportingToolBase {
 							}
 							
 							jgDictionaries.writeStartObject();
+							jgDictionaries.writeObjectField("Entity", et.getUuid());
+							jgDictionaries.writeObjectField("EntityType", et.getType());
 							jgDictionaries.writeObjectField(dictionary, dict);
 							jgDictionaries.writeEndObject();
 						}
