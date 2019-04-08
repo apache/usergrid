@@ -1459,6 +1459,7 @@
                         <exclude>**/dummy.txt</exclude>
                         <exclude>**/cloudbees.xml</exclude>
                         <exclude>**/catalina_base/**</exclude>
+                        <exclude>**/*.p12</exclude>
 
                     </excludes>
                 </configuration>
