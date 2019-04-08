@@ -53,6 +53,8 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import org.apache.usergrid.persistence.index.query.Identifier;
 
 
+
+
 /**
  * Import Admin Users and metadata including organizations and passwords.
  *
@@ -452,6 +454,47 @@ public class ImportAdmins extends ToolBase {
                         try {
                             managementService.createOrganization( orgUuid, orgName, userInfo, false );
                             orgInfo = managementService.getOrganizationByUuid( orgUuid );
+                            
+                            List<Object> applicationList = (List<Object>) metadata.get("applications");
+                            
+                            for (Object applicationObj : applicationList) {
+
+                                Map<String, Object> appObj = (Map<String, Object>) applicationObj;
+                                UUID appUuid = UUID.fromString( (String) appObj.get( "uuid" ) );
+                                String appName = (String) appObj.get( "applicationName" );
+                                
+                                managementService.createApplication(orgUuid, appName, appUuid, null, false);
+                                
+                                // Import all dictionary values for app
+                                
+                                Map<String, Object> dictionariesAppMap = (Map<String, Object>) metadata.get("dictionaries");
+                                EntityRef entityRefApp = new SimpleEntityRef( "application", appUuid );
+                                if (dictionariesAppMap != null && !dictionariesAppMap.isEmpty()) {
+                                    for (String name : dictionariesAppMap.keySet()) {
+                                        try {
+                                            Map<String, Object> dictionaryApp = (Map<String, Object>) dictionariesAppMap.get(name);
+                                            em.addMapToDictionary( entityRefApp, name, dictionaryApp);
+
+                                            logger.debug( "Creating dictionary for {} name {}",
+                                                    new Object[]{entityRefApp, name} );
+
+                                        } catch (Exception e) {
+                                            if (logger.isDebugEnabled()) {
+                                                logger.error("Error importing dictionary name "
+                                                        + name + " for App " + entityRefApp.getUuid(), e);
+                                            } else {
+                                                logger.error("Error importing dictionary name "
+                                                        + name + " for App " + entityRefApp.getUuid());
+                                            }
+                                        }
+                                    }
+
+                                } else {
+                                    logger.warn("App {} has no dictionaries", entityRefApp.getUuid() );
+                                }
+                            }
+                            
+                           
 
                             logger.debug( "Created new org {} for user {}",
                                     new Object[]{orgInfo.getName(), user.getEmail()} );
