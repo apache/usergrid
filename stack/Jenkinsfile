@@ -1,0 +1,99 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+pipeline {
+    agent { label 'ubuntu' }
+
+    tools {
+        maven 'Maven 3 (latest)'
+        jdk 'JDK 1.8 (latest)'
+    }
+
+    options {
+          timeout(time: 30, unit: 'MINUTES')
+      }
+
+
+    stages {
+        stage ('Initialize') {
+            steps {
+                sh '''
+                    echo "PATH = ${PATH}"
+                    echo "M2_HOME = ${M2_HOME}"
+                '''
+            }
+        }
+
+        stage ('Build Usergrid-Java') {
+            steps {
+                git 'https://github.com/apache/usergrid-java.git'
+                sh '''
+                    mvn clean install -DskipTests=true
+                '''
+            }
+        }
+
+        stage ('Start C* and ES') {
+            steps {
+                sh '''
+                    mkdir -p temp
+                    cd temp
+                    rm -rf *
+                    wget http://archive.apache.org/dist/cassandra/2.1.20/apache-cassandra-2.1.20-bin.tar.gz
+                    tar -xvf apache-cassandra-2.1.20-bin.tar.gz
+                    wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.5.tar.gz
+                    tar -xvf elasticsearch-1.7.5.tar.gz
+                    apache-cassandra-2.1.20/bin/cassandra
+                    elasticsearch-1.7.5/bin/elasticsearch -d
+                    cd ..
+                    echo "Started C* and ES. Waiting 3 mins before starting tests ..."
+                    sleep 180
+                '''
+            }
+        }
+
+        stage ('Build Usergrid Stack') {
+            steps {
+                git 'https://github.com/apache/usergrid.git'
+                sh '''
+                    mvn clean install -DskipTests=true -f stack/pom.xml
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'End of pipeline'
+            junit 'stack/**/surefire-reports/*.xml'
+            sh 'ps -ef | grep cassandra'
+            sh 'ps -ef | grep elastic'
+            deleteDir() /* clean up our workspace */
+        }
+        success {
+            echo 'Usergrid build and tests succeeded'
+        }
+        failure {
+            echo 'Usergrid build and/or tests failed'
+        }
+
+    }
+}
+
+
+
+
