@@ -38,18 +38,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.MetricRegistry;
 
 
 
 public class CollectionDeleteTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( CollectionDeleteTest.class );
 
-    private static final MetricRegistry registry = new MetricRegistry();
 
 
-    private static final int ENTITIES_TO_DELETE = 1000;
-    private static final int ENTITIES_TO_ADD_AFTER_TIME = 3;
+    private static final int ENTITIES_TO_DELETE = 1100;
+    private static final int ENTITIES_TO_ADD_AFTER_TIME = 5;
 
 
     @Before
@@ -97,7 +95,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
             final Entity entity;
 
             try {
-                entityMap.put( "key", i );
+                entityMap.put( "key", i+1 );
                 entity = em.create(itemType, entityMap);
             }
             catch ( Exception ex ) {
@@ -105,35 +103,39 @@ public class CollectionDeleteTest extends AbstractCoreIT {
             }
 
             entityRefs.add( new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
-            if ( i % 10 == 0 ) {
-                logger.info( "Created {} entities", i );
+            if ( (i+1) % 10 == 0 ) {
+                logger.info( "Created {} entities", i+1 );
             }
         }
 
-        logger.info("Created {} entities", ENTITIES_TO_DELETE);
 
         app.waitForQueueDrainAndRefreshIndex(10000);
 
         long timeFirstPutDone = System.currentTimeMillis();
-        logger.info("timeFirstPutDone={}", timeFirstPutDone);
+        logger.info("Finished adding first lot of entities at {}", timeFirstPutDone);
+
+        try {
+            //Wait to make sure that the time on the next entry changes
+            Thread.sleep(2000);
+        }
+        catch (Exception e) {
+        }
 
         for (int i = 0; i < ENTITIES_TO_ADD_AFTER_TIME; i++) {
 
             final Entity entity;
 
             try {
-                entityMap.put( "key", ENTITIES_TO_DELETE + i );
+                entityMap.put("key", ENTITIES_TO_DELETE + i+1);
                 entity = em.create(itemType, entityMap);
-            }
-            catch ( Exception ex ) {
-                throw new RuntimeException( "Error creating entity", ex );
+            } catch (Exception ex) {
+                throw new RuntimeException("Error creating entity", ex);
             }
 
-            entityRefs.add( new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
-            logger.info( "Created {} entities after delete time created time {} ", i , entity.getCreated());
+            entityRefs.add(new SimpleEntityRef(entity.getType(), entity.getUuid()));
+            logger.info("Created {} entities after delete time with key {} and uuid {} at {} ", i + 1, entity.getProperty("key"), entity.getUuid(), entity.getCreated());
 
         }
-        logger.info("Created {} entities after delete time", ENTITIES_TO_ADD_AFTER_TIME);
 
 
         app.waitForQueueDrainAndRefreshIndex(15000);
@@ -238,7 +240,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
                 }
                 lastEntityUUID = e.getUuid();
                 uniqueRemEnts.add(e);
-                logger.info("Found remaining entity {}", lastEntityUUID);
+                logger.info("Found remaining entity {} with key {}", lastEntityUUID, e.getProperty("key"));
             }
 
             results = em.getCollection(em.getApplicationRef(), collectionName, lastEntityUUID, expectedEntities,
@@ -250,7 +252,7 @@ public class CollectionDeleteTest extends AbstractCoreIT {
             logger.info("Expected {} did not match actual {}", expectedEntities, uniqueRemEnts.size());
             if (uniqueRemEnts.size() < 20) {
                 for (Entity e : uniqueRemEnts) {
-                    Object key = e.getProperty("key2");
+                    Object key = e.getProperty("key");
                     logger.info("Entity key {} uuid {} created {}", key,e.getUuid(), e.getCreated());
                 }
             }

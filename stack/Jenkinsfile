@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+
 pipeline {
     agent { label 'ubuntu' }
 
@@ -24,7 +25,7 @@ pipeline {
     }
 
     options {
-          timeout(time: 30, unit: 'MINUTES')
+          timeout(time: 120, unit: 'MINUTES')
       }
 
 
@@ -70,7 +71,7 @@ pipeline {
             steps {
                 git 'https://github.com/apache/usergrid.git'
                 sh '''
-                    mvn clean install -DskipTests=true -f stack/pom.xml
+                    mvn clean install -f stack/pom.xml
                 '''
             }
         }
@@ -82,7 +83,7 @@ pipeline {
             junit 'stack/**/surefire-reports/*.xml'
             sh 'ps -ef | grep cassandra'
             sh 'ps -ef | grep elastic'
-            deleteDir() /* clean up our workspace */
+            deleteDir()  /*clean up our workspace */
         }
         success {
             echo 'Usergrid build and tests succeeded'
@@ -93,7 +94,3 @@ pipeline {
 
     }
 }
-
-
-
-
