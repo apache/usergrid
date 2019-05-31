@@ -36,6 +36,12 @@ pipeline {
                     echo "PATH = ${PATH}"
                     echo "M2_HOME = ${M2_HOME}"
                 '''
+
+                emailext (
+                    subject: "STARTED : UG Build Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                    body: """UG Build Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' has been kicked off \nCheck output at '${env.BUILD_URL}'""",
+                    recipientProviders: [[$class: 'RequesterRecipientProvider'], [$class: 'DevelopersRecipientProvider']]
+                )
             }
         }
 
@@ -75,6 +81,7 @@ pipeline {
                 '''
             }
         }
+
     }
 
     post {
@@ -87,9 +94,19 @@ pipeline {
         }
         success {
             echo 'Usergrid build and tests succeeded'
+            emailext (
+                    subject: "SUCCESS : UG Build Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                    body: """UG Build Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' has completed SUCCESSFULLY \nCheck output at '${env.BUILD_URL}'""",
+                    recipientProviders: [[$class: 'RequesterRecipientProvider'], [$class: 'DevelopersRecipientProvider']]
+                )
         }
         failure {
             echo 'Usergrid build and/or tests failed'
+            emailext (
+                    subject: "FAILURE : UG Build Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                    body: """UG Build Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' has FAILED \nCheck output at '${env.BUILD_URL}'""",
+                    recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'DevelopersRecipientProvider']]
+                )
         }
 
     }
