@@ -37,14 +37,16 @@ public class ImportAppTest extends AbstractServiceIT {
 
         // add app with some data
 
-    	  long start = System.currentTimeMillis();
+	    long start = System.currentTimeMillis();
 
-        ImportApps importapp = new ImportApps();
-        importapp.startTool( new String[]{
-                  "-host", "localhost:9160",
-        		"-inputDir",  "/tools/src/test/resources/",
-                 "-v","/tools/src/test/resources/import-apps-details.log"} ,false);
-
+	       	Path currentRelativePath = Paths.get("");
+	       	String resourcePath = currentRelativePath.toAbsolutePath().toString();
+    	
+	           ImportApps importapp = new ImportApps();
+	           importapp.startTool( new String[]{
+	                     "-host", "localhost:9160",
+	           		"-inputDir",  resourcePath+"/src/test/resources/",
+	                    "-v", resourcePath+"/src/test/resources/import-apps-details.log"} ,false);
 
         logger.info( "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s" );
 
