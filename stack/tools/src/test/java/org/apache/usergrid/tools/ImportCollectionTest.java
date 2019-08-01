@@ -37,14 +37,17 @@ public class ImportCollectionTest extends AbstractServiceIT {
 
         // add app with some data
 
-    	  long start = System.currentTimeMillis();
+		Path currentRelativePath = Paths.get("");
+		   	 	String resourcePath = currentRelativePath.toAbsolutePath().toString();
 
-        ImportCollections importCollection = new ImportCollections();
-        importCollection.startTool( new String[]{
-                  "-host", "localhost:9160",
-                  "-appId", "e5fe5955-9750-11e9-bc62-26c8b3a04fa8",     // add your appid
-        		"-inputDir",  "/tools/src/test/resources/",                        
-                 "-v","/tools/src/test/resources/import-collection-details.log"} ,false);
+		    	long start = System.currentTimeMillis();
+
+		        ImportCollections importCollection = new ImportCollections();
+		        importCollection.startTool( new String[]{
+		                  "-host", "localhost:9160",
+		                  "-appId", "6781adef-4f8d-11e9-b170-005056a636e2",     // add your appid
+		        		"-inputDir",  resourcePath + "/src/test/resources/",                        
+		                 "-v",resourcePath + "/src/test/resources/import-collection-details.log"} ,false);
 
 
         logger.info( "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s" );
