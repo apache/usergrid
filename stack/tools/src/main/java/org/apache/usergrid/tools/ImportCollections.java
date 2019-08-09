@@ -16,21 +16,6 @@
  */
 package org.apache.usergrid.tools;
 
-
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -47,33 +32,45 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 
 /**
  * Import collection Users and metadata including organizations and passwords.
  *
- * Usage Example:
+ * <p>Usage Example:
  *
- * java -Xmx8000m -Dlog4j.configuration=file:/home/me/log4j.properties -classpath . \
- *      -jar usergrid-tools-1.0.2.jar Importcollections -writeThreads 100 -auditThreads 100 \
- *      -host casshost -inputDir=/home/me/import-data
+ * <p>java -Xmx8000m -Dlog4j.configuration=file:/home/me/log4j.properties -classpath . \ -jar
+ * usergrid-tools-1.0.2.jar Importcollections -writeThreads 100 -auditThreads 100 \ -host casshost
+ * -inputDir=/home/me/import-data
  *
- * If you want to provide any property overrides, put properties file named usergrid-custom-tools.properties
- * in the same directory where you run the above command. For example, you might want to set the Cassandra
- * client threads and import to a specific set of keyspaces:
+ * <p>If you want to provide any property overrides, put properties file named
+ * usergrid-custom-tools.properties in the same directory where you run the above command. For
+ * example, you might want to set the Cassandra client threads and import to a specific set of
+ * keyspaces:
  *
- *    cassandra.connections=110
- *    cassandra.system.keyspace=My_Other_Usergrid
- *    cassandra.application.keyspace=My_Other_Usergrid_Applications
- *    cassandra.lock.keyspace=My_Other_Usergrid_Locks
+ * <p>cassandra.connections=110 cassandra.system.keyspace=My_Other_Usergrid
+ * cassandra.application.keyspace=My_Other_Usergrid_Applications
+ * cassandra.lock.keyspace=My_Other_Usergrid_Locks
  */
 public class ImportCollections extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportCollections.class);
 
-    /**
-     * Input directory where the .json export files are
-     */
+    /** Input directory where the .json export files are */
     static final String INPUT_DIR = "inputDir";
+
     static final String WRITE_THREAD_COUNT = "writeThreads";
     static final String AUDIT_THREAD_COUNT = "auditThreads";
     protected static final String APP_ID = "appId";
@@ -82,21 +79,21 @@ public class ImportCollections extends ToolBase {
     protected UUID applicationId;
     static final String DEFAULT_INPUT_DIR = "export";
 
-    private static Map<Stoppable, Thread> collectionWriteThreads = new ConcurrentHashMap<Stoppable, Thread>();
+    private static Map<Stoppable, Thread> collectionWriteThreads =
+        new ConcurrentHashMap<Stoppable, Thread>();
     private Map<Stoppable, Thread> collectionAuditThreads = new HashMap<Stoppable, Thread>();
     private Map<Stoppable, Thread> metadataWorkerThreadMap = new HashMap<Stoppable, Thread>();
 
     BlockingQueue<Map<String, Object>> workQueue = new LinkedBlockingQueue<Map<String, Object>>();
-    
+
     JsonFactory jsonFactory = new JsonFactory();
 
-    AtomicInteger collectionCount = new AtomicInteger( 0 );
-    AtomicInteger metadataCount = new AtomicInteger( 0 );
+    AtomicInteger collectionCount = new AtomicInteger(0);
+    AtomicInteger metadataCount = new AtomicInteger(0);
 
-    AtomicInteger writeEmptyCount = new AtomicInteger( 0 );
-    AtomicInteger auditEmptyCount = new AtomicInteger( 0 );
-    AtomicInteger metadataEmptyCount = new AtomicInteger( 0 );
-
+    AtomicInteger writeEmptyCount = new AtomicInteger(0);
+    AtomicInteger auditEmptyCount = new AtomicInteger(0);
+    AtomicInteger metadataEmptyCount = new AtomicInteger(0);
 
     @Override
     @SuppressWarnings("static-access")
@@ -105,42 +102,45 @@ public class ImportCollections extends ToolBase {
         // inherit parent options
         Options options = super.createOptions();
 
-        Option inputDir = OptionBuilder
-                .hasArg()
-                .withDescription("input directory -inputDir").create(INPUT_DIR);
-        
-        Option appId = OptionBuilder.hasArg().withDescription( "Use a specific application -appId (Needs -orgId or -orgName)" ).create( APP_ID );
+        Option inputDir =
+            OptionBuilder.hasArg().withDescription("input directory -inputDir").create(INPUT_DIR);
 
-        Option writeThreads = OptionBuilder
-                .hasArg()
-                .withDescription("Write Threads -writeThreads").create(WRITE_THREAD_COUNT);
+        Option appId =
+            OptionBuilder.hasArg()
+                .withDescription("Use a specific application -appId (Needs -orgId or -orgName)")
+                .create(APP_ID);
 
-        Option auditThreads = OptionBuilder
-                .hasArg()
-                .withDescription("Audit Threads -auditThreads").create(AUDIT_THREAD_COUNT);
+        Option writeThreads =
+            OptionBuilder.hasArg()
+                .withDescription("Write Threads -writeThreads")
+                .create(WRITE_THREAD_COUNT);
 
-        Option verbose = OptionBuilder
-                .withDescription("Print on the console an echo of the content written to the file")
+        Option auditThreads =
+            OptionBuilder.hasArg()
+                .withDescription("Audit Threads -auditThreads")
+                .create(AUDIT_THREAD_COUNT);
+
+        Option verbose =
+            OptionBuilder.withDescription(
+                "Print on the console an echo of the content written to the file")
                 .create(VERBOSE);
 
-        options.addOption( appId );
-        
-        options.addOption( writeThreads );
-        options.addOption( auditThreads );
-        options.addOption( inputDir );
-        options.addOption( verbose );
+        options.addOption(appId);
+
+        options.addOption(writeThreads);
+        options.addOption(auditThreads);
+        options.addOption(inputDir);
+        options.addOption(verbose);
 
         return options;
     }
-    
-    protected void applyExportParams( CommandLine line ) {
-        
-        if ( line.hasOption( APP_ID ) ) {
-            this.applicationId = ConversionUtils.uuid( line.getOptionValue( APP_ID ) );
-        }
-        
-    }
 
+    protected void applyExportParams(CommandLine line) {
+
+        if (line.hasOption(APP_ID)) {
+            this.applicationId = ConversionUtils.uuid(line.getOptionValue(APP_ID));
+        }
+    }
 
     @Override
     public void runTool(CommandLine line) throws Exception {
@@ -150,27 +150,23 @@ public class ImportCollections extends ToolBase {
         setVerbose(line);
 
         applyExportParams(line);
-        
+
         openImportDirectory(line);
 
         int writeThreadCount = 1;
 
         if (line.hasOption(WRITE_THREAD_COUNT)) {
-            writeThreadCount = Integer.parseInt( line.getOptionValue(WRITE_THREAD_COUNT));
+            writeThreadCount = Integer.parseInt(line.getOptionValue(WRITE_THREAD_COUNT));
         }
 
-        importCollectionData( writeThreadCount );
-
+        importCollectionData(writeThreadCount);
     }
 
-
-    /**
-     * Import collection users.
-     */
+    /** Import collection users. */
     private void importCollectionData(int writeThreadCount) throws Exception {
 
-    	  String[] fileNames = importDir.list(new PrefixFileFilter("collection" + "."));
-        logger.info( "Applications to read: " + fileNames.length );
+        String[] fileNames = importDir.list(new PrefixFileFilter("collection" + "."));
+        logger.info("Applications to read: " + fileNames.length);
 
         for (String fileName : fileNames) {
             try {
@@ -181,75 +177,78 @@ public class ImportCollections extends ToolBase {
         }
     }
 
-
     /**
      * Imports collection users.
      *
      * @param fileName Name of collection user data file.
      */
-    private void importCollectionData(final String fileName,
-                                  final int writeThreadCount) throws Exception {
+    private void importCollectionData(final String fileName, final int writeThreadCount)
+        throws Exception {
 
-        
         readCollectionFile(fileName);
-        
+
         startcollectionWorkers(workQueue, writeThreadCount);
     }
 
-	private void readCollectionFile(final String fileName)
-			throws Exception, IOException, JsonParseException, InterruptedException {
-		File collectionFile = new File(importDir, fileName);
+    private void readCollectionFile(final String fileName)
+        throws Exception, IOException, JsonParseException, InterruptedException {
+        File collectionFile = new File(importDir, fileName);
 
         logger.info("----- Loading file: " + collectionFile.getAbsolutePath());
         JsonParser jp = getJsonParserForFile(collectionFile);
 
         int loopCounter = 0;
-        
-        
+
         JsonToken jsonToken = jp.nextToken();
         while (jsonToken != null) {
             if (jsonToken.equals(JsonToken.START_OBJECT)) {
                 try {
-                	loopCounter += 1;
-                	
-                	            @SuppressWarnings("unchecked")
-                	            Map<String, Object> entityProps = jp.readValueAs(HashMap.class);
-                	            
-                	            Map<String, Object> dynamic_properties = (Map<String, Object>) entityProps.get("dynamic_properties");
-                	            if(dynamic_properties != null ){
-                	            Map<String, Object> data = (Map<String, Object>) dynamic_properties.get("data");
-                	            entityProps.remove("dynamic_properties");
-                	            if(data != null) entityProps.put("data",data);
-                	            }
-                	            if (loopCounter % 1000 == 0) {
-                	                logger.debug( "Publishing to queue... counter=" + loopCounter );
-                	            }
-                	            
-                	            workQueue.add( entityProps );
+                    loopCounter += 1;
+
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> entityProps = jp.readValueAs(HashMap.class);
+
+                    Map<String, Object> dynamic_properties =
+                        (Map<String, Object>) entityProps.get("dynamic_properties");
+                    if (dynamic_properties != null) {
+                        Map<String, Object> data = (Map<String, Object>) dynamic_properties.get("data");
+                        entityProps.remove("dynamic_properties");
+                        if (data != null) entityProps.put("data", data);
+                    }
+                    if (loopCounter % 1000 == 0) {
+                        logger.debug("Publishing to queue... counter=" + loopCounter);
+                    }
+
+                    workQueue.add(entityProps);
                     jsonToken = jp.nextToken();
-                } catch ( Exception e ) {
-                   logger.debug( "Error with user {}, not putting in metadata queue" );
+                } catch (Exception e) {
+                    logger.debug("Error with user {}, not putting in metadata queue");
                 }
             }
         }
 
-        logger.info("----- End: Imported {} collection users from file {}",
-        		loopCounter, collectionFile.getAbsolutePath());
+        logger.info(
+            "----- End: Imported {} collection users from file {}",
+            loopCounter,
+            collectionFile.getAbsolutePath());
 
         jp.close();
-	}
+    }
 
-    private static void waitForQueueAndMeasure(final BlockingQueue workQueue,
-                                               final AtomicInteger emptyCounter,
-                                               final Map<Stoppable, Thread> threadMap,
-                                               final String identifier) throws InterruptedException {
+    private static void waitForQueueAndMeasure(
+        final BlockingQueue workQueue,
+        final AtomicInteger emptyCounter,
+        final Map<Stoppable, Thread> threadMap,
+        final String identifier)
+        throws InterruptedException {
         double rateAverageSum = 0;
         int iterations = 0;
 
-        while ( emptyCounter.get() < threadMap.size() ) {
+        while (emptyCounter.get() < threadMap.size()) {
             iterations += 1;
-            
-            logger.info("emptyCounter is {} , threadMap size={}, waiting...", emptyCounter, threadMap.size());
+
+            logger.info(
+                "emptyCounter is {} , threadMap size={}, waiting...", emptyCounter, threadMap.size());
 
             int sizeLast = workQueue.size();
             long lastTime = System.currentTimeMillis();
@@ -266,22 +265,29 @@ public class ImportCollections extends ToolBase {
             double rateLast = (double) processed / (timeDelta / 1000);
             rateAverageSum += rateLast;
 
-            long timeRemaining = (long) ( sizeLast / (rateAverageSum / iterations) );
+            long timeRemaining = (long) (sizeLast / (rateAverageSum / iterations));
 
-            logger.info("++PROGRESS ({}): sizeLast={} nowSize={} processed={} rateLast={}/s rateAvg={}/s timeRemaining={}s",
+            logger.info(
+                "++PROGRESS ({}): sizeLast={} nowSize={} processed={} rateLast={}/s rateAvg={}/s timeRemaining={}s",
                 new Object[] {
-                    identifier, sizeLast, sizeNow, processed, rateLast, (rateAverageSum / iterations), timeRemaining } );
+                    identifier,
+                    sizeLast,
+                    sizeNow,
+                    processed,
+                    rateLast,
+                    (rateAverageSum / iterations),
+                    timeRemaining
+                });
         }
 
         for (Stoppable worker : threadMap.keySet()) {
             worker.setDone(true);
             collectionWriteThreads.remove(worker);
-            
         }
     }
 
-    private void startcollectionWorkers(BlockingQueue<Map<String, Object>> workQueue,
-                                   int workerCount) throws InterruptedException {
+    private void startcollectionWorkers(BlockingQueue<Map<String, Object>> workQueue, int workerCount)
+        throws InterruptedException {
 
         for (int x = 0; x < workerCount; x++) {
             ImportcollectionWorker worker = new ImportcollectionWorker(workQueue);
@@ -289,35 +295,27 @@ public class ImportCollections extends ToolBase {
             workerThread.start();
             collectionWriteThreads.put(worker, workerThread);
         }
-        
+
         waitForQueueAndMeasure(workQueue, writeEmptyCount, collectionWriteThreads, "collection Write");
-        
+
         logger.info("Started {} collection workers", workerCount);
     }
-
 
     private String getType(Map<String, Object> entityProps) {
         return (String) entityProps.get(PROPERTY_TYPE);
     }
 
-
     private UUID getId(Map<String, Object> entityProps) {
         return UUID.fromString((String) entityProps.get(PROPERTY_UUID));
     }
 
-
     private JsonParser getJsonParserForFile(File organizationFile) throws Exception {
-        JsonParser jp = jsonFactory.createJsonParser( organizationFile );
-        jp.setCodec( new ObjectMapper() );
+        JsonParser jp = jsonFactory.createJsonParser(organizationFile);
+        jp.setCodec(new ObjectMapper());
         return jp;
     }
 
-
-
-
-    /**
-     * Open up the import directory based on <code>importDir</code>
-     */
+    /** Open up the import directory based on <code>importDir</code> */
     private void openImportDirectory(CommandLine line) {
 
         boolean hasInputDir = line.hasOption(INPUT_DIR);
@@ -332,7 +330,6 @@ public class ImportCollections extends ToolBase {
         logger.info("Status. Exists: " + importDir.exists() + " - Readable: " + importDir.canRead());
     }
 
-
     interface Stoppable {
         void setDone(boolean done);
     }
@@ -341,7 +338,6 @@ public class ImportCollections extends ToolBase {
 
         private BlockingQueue<Map<String, Object>> workQueue1;
         private boolean done = false;
-
 
         public ImportcollectionWorker(final BlockingQueue<Map<String, Object>> workQueue) {
             this.workQueue1 = workQueue;
@@ -376,19 +372,20 @@ public class ImportCollections extends ToolBase {
 
                     // Import/create the entity
                     UUID uuid = getId(entityProps);
-                    String type = getType( entityProps );
+                    String type = getType(entityProps);
 
                     try {
                         long startTime = System.currentTimeMillis();
-                        
-                        if(em != null){
-                        em.create(uuid, type, entityProps);
-                       }else{
-                    	   continue;
-                       }
-                        
-                        logger.debug( "Imported collection  {}:{}:{}",
-                            new Object[] { entityProps.get( "uuid" ), entityProps.get("uuid"), uuid } );
+
+                        if (em != null) {
+                            em.create(uuid, type, entityProps);
+                        } else {
+                            continue;
+                        }
+
+                        logger.debug(
+                            "Imported collection  {}:{}:{}",
+                            new Object[] {entityProps.get("uuid"), entityProps.get("uuid"), uuid});
 
                         collectionCount.getAndIncrement();
                         long stopTime = System.currentTimeMillis();
@@ -397,22 +394,21 @@ public class ImportCollections extends ToolBase {
 
                         count++;
                         if (count % 30 == 0) {
-                            logger.info( "This worked has imported {} users of total {} imported so far. " +
-                                            "Average Creation Rate: {}ms",
-                                new Object[] { count, collectionCount.get(), durationSum / count });
+                            logger.info(
+                                "This worked has imported {} users of total {} imported so far. "
+                                    + "Average Creation Rate: {}ms",
+                                new Object[] {count, collectionCount.get(), durationSum / count});
                         }
 
                     } catch (DuplicateUniquePropertyExistsException de) {
                         continue;
 
-
                     } catch (Exception e) {
                         logger.error("Error", e);
                     }
                 } catch (InterruptedException e) {
-                    logger.error( "Error", e );
+                    logger.error("Error", e);
                 }
-
             }
         }
     }

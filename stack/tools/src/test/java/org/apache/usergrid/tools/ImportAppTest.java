@@ -16,46 +16,50 @@
  */
 package org.apache.usergrid.tools;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.usergrid.services.AbstractServiceIT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * TODO: better test, this is really just a smoke test.
- */
+import static org.junit.Assert.assertEquals;
+
+/** TODO: better test, this is really just a smoke test. */
 public class ImportAppTest extends AbstractServiceIT {
-    static final Logger logger = LoggerFactory.getLogger( ImportAppTest.class );
+  static final Logger logger = LoggerFactory.getLogger(ImportAppTest.class);
 
-    int NUM_COLLECTIONS = 10;
-    int NUM_ENTITIES = 50;
-    int NUM_CONNECTIONS = 3;
+  int NUM_COLLECTIONS = 10;
+  int NUM_ENTITIES = 50;
+  int NUM_CONNECTIONS = 3;
 
-    @org.junit.Test
-    public void testBasicOperation() throws Exception {
+  @org.junit.Test
+  public void testBasicOperation() throws Exception {
 
-        // add app with some data
+    // add app with some data
 
-	    long start = System.currentTimeMillis();
+    long start = System.currentTimeMillis();
 
-	       	Path currentRelativePath = Paths.get("");
-	       	String resourcePath = currentRelativePath.toAbsolutePath().toString();
-    	
-	           ImportApps importapp = new ImportApps();
-	           importapp.startTool( new String[]{
-	                     "-host", "localhost:9160",
-	           		"-inputDir",  resourcePath+"/src/test/resources/",
-	                    "-v", resourcePath+"/src/test/resources/import-apps-details.log"} ,false);
+    Path currentRelativePath = Paths.get("");
+    String resourcePath = currentRelativePath.toAbsolutePath().toString();
 
-        logger.info( "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s" );
+    ImportApps importapp = new ImportApps();
+    importapp.startTool(
+        new String[] {
+          "-host",
+          "localhost:9160",
+          "-inputDir",
+          resourcePath + "/src/test/resources/",
+          "-v",
+          resourcePath + "/src/test/resources/import-apps-details.log"
+        },
+        false);
 
-        // check that we got the expected number of export files
+    logger.info(
+        "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s");
 
-        logger.info( "1 thread time = " + (System.currentTimeMillis() - start) / 1000 + "s" );
+    // check that we got the expected number of export files
 
-        assertEquals( 1, 1);
-        assertEquals( 1, 1);
-    }
+    logger.info("1 thread time = " + (System.currentTimeMillis() - start) / 1000 + "s");
 
+    assertEquals(1, 1);
+    assertEquals(1, 1);
+  }
 }

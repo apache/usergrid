@@ -16,48 +16,52 @@
  */
 package org.apache.usergrid.tools;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.usergrid.services.AbstractServiceIT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * TODO: better test, this is really just a smoke test.
- */
+import static org.junit.Assert.assertEquals;
+
+/** TODO: better test, this is really just a smoke test. */
 public class ImportCollectionTest extends AbstractServiceIT {
-    static final Logger logger = LoggerFactory.getLogger( ImportCollectionTest.class );
+  static final Logger logger = LoggerFactory.getLogger(ImportCollectionTest.class);
 
-    int NUM_COLLECTIONS = 10;
-    int NUM_ENTITIES = 50;
-    int NUM_CONNECTIONS = 3;
+  int NUM_COLLECTIONS = 10;
+  int NUM_ENTITIES = 50;
+  int NUM_CONNECTIONS = 3;
 
-    @org.junit.Test
-    public void testBasicOperation() throws Exception {
+  @org.junit.Test
+  public void testBasicOperation() throws Exception {
 
-        // add app with some data
+    // add app with some data
 
-		Path currentRelativePath = Paths.get("");
-		   	 	String resourcePath = currentRelativePath.toAbsolutePath().toString();
+    Path currentRelativePath = Paths.get("");
+    String resourcePath = currentRelativePath.toAbsolutePath().toString();
 
-		    	long start = System.currentTimeMillis();
+    long start = System.currentTimeMillis();
 
-		        ImportCollections importCollection = new ImportCollections();
-		        importCollection.startTool( new String[]{
-		                  "-host", "localhost:9160",
-		                  "-appId", "6781adef-4f8d-11e9-b170-005056a636e2",     // add your appid
-		        		"-inputDir",  resourcePath + "/src/test/resources/",                        
-		                 "-v",resourcePath + "/src/test/resources/import-collection-details.log"} ,false);
+    ImportCollections importCollection = new ImportCollections();
+    importCollection.startTool(
+        new String[] {
+          "-host",
+          "localhost:9160",
+          "-appId",
+          "6781adef-4f8d-11e9-b170-005056a636e2", // add your appid
+          "-inputDir",
+          resourcePath + "/src/test/resources/",
+          "-v",
+          resourcePath + "/src/test/resources/import-collection-details.log"
+        },
+        false);
 
+    logger.info(
+        "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s");
 
-        logger.info( "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s" );
+    // check that we got the expected number of export files
 
-        // check that we got the expected number of export files
+    logger.info("1 thread time = " + (System.currentTimeMillis() - start) / 1000 + "s");
 
-        logger.info( "1 thread time = " + (System.currentTimeMillis() - start) / 1000 + "s" );
-
-        assertEquals( 1, 1);
-        assertEquals( 1, 1);
-    }
-
+    assertEquals(1, 1);
+    assertEquals(1, 1);
+  }
 }
