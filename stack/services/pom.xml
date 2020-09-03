@@ -109,6 +109,9 @@
                         <include>**/*IT.java</include>
                         <include>**/*Test.java</include>
                     </includes>
+                    <excludes>
+                        <exclude>org/apache/usergrid/services/notifications/**/*.java</exclude>
+                    </excludes>
                     <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
                 </configuration>
                 <dependencies>
