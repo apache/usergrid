@@ -95,7 +95,7 @@
                         <storage-config>${basedir}/src/test/conf</storage-config>
                         <target.directory>${project.build.directory}</target.directory>
                     </systemPropertyVariables>
-                    <parallel>${usergrid.it.parallel}</parallel>
+                    <!--parallel>${usergrid.it.parallel}</parallel-->
                     <forkCount>${usergrid.it.forkCount}</forkCount>
                     <threadCount>${usergrid.it.threads}</threadCount>
                     <reuseForks>${usergrid.it.reuseForks}</reuseForks>
