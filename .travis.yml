@@ -1,0 +1,29 @@
+dist: trusty
+language: java
+
+jdk:
+  - oraclejdk8
+
+before_install:
+  - git clone https://github.com/apache/usergrid-java
+  - cd usergrid-java
+  - mvn -q clean install -DskipTests=true
+  
+  - cd ..
+  - sudo rm -rf /var/lib/cassandra/*
+  - wget http://archive.apache.org/dist/cassandra/2.1.20/apache-cassandra-2.1.20-bin.tar.gz
+  - tar -xvzf apache-cassandra-2.1.20-bin.tar.gz
+  - sudo sh apache-cassandra-2.1.20/bin/cassandra
+  
+  - curl -O https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.5.deb
+  - sudo dpkg -i --force-confnew elasticsearch-1.7.5.deb
+  - sudo service elasticsearch restart
+  - sleep 180
+
+  - cd stack
+
+services:
+  - elasticsearch
+  
+script:
+  - mvn -q clean install

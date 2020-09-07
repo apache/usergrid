@@ -19,6 +19,11 @@
 pipeline {
     agent { label 'ubuntu' }
 
+    environment {
+        CASS_HOME = "${WORKSPACE}/temp/apache-cassandra-2.1.20"
+        ES_HOME = "${WORKSPACE}/temp/elasticsearch-1.7.5"
+    }
+
     tools {
         maven 'Maven 3 (latest)'
         jdk 'JDK 1.8 (latest)'
@@ -54,31 +59,63 @@ pipeline {
             }
         }
 
-        stage ('Start C* and ES') {
+        stage ('Setup C*, ES and Code') {
             steps {
                 sh '''
-                    mkdir -p temp
-                    cd temp
+                    mkdir -p $WORKSPACE/temp
+                    cd $WORKSPACE/temp
                     rm -rf *
                     wget http://archive.apache.org/dist/cassandra/2.1.20/apache-cassandra-2.1.20-bin.tar.gz
                     tar -xvf apache-cassandra-2.1.20-bin.tar.gz
                     wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.5.tar.gz
                     tar -xvf elasticsearch-1.7.5.tar.gz
-                    apache-cassandra-2.1.20/bin/cassandra
-                    elasticsearch-1.7.5/bin/elasticsearch -d
-                    cd ..
-                    echo "Started C* and ES. Waiting 3 mins before starting tests ..."
-                    sleep 180
+                    echo "Setup C* and ES."
                 '''
+                git 'https://github.com/apache/usergrid.git'
             }
         }
 
-        stage ('Build Usergrid Stack') {
+        stage ('Build Usergrid Stack Grp 1') {
             steps {
-                git 'https://github.com/apache/usergrid.git'
+                startDBs()
                 sh '''
-                    mvn clean install -f stack/pom.xml
+                    mvn clean install -f stack/build-tools/pom.xml
+                    mvn clean install -f stack/config/pom.xml
+                    mvn clean install -f stack/corepersistence/pom.xml
+                    mvn clean install -f stack/core/pom.xml
                 '''
+                stopDBs()
+            }
+        }
+
+        stage ('Build Usergrid Stack Grp 2') {
+            steps {
+                startDBs()
+                sh '''
+                    mvn clean install -f stack/services/pom.xml
+                '''
+                stopDBs()
+            }
+        }
+
+        stage ('Build Usergrid Stack Grp 3') {
+            steps {
+                startDBs()
+                sh '''
+                    mvn clean install -f stack/rest/pom.xml
+                '''
+                stopDBs()
+            }
+        }
+
+        stage ('Build Usergrid Stack Grp 4') {
+            steps {
+                startDBs()
+                sh '''
+                    mvn clean install -f stack/tools/pom.xml
+                    mvn clean install -f stack/query-validator/pom.xml
+                '''
+                stopDBs()
             }
         }
 
@@ -110,4 +147,41 @@ pipeline {
         }
 
     }
+}
+
+def stopDBs() {
+    sh '''
+        echo "Stopping C* and ES  ..."
+
+        $CASS_HOME/bin/nodetool status
+        $CASS_HOME/bin/nodetool drain
+        kill -9 $(pgrep -if 'cassandra')
+        kill -9 $(pgrep -if 'elastic')
+        ps -ef | grep -i cassandra
+        ps -ef | grep -i elastic
+        rm -rf $CASS_HOME/data/*
+        rm -rf $CASS_HOME/logs/*
+        rm -rf $ES_HOME/data/*
+        rm -rf $ES_HOME/logs/*
+
+        echo "Stopped C* and ES."
+    '''
+}
+
+def startDBs() {
+    sh '''
+        echo "Starting C* and ES  ..."
+
+        $CASS_HOME/bin/cassandra
+        $ES_HOME/bin/elasticsearch -d
+
+        echo "Started C* and ES. Waiting 1 min before starting tests ..."
+        sleep 60
+    '''
+}
+
+
+def resetState() {
+    stopDBs()
+    startDBs()
 }
