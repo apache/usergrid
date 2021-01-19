@@ -26,6 +26,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class NoteDao extends Dao {
 
         IndexResponse response = elasticSearchClient.getClient()
                 .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, note.getId() )
-                .setRefresh( true )
+//                .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
@@ -62,7 +63,7 @@ public class NoteDao extends Dao {
                 .execute()
                 .actionGet();
 
-        return response.isCreated();
+        return response.getResult().equals(RestStatus.CREATED);// isCreated();
     }
 
 

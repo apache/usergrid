@@ -18,21 +18,20 @@
  */
 package org.apache.usergrid.chop.webapp.elasticsearch;
 
-
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.node.NodeBuilder;
-import org.elasticsearch.node.internal.InternalNode;
-import org.elasticsearch.transport.netty.NettyTransport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchFig.DATA_DIR_KEY;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+//import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.transport.netty4.Netty4Transport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchFig.DATA_DIR_KEY;
+
 
 
 /**
@@ -42,7 +41,7 @@ public class EmbeddedUtils {
     private static final Logger LOG = LoggerFactory.getLogger(EmbeddedUtils.class);
 
 
-    public static void extractTransportInfo(InternalNode inode, ElasticSearchFig config) {
+	public static void extractTransportInfo(Node inode, ElasticSearchFig config) {
         TransportAddress ta = getTransportAddress(inode);
         LOG.info("ta = {}", ta.toString());
 
@@ -56,17 +55,16 @@ public class EmbeddedUtils {
     }
 
 
-    public static TransportAddress getTransportAddress(InternalNode inode) {
-        return inode.injector().getInstance(NettyTransport.class).boundAddress().publishAddress();
+	public static TransportAddress getTransportAddress(Node inode) {
+		return inode.injector().getInstance(Netty4Transport.class).boundAddress().publishAddress();
     }
 
 
-    public static InternalNode newInstance(ElasticSearchFig config) {
-        InternalNode inode = (InternalNode)
-                NodeBuilder.nodeBuilder().settings(getSettings(config))
-                        .data(true)
-                        .clusterName(config.getClusterName())
-                        .node();
+	public static Node newInstance(ElasticSearchFig config) {
+		Node inode = new Node(getSettings(config));
+		// NodeBuilder.nodeBuilder().settings(
+		// ).data(true)
+		// .clusterName(config.getClusterName()).node();
 
         extractTransportInfo(inode, config);
         return inode;
@@ -103,7 +101,7 @@ public class EmbeddedUtils {
             dataDir = config.getDataDir();
         }
 
-        return ImmutableSettings.settingsBuilder()
+        return Settings.builder()
                 .put("path.data", dataDir)
                 .build();
     }

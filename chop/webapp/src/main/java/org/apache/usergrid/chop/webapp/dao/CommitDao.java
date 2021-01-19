@@ -32,6 +32,8 @@ import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.rest.RestResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 
 
@@ -67,7 +69,7 @@ public class CommitDao extends Dao {
 
         IndexResponse response = elasticSearchClient.getClient()
                 .prepareIndex( "modules", "commit", commit.getId() )
-                .setRefresh( true )
+				// .setRefresh(true)
                 .setSource(
                         jsonBuilder()
                                 .startObject()
@@ -78,8 +80,7 @@ public class CommitDao extends Dao {
                 )
                 .execute()
                 .actionGet();
-
-        return response.isCreated();
+		return response.getResult().equals(RestStatus.CREATED);// isCreated();
     }
 
 

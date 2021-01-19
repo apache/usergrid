@@ -42,10 +42,11 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.inQuery;
+//import static org.elasticsearch.index.query.QueryBuilders.inQuery;
 import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
@@ -76,7 +77,7 @@ public class RunDao extends Dao {
 
         IndexResponse response = elasticSearchClient.getClient()
                 .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, run.getId() )
-                .setRefresh( true )
+                // .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
@@ -104,8 +105,7 @@ public class RunDao extends Dao {
                 )
                 .execute()
                 .actionGet();
-
-        return response.isCreated();
+		return response.getResult().equals(RestStatus.CREATED);// response.isCreated();
     }
 
 
@@ -117,11 +117,10 @@ public class RunDao extends Dao {
     public boolean delete( Run run ) {
         DeleteResponse response = elasticSearchClient.getClient()
                 .prepareDelete( DAO_INDEX_KEY, DAO_TYPE_KEY, run.getId() )
-                .setRefresh( true )
+				// .setRefresh( true )
                 .execute()
                 .actionGet();
-
-        return response.isFound();
+		return !response.getResult().equals(RestStatus.NOT_FOUND);// .isFound()
     }
 
 

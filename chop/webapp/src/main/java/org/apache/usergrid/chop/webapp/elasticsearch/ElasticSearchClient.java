@@ -25,9 +25,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +35,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -65,16 +66,16 @@ public class ElasticSearchClient implements IElasticSearchClient {
         host = elasticSearchFig.getTransportHost();
         clusterName = elasticSearchFig.getClusterName();
 
-        Settings settings = ImmutableSettings.settingsBuilder().put( "cluster.name", clusterName ).build();
-        LOG.info( "Connecting Elasticsearch on {}", elasticSearchFig.getTransportHost() + ":" +
-                elasticSearchFig.getTransportPort() );
+		Settings settings = Settings.builder().put("cluster.name", clusterName).build();
+		LOG.info("Connecting Elasticsearch on {}",
+				elasticSearchFig.getTransportHost() + ":" + elasticSearchFig.getTransportPort());
         nodeList = getNodeList();
-        TransportClient transportClient = new TransportClient( settings );
+		TransportClient transportClient = new PreBuiltTransportClient(settings);
         for ( ElasticSearchNode elasticSearchNode : nodeList ) {
-            LOG.debug( "Adding transport address with host {} and port {}", elasticSearchNode.getTransportHost()
-                    , elasticSearchNode.getTransportPort() );
-            transportClient.addTransportAddress( new InetSocketTransportAddress( elasticSearchNode.getTransportHost(),
-                    elasticSearchNode.getTransportPort() ) );
+			LOG.debug("Adding transport address with host {} and port {}", elasticSearchNode.getTransportHost(),
+					elasticSearchNode.getTransportPort());
+			transportClient.addTransportAddress(new InetSocketTransportAddress(
+					new InetSocketAddress(elasticSearchNode.getTransportHost(), elasticSearchNode.getTransportPort())));
         }
 
         client = transportClient;
