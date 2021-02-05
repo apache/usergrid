@@ -1,0 +1,51 @@
+[ {"username":"gyan","email":"gyan@intelliswift.co.in","name":"Gyanendra","activated":true,"picture":"http://www.gravatar.com/avatar/592b84d249eddb438533006fbf051aea","uuid":"d183ca51-91af-11e9-87ed-26c8b3a04fa8","created":1560851993189,"modified":1560851993189,"dynamic_properties":{"metadata":{"credentials" : {
+    "password" : {
+      "recoverable" : false,
+      "encrypted" : true,
+      "hashType" : null,
+      "created" : 1560851993248,
+      "cryptoChain" : [ "bcrypt" ],
+      "secret" : "JDJhJDA5JGZSSjJPRkQ2VGZPb1ZNeWM1ZDJYY3U4SEp6TG56Z2ducENBWW1uRDlHcEZySXA5TUxtNUJT"
+    }
+	},"size":461}},"dynamic_sets":{},"size":0},
+{"username":"ajitkulkarni","email":"ajitkulkarni@google.com","name":"Ajit","activated":true,"picture":"http://www.gravatar.com/avatar/b161c81d5c818ddea55c16a1b06dde54","uuid":"796c5e2d-91af-11e9-87ed-26c8b3a04fa8","created":1560851845396,"modified":1560851845396,"dynamic_properties":{"metadata":{"credentials" : {
+    "password" : {
+      "recoverable" : false,
+      "encrypted" : true,
+      "hashType" : null,
+      "created" : 1560851845509,
+      "cryptoChain" : [ "bcrypt" ],
+      "secret" : "JDJhJDA5JDBTbFYzN0NlNHlLQ2d2NUtYLmdIYXV6ZTJXdEl0djNWV2pnY09LZEJ1VUhWRkdFSXNFZzBh"
+    }
+	}, "size":464}},"dynamic_sets":{},"size":0},
+{"username":"shiveshwar","email":"shiv@intelliswift.co.in","name":"shiveshwar","activated":true,"picture":"http://www.gravatar.com/avatar/2602b8eab7f6fde62d6f415ea4fd6c54","uuid":"b8ddab5f-91af-11e9-87ed-26c8b3a04fa8","created":1560851951835,"modified":1560851951835,"dynamic_properties":{"metadata":{"credentials" : {
+    "password" : {
+      "recoverable" : false,
+      "encrypted" : true,
+      "hashType" : null,
+      "created" : 1560851951885,
+      "cryptoChain" : [ "bcrypt" ],
+      "secret" : "JDJhJDA5JEFKNmozbm1URi5yN1JsVHdrWWNPWmVmSkRremxHelI2Q3h1NGJGeGxoUTRiYjlPLk9qcWFP"
+    }
+	}, "size":468}},"dynamic_sets":{},"size":0},
+{"username":"chandu","email":"chandu@google.com","name":"Chandrakant","activated":true,"picture":"http://www.gravatar.com/avatar/2b1dda8f065014de86c7f986b10746ce","uuid":"91b9388f-91af-11e9-87ed-26c8b3a04fa8","created":1560851886165,"modified":1560851886165,"dynamic_properties":{"metadata":{"credentials" : {
+    "password" : {
+      "recoverable" : false,
+      "encrypted" : true,
+      "hashType" : null,
+      "created" : 1560851886217,
+      "cryptoChain" : [ "bcrypt" ],
+      "secret" : "JDJhJDA5JEhsZ3A5enZIcFU1SHRqLk0xYjQ1MS5iNVoybS9YekFIbVdhNHlteXNEekVhZGI2eUdBZFNl"
+    }
+	},"size":459}},"dynamic_sets":{},"size":0},
+{"username":"anshul","email":"anshul@google.com","name":"Anshul","activated":true,"picture":"http://www.gravatar.com/avatar/b3477c79fb1d2d289b7ede7b81bbb8da","uuid":"e42d9e97-91af-11e9-87ed-26c8b3a04fa8","created":1560852024501,"modified":1560852024501,"dynamic_properties":{"metadata":{"credentials" : {
+    "password" : {
+      "recoverable" : false,
+      "encrypted" : true,
+      "hashType" : null,
+      "created" : 1560852024542,
+      "cryptoChain" : [ "bcrypt" ],
+      "secret" : "JDJhJDA5JFpZbjNTY3NLVFZIcXdKcU9mWWNxN09qdzBRcVBwdHguMzZUMGsuTThVdFpuM3I4VUZJay9X"
+    }
+	},"size":454}},"dynamic_sets":{},"size":0} ]
+

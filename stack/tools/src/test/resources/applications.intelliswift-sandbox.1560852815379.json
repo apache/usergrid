@@ -1,0 +1,33 @@
+[  {
+  "uuid" : "6781adef-4f8d-11e9-b170-005056a636e2",
+  "type" : "application",
+  "name" : "test-organization/ajit123",
+  "accesstokenttl" : null,
+  "applicationName" : "ajit123",
+  "organizationName" : "test-organization",
+  "created" : 1553580374677,
+  "modified" : 1553580374677,
+  "metadata" : {
+    "size" : 347,
+    "counters" : {
+      "application.requests.get" : 34,
+      "application.requests.post" : 5,
+      "application.collection.users" : 5,
+      "application.entities" : 8,
+      "application.collection.roles" : 3
+    },
+    "collections" : [ "assets", "folders", "devices", "activities", "roles", "groups", "users", "events" ],
+    "dictionaries" : {
+      "credentials" : {
+        "secret" : {
+          "recoverable" : true,
+          "encrypted" : false,
+          "hashType" : null,
+          "created" : 1560848573601,
+          "cryptoChain" : [ "plaintext" ],
+          "secret" : "YXA6X69Jq87nucvbAcmtLQe13HLv1EE"
+        }
+      }
+    }
+  }
+} ]
