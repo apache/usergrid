@@ -88,7 +88,7 @@ limitations under the License.
         <guice.version>4.0-beta5</guice.version>
         <guicyfig.version>3.2</guicyfig.version>
         <hystrix.version>1.4.0</hystrix.version>
-        <jackson-2-version>2.4.1</jackson-2-version>
+        <jackson-2-version>2.10.1</jackson-2-version>
         <mockito.version>1.10.8</mockito.version>
         <junit.version>4.11</junit.version>
         <kryo-serializers.version>0.26</kryo-serializers.version>
