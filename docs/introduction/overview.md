@@ -17,7 +17,7 @@ If you are the person who will be installing Usergrid, setting up the required C
 * [Usergrid Deployment Guide](../installation/deployment-guide.html)
   
    
-## For Open Source contributoes 
+## For Open Source contributors 
 
 If you want to build Usergrid from source-code then start at our [GitHub repo](http://github.com/apache/usergrid). You will find README files there that explain how to build the Stack, the Portal, SDKs and other components.
 
