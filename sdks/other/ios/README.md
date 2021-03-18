@@ -2,7 +2,7 @@
 
 ##Version
 
-Current Version: **0.9.2**
+Current Version: **0.9.3**
 
 Change log:
 
@@ -22,7 +22,13 @@ To find out more about how to use the iOS SDK within Usergrid, see:
 <http://usergrid.apache.org/docs/sdks/ios-new.html>
 
 ##Installing
+
+*Manual:*
 Once you have downloaded the SDK, add the UGAPI folder to your project by dragging and dropping it into your project. 
+
+*Cocoapods:*
+```pod 'UsergridSDK-ObjC', '~> 0.9.3'```
+
 
 **Note:** Make sure you check the "Copy items into destination group's folder", and also make sure the appropriate boxes are checked next to "Add to targets".
 
@@ -78,3 +84,4 @@ Like [Usergrid](https://github.com/apache/usergrid/), the Usergrid iOS SDK is op
 4. Commit your changes (`git commit -am '${JIRA_NUMBER} ${JIRA_TITLE}'`)
 5. Push your changes to the upstream branch (`git push origin my-new-feature`)
 6. Create new Pull Request (make sure you describe what you did and why your mod is needed)
+

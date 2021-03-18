@@ -74,7 +74,7 @@ static int activityCount = 0;
 	self.completionHandler = completionHandler;
     self.progressHandler = progressHandler;
 	self.connection = [[NSURLConnection alloc] initWithRequest:self.request delegate:self];
-    [isa retainNetworkActivityIndicator];
+    [UGHTTPClient retainNetworkActivityIndicator];
 }
 
 - (void) connectWithCompletionHandler:(UGHTTPCompletionHandler) completionHandler
@@ -117,7 +117,7 @@ static int activityCount = 0;
     }
 	self.connection = nil;
     self.data = nil;
-    [isa releaseNetworkActivityIndicator];
+    [UGHTTPClient releaseNetworkActivityIndicator];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
@@ -135,7 +135,7 @@ static int activityCount = 0;
     }
     self.connection = nil;
     self.data = nil;
-    [isa releaseNetworkActivityIndicator];
+    [UGHTTPClient releaseNetworkActivityIndicator];
 }
 
 - (void) cancel {

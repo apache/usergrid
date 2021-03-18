@@ -21,32 +21,11 @@
 		22FC70C71730639600153630 /* UGEntityViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70BF1730639600153630 /* UGEntityViewController.m */; };
 		22FC70C81730639600153630 /* UGSignInViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70C11730639600153630 /* UGSignInViewController.m */; };
 		22FC70C91730639600153630 /* UGTextViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70C31730639600153630 /* UGTextViewController.m */; };
-		22FC70FD173063AF00153630 /* NSObject+SBJson.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70CD173063AF00153630 /* NSObject+SBJson.m */; };
-		22FC70FE173063AF00153630 /* SBJsonParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70D0173063AF00153630 /* SBJsonParser.m */; };
-		22FC70FF173063AF00153630 /* SBJsonStreamParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70D2173063AF00153630 /* SBJsonStreamParser.m */; };
-		22FC7100173063AF00153630 /* SBJsonStreamParserAccumulator.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70D4173063AF00153630 /* SBJsonStreamParserAccumulator.m */; };
-		22FC7101173063AF00153630 /* SBJsonStreamParserAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70D6173063AF00153630 /* SBJsonStreamParserAdapter.m */; };
-		22FC7102173063AF00153630 /* SBJsonStreamParserState.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70D8173063AF00153630 /* SBJsonStreamParserState.m */; };
-		22FC7103173063AF00153630 /* SBJsonStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70DA173063AF00153630 /* SBJsonStreamWriter.m */; };
-		22FC7104173063AF00153630 /* SBJsonStreamWriterAccumulator.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70DC173063AF00153630 /* SBJsonStreamWriterAccumulator.m */; };
-		22FC7105173063AF00153630 /* SBJsonStreamWriterState.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70DE173063AF00153630 /* SBJsonStreamWriterState.m */; };
-		22FC7106173063AF00153630 /* SBJsonTokeniser.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70E0173063AF00153630 /* SBJsonTokeniser.m */; };
-		22FC7107173063AF00153630 /* SBJsonUTF8Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70E2173063AF00153630 /* SBJsonUTF8Stream.m */; };
-		22FC7108173063AF00153630 /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70E4173063AF00153630 /* SBJsonWriter.m */; };
-		22FC7109173063AF00153630 /* UGActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70E6173063AF00153630 /* UGActivity.m */; };
-		22FC710A173063AF00153630 /* UGClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70E8173063AF00153630 /* UGClient.m */; };
-		22FC710B173063AF00153630 /* UGClientResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70EB173063AF00153630 /* UGClientResponse.m */; };
-		22FC710C173063AF00153630 /* UGHTTPManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70ED173063AF00153630 /* UGHTTPManager.m */; };
-		22FC710D173063AF00153630 /* UGMultiStepAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70EF173063AF00153630 /* UGMultiStepAction.m */; };
-		22FC710E173063AF00153630 /* UGQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70F1173063AF00153630 /* UGQuery.m */; };
-		22FC710F173063AF00153630 /* UGUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70F3173063AF00153630 /* UGUser.m */; };
-		22FC7110173063AF00153630 /* UGConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70F6173063AF00153630 /* UGConnection.m */; };
-		22FC7111173063AF00153630 /* UGHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70F8173063AF00153630 /* UGHTTPClient.m */; };
-		22FC7112173063AF00153630 /* UGHTTPHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70FA173063AF00153630 /* UGHTTPHelpers.m */; };
-		22FC7113173063AF00153630 /* UGHTTPResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 22FC70FC173063AF00153630 /* UGHTTPResult.m */; };
+		6B70355E89D84B6F1B519CCA /* libPods-browser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EC6C0620A4F57D877AF976C7 /* libPods-browser.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		019F843866D31634814293DF /* Pods-browser.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-browser.release.xcconfig"; path = "Pods/Target Support Files/Pods-browser/Pods-browser.release.xcconfig"; sourceTree = "<group>"; };
 		22FC70981730595C00153630 /* browser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = browser.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		22FC709B1730595C00153630 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		22FC709D1730595C00153630 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -70,54 +49,8 @@
 		22FC70C11730639600153630 /* UGSignInViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGSignInViewController.m; sourceTree = "<group>"; };
 		22FC70C21730639600153630 /* UGTextViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGTextViewController.h; sourceTree = "<group>"; };
 		22FC70C31730639600153630 /* UGTextViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGTextViewController.m; sourceTree = "<group>"; };
-		22FC70CC173063AF00153630 /* NSObject+SBJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+SBJson.h"; sourceTree = "<group>"; };
-		22FC70CD173063AF00153630 /* NSObject+SBJson.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+SBJson.m"; sourceTree = "<group>"; };
-		22FC70CE173063AF00153630 /* SBJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJson.h; sourceTree = "<group>"; };
-		22FC70CF173063AF00153630 /* SBJsonParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonParser.h; sourceTree = "<group>"; };
-		22FC70D0173063AF00153630 /* SBJsonParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonParser.m; sourceTree = "<group>"; };
-		22FC70D1173063AF00153630 /* SBJsonStreamParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParser.h; sourceTree = "<group>"; };
-		22FC70D2173063AF00153630 /* SBJsonStreamParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParser.m; sourceTree = "<group>"; };
-		22FC70D3173063AF00153630 /* SBJsonStreamParserAccumulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParserAccumulator.h; sourceTree = "<group>"; };
-		22FC70D4173063AF00153630 /* SBJsonStreamParserAccumulator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParserAccumulator.m; sourceTree = "<group>"; };
-		22FC70D5173063AF00153630 /* SBJsonStreamParserAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParserAdapter.h; sourceTree = "<group>"; };
-		22FC70D6173063AF00153630 /* SBJsonStreamParserAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParserAdapter.m; sourceTree = "<group>"; };
-		22FC70D7173063AF00153630 /* SBJsonStreamParserState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParserState.h; sourceTree = "<group>"; };
-		22FC70D8173063AF00153630 /* SBJsonStreamParserState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParserState.m; sourceTree = "<group>"; };
-		22FC70D9173063AF00153630 /* SBJsonStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamWriter.h; sourceTree = "<group>"; };
-		22FC70DA173063AF00153630 /* SBJsonStreamWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamWriter.m; sourceTree = "<group>"; };
-		22FC70DB173063AF00153630 /* SBJsonStreamWriterAccumulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamWriterAccumulator.h; sourceTree = "<group>"; };
-		22FC70DC173063AF00153630 /* SBJsonStreamWriterAccumulator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamWriterAccumulator.m; sourceTree = "<group>"; };
-		22FC70DD173063AF00153630 /* SBJsonStreamWriterState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamWriterState.h; sourceTree = "<group>"; };
-		22FC70DE173063AF00153630 /* SBJsonStreamWriterState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamWriterState.m; sourceTree = "<group>"; };
-		22FC70DF173063AF00153630 /* SBJsonTokeniser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonTokeniser.h; sourceTree = "<group>"; };
-		22FC70E0173063AF00153630 /* SBJsonTokeniser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonTokeniser.m; sourceTree = "<group>"; };
-		22FC70E1173063AF00153630 /* SBJsonUTF8Stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonUTF8Stream.h; sourceTree = "<group>"; };
-		22FC70E2173063AF00153630 /* SBJsonUTF8Stream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonUTF8Stream.m; sourceTree = "<group>"; };
-		22FC70E3173063AF00153630 /* SBJsonWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonWriter.h; sourceTree = "<group>"; };
-		22FC70E4173063AF00153630 /* SBJsonWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonWriter.m; sourceTree = "<group>"; };
-		22FC70E5173063AF00153630 /* UGActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGActivity.h; sourceTree = "<group>"; };
-		22FC70E6173063AF00153630 /* UGActivity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGActivity.m; sourceTree = "<group>"; };
-		22FC70E7173063AF00153630 /* UGClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGClient.h; sourceTree = "<group>"; };
-		22FC70E8173063AF00153630 /* UGClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGClient.m; sourceTree = "<group>"; };
-		22FC70E9173063AF00153630 /* UGClientDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGClientDelegate.h; sourceTree = "<group>"; };
-		22FC70EA173063AF00153630 /* UGClientResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGClientResponse.h; sourceTree = "<group>"; };
-		22FC70EB173063AF00153630 /* UGClientResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGClientResponse.m; sourceTree = "<group>"; };
-		22FC70EC173063AF00153630 /* UGHTTPManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPManager.h; sourceTree = "<group>"; };
-		22FC70ED173063AF00153630 /* UGHTTPManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPManager.m; sourceTree = "<group>"; };
-		22FC70EE173063AF00153630 /* UGMultiStepAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGMultiStepAction.h; sourceTree = "<group>"; };
-		22FC70EF173063AF00153630 /* UGMultiStepAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGMultiStepAction.m; sourceTree = "<group>"; };
-		22FC70F0173063AF00153630 /* UGQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGQuery.h; sourceTree = "<group>"; };
-		22FC70F1173063AF00153630 /* UGQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGQuery.m; sourceTree = "<group>"; };
-		22FC70F2173063AF00153630 /* UGUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGUser.h; sourceTree = "<group>"; };
-		22FC70F3173063AF00153630 /* UGUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGUser.m; sourceTree = "<group>"; };
-		22FC70F5173063AF00153630 /* UGConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGConnection.h; sourceTree = "<group>"; };
-		22FC70F6173063AF00153630 /* UGConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGConnection.m; sourceTree = "<group>"; };
-		22FC70F7173063AF00153630 /* UGHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPClient.h; sourceTree = "<group>"; };
-		22FC70F8173063AF00153630 /* UGHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPClient.m; sourceTree = "<group>"; };
-		22FC70F9173063AF00153630 /* UGHTTPHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPHelpers.h; sourceTree = "<group>"; };
-		22FC70FA173063AF00153630 /* UGHTTPHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPHelpers.m; sourceTree = "<group>"; };
-		22FC70FB173063AF00153630 /* UGHTTPResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPResult.h; sourceTree = "<group>"; };
-		22FC70FC173063AF00153630 /* UGHTTPResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPResult.m; sourceTree = "<group>"; };
+		81E161CC6A9F5CBC61355FD0 /* Pods-browser.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-browser.debug.xcconfig"; path = "Pods/Target Support Files/Pods-browser/Pods-browser.debug.xcconfig"; sourceTree = "<group>"; };
+		EC6C0620A4F57D877AF976C7 /* libPods-browser.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-browser.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +61,7 @@
 				22FC709C1730595C00153630 /* UIKit.framework in Frameworks */,
 				22FC709E1730595C00153630 /* Foundation.framework in Frameworks */,
 				22FC70A01730595C00153630 /* CoreGraphics.framework in Frameworks */,
+				6B70355E89D84B6F1B519CCA /* libPods-browser.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,10 +71,10 @@
 		22FC708F1730595C00153630 = {
 			isa = PBXGroup;
 			children = (
-				22FC70CA173063AF00153630 /* UGAPI */,
 				22FC70A11730595C00153630 /* browser */,
 				22FC709A1730595C00153630 /* Frameworks */,
 				22FC70991730595C00153630 /* Products */,
+				A7EDAC7C98DD6DBAF23D9C9F /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -158,6 +92,7 @@
 				22FC709B1730595C00153630 /* UIKit.framework */,
 				22FC709D1730595C00153630 /* Foundation.framework */,
 				22FC709F1730595C00153630 /* CoreGraphics.framework */,
+				EC6C0620A4F57D877AF976C7 /* libPods-browser.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -196,76 +131,13 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		22FC70CA173063AF00153630 /* UGAPI */ = {
+		A7EDAC7C98DD6DBAF23D9C9F /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				22FC70CB173063AF00153630 /* SBJson */,
-				22FC70E5173063AF00153630 /* UGActivity.h */,
-				22FC70E6173063AF00153630 /* UGActivity.m */,
-				22FC70E7173063AF00153630 /* UGClient.h */,
-				22FC70E8173063AF00153630 /* UGClient.m */,
-				22FC70E9173063AF00153630 /* UGClientDelegate.h */,
-				22FC70EA173063AF00153630 /* UGClientResponse.h */,
-				22FC70EB173063AF00153630 /* UGClientResponse.m */,
-				22FC70EC173063AF00153630 /* UGHTTPManager.h */,
-				22FC70ED173063AF00153630 /* UGHTTPManager.m */,
-				22FC70EE173063AF00153630 /* UGMultiStepAction.h */,
-				22FC70EF173063AF00153630 /* UGMultiStepAction.m */,
-				22FC70F0173063AF00153630 /* UGQuery.h */,
-				22FC70F1173063AF00153630 /* UGQuery.m */,
-				22FC70F2173063AF00153630 /* UGUser.h */,
-				22FC70F3173063AF00153630 /* UGUser.m */,
-				22FC70F4173063AF00153630 /* v2 */,
+				81E161CC6A9F5CBC61355FD0 /* Pods-browser.debug.xcconfig */,
+				019F843866D31634814293DF /* Pods-browser.release.xcconfig */,
 			);
-			name = UGAPI;
-			path = ../../UGAPI;
-			sourceTree = "<group>";
-		};
-		22FC70CB173063AF00153630 /* SBJson */ = {
-			isa = PBXGroup;
-			children = (
-				22FC70CC173063AF00153630 /* NSObject+SBJson.h */,
-				22FC70CD173063AF00153630 /* NSObject+SBJson.m */,
-				22FC70CE173063AF00153630 /* SBJson.h */,
-				22FC70CF173063AF00153630 /* SBJsonParser.h */,
-				22FC70D0173063AF00153630 /* SBJsonParser.m */,
-				22FC70D1173063AF00153630 /* SBJsonStreamParser.h */,
-				22FC70D2173063AF00153630 /* SBJsonStreamParser.m */,
-				22FC70D3173063AF00153630 /* SBJsonStreamParserAccumulator.h */,
-				22FC70D4173063AF00153630 /* SBJsonStreamParserAccumulator.m */,
-				22FC70D5173063AF00153630 /* SBJsonStreamParserAdapter.h */,
-				22FC70D6173063AF00153630 /* SBJsonStreamParserAdapter.m */,
-				22FC70D7173063AF00153630 /* SBJsonStreamParserState.h */,
-				22FC70D8173063AF00153630 /* SBJsonStreamParserState.m */,
-				22FC70D9173063AF00153630 /* SBJsonStreamWriter.h */,
-				22FC70DA173063AF00153630 /* SBJsonStreamWriter.m */,
-				22FC70DB173063AF00153630 /* SBJsonStreamWriterAccumulator.h */,
-				22FC70DC173063AF00153630 /* SBJsonStreamWriterAccumulator.m */,
-				22FC70DD173063AF00153630 /* SBJsonStreamWriterState.h */,
-				22FC70DE173063AF00153630 /* SBJsonStreamWriterState.m */,
-				22FC70DF173063AF00153630 /* SBJsonTokeniser.h */,
-				22FC70E0173063AF00153630 /* SBJsonTokeniser.m */,
-				22FC70E1173063AF00153630 /* SBJsonUTF8Stream.h */,
-				22FC70E2173063AF00153630 /* SBJsonUTF8Stream.m */,
-				22FC70E3173063AF00153630 /* SBJsonWriter.h */,
-				22FC70E4173063AF00153630 /* SBJsonWriter.m */,
-			);
-			path = SBJson;
-			sourceTree = "<group>";
-		};
-		22FC70F4173063AF00153630 /* v2 */ = {
-			isa = PBXGroup;
-			children = (
-				22FC70F5173063AF00153630 /* UGConnection.h */,
-				22FC70F6173063AF00153630 /* UGConnection.m */,
-				22FC70F7173063AF00153630 /* UGHTTPClient.h */,
-				22FC70F8173063AF00153630 /* UGHTTPClient.m */,
-				22FC70F9173063AF00153630 /* UGHTTPHelpers.h */,
-				22FC70FA173063AF00153630 /* UGHTTPHelpers.m */,
-				22FC70FB173063AF00153630 /* UGHTTPResult.h */,
-				22FC70FC173063AF00153630 /* UGHTTPResult.m */,
-			);
-			path = v2;
+			name = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -275,9 +147,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 22FC70B51730595C00153630 /* Build configuration list for PBXNativeTarget "browser" */;
 			buildPhases = (
+				F7128CDF5F02CFE3DF1B3124 /* [CP] Check Pods Manifest.lock */,
 				22FC70941730595C00153630 /* Sources */,
 				22FC70951730595C00153630 /* Frameworks */,
 				22FC70961730595C00153630 /* Resources */,
+				043ADFA22EF54A7FF7E8C9B0 /* [CP] Embed Pods Frameworks */,
+				3205840CF887B58F1CD52E01 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -328,6 +203,54 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		043ADFA22EF54A7FF7E8C9B0 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-browser/Pods-browser-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3205840CF887B58F1CD52E01 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-browser/Pods-browser-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F7128CDF5F02CFE3DF1B3124 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		22FC70941730595C00153630 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -340,29 +263,6 @@
 				22FC70C71730639600153630 /* UGEntityViewController.m in Sources */,
 				22FC70C81730639600153630 /* UGSignInViewController.m in Sources */,
 				22FC70C91730639600153630 /* UGTextViewController.m in Sources */,
-				22FC70FD173063AF00153630 /* NSObject+SBJson.m in Sources */,
-				22FC70FE173063AF00153630 /* SBJsonParser.m in Sources */,
-				22FC70FF173063AF00153630 /* SBJsonStreamParser.m in Sources */,
-				22FC7100173063AF00153630 /* SBJsonStreamParserAccumulator.m in Sources */,
-				22FC7101173063AF00153630 /* SBJsonStreamParserAdapter.m in Sources */,
-				22FC7102173063AF00153630 /* SBJsonStreamParserState.m in Sources */,
-				22FC7103173063AF00153630 /* SBJsonStreamWriter.m in Sources */,
-				22FC7104173063AF00153630 /* SBJsonStreamWriterAccumulator.m in Sources */,
-				22FC7105173063AF00153630 /* SBJsonStreamWriterState.m in Sources */,
-				22FC7106173063AF00153630 /* SBJsonTokeniser.m in Sources */,
-				22FC7107173063AF00153630 /* SBJsonUTF8Stream.m in Sources */,
-				22FC7108173063AF00153630 /* SBJsonWriter.m in Sources */,
-				22FC7109173063AF00153630 /* UGActivity.m in Sources */,
-				22FC710A173063AF00153630 /* UGClient.m in Sources */,
-				22FC710B173063AF00153630 /* UGClientResponse.m in Sources */,
-				22FC710C173063AF00153630 /* UGHTTPManager.m in Sources */,
-				22FC710D173063AF00153630 /* UGMultiStepAction.m in Sources */,
-				22FC710E173063AF00153630 /* UGQuery.m in Sources */,
-				22FC710F173063AF00153630 /* UGUser.m in Sources */,
-				22FC7110173063AF00153630 /* UGConnection.m in Sources */,
-				22FC7111173063AF00153630 /* UGHTTPClient.m in Sources */,
-				22FC7112173063AF00153630 /* UGHTTPHelpers.m in Sources */,
-				22FC7113173063AF00153630 /* UGHTTPResult.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -440,6 +340,7 @@
 		};
 		22FC70B61730595C00153630 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 81E161CC6A9F5CBC61355FD0 /* Pods-browser.debug.xcconfig */;
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "browser/browser-Prefix.pch";
@@ -451,6 +352,7 @@
 		};
 		22FC70B71730595C00153630 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 019F843866D31634814293DF /* Pods-browser.release.xcconfig */;
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "browser/browser-Prefix.pch";
