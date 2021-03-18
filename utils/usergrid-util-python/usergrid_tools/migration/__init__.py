@@ -18,7 +18,6 @@
 # */
 
 import usergrid_data_migrator
-import usergrid_data_exporter
 
 __author__ = 'Jeff.West@yahoo.com'
 
