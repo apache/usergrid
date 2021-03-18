@@ -34,6 +34,8 @@ Alternatively, when you use a statement that starts select * where you can omit 
 
 Your query can return multiple kinds of values -- such as the values of multiple properties -- by specifying the property names in your select statement as a comma-separated list.
 
+Property names in entities must be lowercase to be selecatable. E.g. you must use phone_number or phonenumber, and not phoneNumber, when creating entities to make them selectable. The select statement however is not case-sensitive.
+
 For example, the following request returns the address and phone number of users whose name is Gladys Kravitz:
 
 	/users?ql=select address,phone_number where name = 'Gladys Kravitz'
