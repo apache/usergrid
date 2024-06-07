@@ -108,7 +108,7 @@
         <hector-test-version>1.1-4</hector-test-version>
         <jacoco.version>0.7.5.201505241946</jacoco.version>
         <jackson-version>1.9.9</jackson-version>
-        <jackson-2-version>2.3.3</jackson-2-version>
+        <jackson-2-version>2.10.1</jackson-2-version>
         <jclouds.version>1.9.0</jclouds.version>
         <jersey-version>2.21</jersey-version>
         <junit-version>4.12</junit-version>
